@@ -1,0 +1,109 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Master Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Primitive Helpers
+    function isValidId(id) { return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); }
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+    function isSignedIn() { return request.auth != null; }
+    
+    // We allow ANY signed-in user who exists in admins collection
+    function isAdmin() { return isSignedIn() && exists(/databases/$(database)/documents/admins/$(request.auth.uid)); }
+
+    match /admins/{userId} {
+      allow read: if isSignedIn() && request.auth.uid == userId;
+      // Allow creation for self (to support the sign up page for owner)
+      allow write: if isSignedIn() && request.auth.uid == userId; 
+    }
+
+    // Products
+    function isValidProduct(data) {
+      return data.size() >= 3 && data.size() <= 15
+        && data.keys().hasAll(['name', 'price', 'category'])
+        && data.name is string && data.name.size() > 0 && data.name.size() <= 100
+        && data.price is number && data.price >= 0
+        && data.category is string && data.category in ['Tool', 'Course', 'Bundle', 'all'];
+    }
+
+    match /products/{productId} {
+      allow get: if isValidId(productId);
+      allow list: if true; // Public list
+      allow create: if isAdmin() && isValidId(productId) && isValidProduct(incoming()) && incoming().createdAt == request.time;
+      allow update: if isAdmin() && isValidId(productId) && isValidProduct(incoming()) && incoming().updatedAt == request.time;
+      allow delete: if isAdmin() && isValidId(productId);
+    }
+
+    // Orders
+    function isValidOrder(data) {
+       return data.size() >= 4 && data.size() <= 15
+         && data.keys().hasAll(['customer_name', 'customer_email', 'total_price', 'status'])
+         && data.customer_name is string && data.customer_name.size() <= 100
+         && data.customer_email is string && data.customer_email.size() <= 100
+         && data.total_price is number && data.total_price >= 0
+         && data.status is string && data.status in ['pending', 'confirmed', 'delivered', 'cancelled'];
+    }
+
+    match /orders/{orderId} {
+      allow create: if isValidId(orderId) && isValidOrder(incoming()) && incoming().createdAt == request.time;
+      // Only admins can see and modify orders
+      allow get: if isAdmin() && isValidId(orderId);
+      allow list: if isAdmin();
+      allow update: if isAdmin() && isValidId(orderId) && isValidOrder(incoming()) && incoming().updatedAt == request.time;
+      allow delete: if isAdmin() && isValidId(orderId);
+    }
+
+    // Contacts
+    function isValidContact(data) {
+       return data.size() >= 4 && data.size() <= 10
+         && data.keys().hasAll(['name', 'email', 'message', 'is_read'])
+         && data.name is string && data.name.size() > 0 && data.name.size() <= 100
+         && data.email is string && data.email.size() <= 100
+         && data.message is string && data.message.size() <= 2000
+         && data.is_read is bool;
+    }
+
+    match /contacts/{contactId} {
+      allow create: if isValidId(contactId) && isValidContact(incoming()) && incoming().createdAt == request.time;
+      // Only admins can see and modify contacts
+      allow get: if isAdmin() && isValidId(contactId);
+      allow list: if isAdmin();
+      allow update: if isAdmin() && isValidId(contactId) && isValidContact(incoming());
+      allow delete: if isAdmin() && isValidId(contactId);
+    }
+    // Transactions / Payments
+    function isValidTransaction(data) {
+       return data.size() >= 5 && data.size() <= 15
+         && data.keys().hasAll(['userId', 'price', 'status', 'proofBase64'])
+         && data.userId is string && data.userId == request.auth.uid
+         && data.price is number && data.price >= 0
+         && data.status is string && data.status in ['pending', 'approved', 'rejected']
+         && data.proofBase64 is string;
+    }
+
+    match /transactions/{transactionId} {
+      allow create: if isSignedIn() && isValidId(transactionId) && isValidTransaction(incoming()) && incoming().createdAt == request.time;
+      allow read: if isSignedIn() && existing().userId == request.auth.uid;
+      allow list: if isAdmin();
+      allow get: if isAdmin();
+      allow update: if isAdmin() && isValidId(transactionId);
+      allow delete: if isAdmin() && isValidId(transactionId);
+    }
+
+    // Visitors Tracking
+    match /visitors/{visitorId} {
+      allow create, update: if true;
+      allow read, delete: if isAdmin();
+    }
+
+    // Payment Methods
+    match /payment_methods/{methodId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+  }
+}
