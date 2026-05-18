@@ -75,7 +75,12 @@ export default function WebsiteEditor() {
                    <h3 className="text-xs font-black text-slate-500 uppercase tracking-wider mb-4">Drag Elements</h3>
                    <div className="grid grid-cols-2 gap-3">
                      {elements.map(el => (
-                       <div key={el.name} className="bg-slate-900 border border-slate-800 rounded-lg p-3 flex flex-col items-center justify-center gap-2 cursor-grab hover:bg-slate-800 hover:border-slate-700 transition-colors">
+                       <div 
+                         key={el.name} 
+                         draggable
+                         onDragStart={(e) => e.dataTransfer.setData('text/plain', el.name)}
+                         className="bg-slate-900 border border-slate-800 rounded-lg p-3 flex flex-col items-center justify-center gap-2 cursor-grab hover:bg-slate-800 hover:border-slate-700 transition-colors"
+                       >
                           <el.icon size={20} className="text-slate-400" />
                           <span className="text-xs font-medium text-slate-300">{el.name}</span>
                        </div>
@@ -130,24 +135,73 @@ export default function WebsiteEditor() {
             <div className={`bg-slate-950 border border-slate-800 shadow-2xl relative transition-all duration-300 ease-in-out ${device === 'desktop' ? 'w-full h-full rounded-2xl' : device === 'tablet' ? 'w-[768px] h-full rounded-3xl' : 'w-[375px] h-full rounded-[2.5rem] border-8'}`}>
                
                {/* Visual Builder Canvas Placeholder */}
-               <div className="absolute inset-0 flex flex-col pointer-events-auto overflow-y-auto minimal-scrollbar">
-                  {/* Header mock */}
-                  <div className="h-16 border-b border-slate-800 p-4 flex justify-between items-center group relative hover:border-red-500/50 hover:bg-slate-900/50 cursor-pointer transition-colors">
-                     <div className="text-white font-bold opacity-50 group-hover:opacity-100">Header Component</div>
-                     <Settings size={16} className="text-slate-500 opacity-0 group-hover:opacity-100" />
-                  </div>
-                  
-                  {/* Hero mock */}
-                  <div className="p-10 relative group border-2 border-transparent hover:border-blue-500/50 transition-colors min-h-[400px] flex flex-col justify-center items-center text-center">
-                     <div className="absolute top-2 right-2 bg-blue-500 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 flex gap-2">
-                        <EditIcon size={14} /> Edit Section <Trash2 size={14} className="hover:text-red-300" />
-                     </div>
-                     <h1 className="text-4xl lg:text-6xl font-black text-white mb-6 p-2 rounded hover:bg-white/5 cursor-text outline-none focus:ring-2 focus:ring-blue-500" contentEditable suppressContentEditableWarning>Learn How to Make 6-Figure Income</h1>
-                     <p className="text-slate-400 mb-8 p-2 rounded hover:bg-white/5 cursor-text outline-none focus:ring-2 focus:ring-blue-500 max-w-xl" contentEditable suppressContentEditableWarning>Automate your process and generate passive income without showing your face.</p>
-                     <div className="flex gap-4">
-                        <button className="bg-red-600 text-white px-6 py-3 rounded-full font-bold cursor-pointer hover:bg-red-500">Buy Tools</button>
-                     </div>
-                  </div>
+               <div className="absolute inset-0 flex flex-col overflow-hidden bg-white">
+                  <iframe 
+                    src="/" 
+                    title="Live Preview" 
+                    className="w-full h-full border-0"
+                    onLoad={(e) => {
+                       try {
+                          const doc = (e.target as HTMLIFrameElement).contentDocument;
+                          if (doc) {
+                             doc.designMode = "off";
+                             
+                             const style = doc.createElement('style');
+                             style.innerHTML = `
+                                .editor-hover { outline: 2px dashed #3b82f6 !important; cursor: pointer !important; }
+                                .editor-drag-over { outline: 2px dashed #10b981 !important; background-color: rgba(16,185,129,0.1) !important; }
+                                [contenteditable="true"]:focus { outline: 2px solid #3b82f6 !important; background-color: rgba(59,130,246,0.05); }
+                             `;
+                             doc.head.appendChild(style);
+
+                             // Editable logic
+                             doc.body.addEventListener('mouseover', ev => {
+                                if (ev.target.tagName !== 'BODY') ev.target.classList.add('editor-hover');
+                             });
+                             doc.body.addEventListener('mouseout', ev => {
+                                ev.target.classList.remove('editor-hover');
+                             });
+                             doc.body.addEventListener('click', ev => {
+                               const tag = ev.target.tagName;
+                               if (['A', 'BUTTON'].includes(tag)) ev.preventDefault();
+                               
+                               if (['P', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'SPAN', 'A', 'BUTTON', 'LI', 'TD'].includes(tag)) {
+                                  ev.target.contentEditable = "true";
+                                  ev.target.focus();
+                               }
+                             });
+
+                             // Drag & Drop logic
+                             doc.body.addEventListener('dragover', ev => {
+                                ev.preventDefault(); // allow drop
+                                if (ev.target.tagName !== 'BODY') ev.target.classList.add('editor-drag-over');
+                             });
+                             doc.body.addEventListener('dragleave', ev => {
+                                ev.target.classList.remove('editor-drag-over');
+                             });
+                             doc.body.addEventListener('drop', ev => {
+                                ev.preventDefault();
+                                ev.target.classList.remove('editor-drag-over');
+                                const type = ev.dataTransfer.getData('text/plain');
+                                if (!type) return;
+
+                                let html = '';
+                                if (type === 'Heading') html = '<h2 class="text-3xl font-bold my-4">New Heading</h2>';
+                                else if (type === 'Text') html = '<p class="text-slate-500 my-2">New text block. Edit me directly.</p>';
+                                else if (type === 'Image') html = '<img src="/Client_Review.png" class="w-full max-w-sm h-auto rounded-lg my-4 object-cover" alt="New Image"/>';
+                                else if (type === 'Video') html = '<div class="w-full aspect-video bg-slate-800 rounded-xl flex items-center justify-center text-white my-4 font-bold">Video Placeholder (Click to edit link)</div>';
+                                else if (type === 'Button') html = '<button class="bg-red-600 hover:bg-red-500 text-white px-6 py-3 rounded-full font-bold my-4 text-sm transition-all shadow-lg hover:scale-105 cursor-pointer">Click Me</button>';
+                                else if (type === 'Sections') html = '<div class="p-10 border-2 border-dashed border-slate-300 rounded-xl my-4 text-center">New Section Area</div>';
+                                else html = '<div class="p-4 border border-dashed border-blue-500 my-2">' + type + '</div>';
+
+                                const div = doc.createElement('div');
+                                div.innerHTML = html;
+                                ev.target.appendChild(div.firstChild);
+                             });
+                          }
+                       } catch (err) {}
+                    }}
+                  />
                </div>
                
                {/* Elementor-like hover overlays */}

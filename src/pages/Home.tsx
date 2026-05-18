@@ -2,13 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { Play, Flame, Rocket, Wrench, Trophy, GraduationCap, DollarSign, CheckCircle, Star, Target, Video, Settings, Send, Quote, ArrowRight, ShoppingCart, ShieldCheck, Tag, Upload, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { db } from '../lib/firebase';
-import { collection, addDoc, serverTimestamp, getDocs, query } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, getDocs, query, onSnapshot } from 'firebase/firestore';
 import { motion, AnimatePresence } from 'motion/react';
 
 export default function Home() {
   const [formData, setFormData] = useState({ name: '', email: '', phone: '', subject: '', message: '' });
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [topProducts, setTopProducts] = useState<any[]>([]);
+  const [loadingProducts, setLoadingProducts] = useState(true);
 
   // Reviews System
   const [reviewsList, setReviewsList] = useState<any[]>([]);
@@ -18,30 +19,30 @@ export default function Home() {
   const [reviewSubmitStatus, setReviewSubmitStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
 
   useEffect(() => {
-    const fetchTopProducts = async () => {
-      try {
-        const q = query(collection(db, 'products'));
-        const querySnapshot = await getDocs(q);
+    let unsubscribeProducts: any = null;
+    let unsubscribeReviews: any = null;
+
+    const fetchTopProducts = () => {
+      const q = query(collection(db, 'products'));
+      unsubscribeProducts = onSnapshot(q, { includeMetadataChanges: true }, (querySnapshot) => {
         const prods: any[] = [];
         querySnapshot.forEach((doc) => prods.push({ id: doc.id, ...doc.data() }));
-        const activeProds = prods.filter((p: any) => p.is_active !== false);
+        const activeProds = prods.filter((p: any) => p.is_active !== false && p.category !== 'Course');
         for (let i = activeProds.length - 1; i > 0; i--) {
           const j = Math.floor(Math.random() * (i + 1));
           [activeProds[i], activeProds[j]] = [activeProds[j], activeProds[i]];
         }
         setTopProducts(activeProds.slice(0, 4));
-      } catch(err) {
+        setLoadingProducts(false);
+      }, (err) => {
         console.error("Error fetching top products", err);
-      }
+        setLoadingProducts(false);
+      });
     };
-    fetchTopProducts();
-  }, []);
 
-  useEffect(() => {
-    const fetchReviews = async () => {
-      try {
-        const q = query(collection(db, 'reviews'));
-        const querySnapshot = await getDocs(q);
+    const fetchReviews = () => {
+      const q = query(collection(db, 'reviews'));
+      unsubscribeReviews = onSnapshot(q, { includeMetadataChanges: true }, (querySnapshot) => {
         const fetchedReviews: any[] = [];
         querySnapshot.forEach(doc => {
           if (doc.data().approved !== false) {
@@ -56,15 +57,18 @@ export default function Home() {
              { name: 'Usman Tariq', city: 'Karachi', text: 'Jerrys tools are very easy to use for automation.', rating: 5 }
            ]);
         }
-      } catch (err) {
+      }, (err) => {
         console.error("Error fetching reviews", err);
-        setReviewsList([
-             { name: 'Ali Raza', city: 'Lahore', text: 'Amazing course, I started earning within two months!', rating: 5, image: '/Client_Review.png' },
-             { name: 'Usman Tariq', city: 'Karachi', text: 'Jerrys tools are very easy to use for automation.', rating: 5 }
-        ]);
-      }
+      });
     };
+
+    fetchTopProducts();
     fetchReviews();
+
+    return () => {
+      if (unsubscribeProducts) unsubscribeProducts();
+      if (unsubscribeReviews) unsubscribeReviews();
+    };
   }, []);
 
   useEffect(() => {
@@ -152,7 +156,7 @@ export default function Home() {
   };
 
   return (
-    <div className="w-full relative overflow-hidden font-sans bg-black">
+    <div className="w-full relative overflow-x-hidden font-sans bg-black">
       <FlashSaleBanner topProducts={topProducts} />
       <LivePurchasePopup topProducts={topProducts} />
       
@@ -165,7 +169,7 @@ export default function Home() {
       </div>
 
       {/* Hero Section */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 lg:py-20 mt-2 relative z-10">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-10 lg:pt-8 lg:pb-20 relative z-10">
         <div className="grid lg:grid-cols-2 gap-10 lg:gap-12 items-center">
           <motion.div {...fadeUp}>
             <div className="flex items-center gap-4 mb-2">
@@ -245,12 +249,16 @@ export default function Home() {
            <div className="relative group/slider">
              <motion.div variants={staggerContainer} initial="hidden" whileInView="show" viewport={{ once: true, margin: "-50px" }} className="bg-slate-900 border border-slate-800 rounded-3xl p-6 lg:p-8 card-shadow w-full">
                <div className="grid grid-cols-2 gap-4 sm:gap-6">
-               {topProducts.length > 0 ? topProducts.slice(0, 4).map(product => (
+               {loadingProducts ? (
+                 [1, 2, 3, 4].map(i => (
+                   <div key={i} className="w-full shrink-0 bg-slate-950 border border-slate-800 rounded-3xl p-6 h-64 animate-pulse"></div>
+                 ))
+               ) : topProducts.length > 0 ? topProducts.slice(0, 4).map(product => (
                   <motion.div variants={staggerItem} key={product.id} className="w-full aspect-square shrink-0 bg-slate-950 border border-slate-800 rounded-3xl p-4 sm:p-6 shadow-xl flex flex-col relative group hover:border-slate-700 transition-colors">
                     {product.badge && <div className="absolute top-4 right-4 bg-slate-800 border border-slate-700 text-red-400 text-xs font-bold px-2 py-1 sm:px-3 sm:py-1 rounded-full z-10">{product.badge}</div>}
                     
                     {product.logoBase64 && (
-                       <img src={product.logoBase64} alt={product.name} className="w-12 h-12 md:w-16 md:h-16 object-contain bg-white rounded-xl p-2 mb-4 shrink-0 transition-transform group-hover:scale-105" />
+                       <img loading="lazy" src={product.logoBase64} alt={product.name} className="w-12 h-12 md:w-16 md:h-16 object-contain bg-white rounded-xl p-2 mb-4 shrink-0 transition-transform group-hover:scale-105" />
                     )}
 
                     <div className="mb-2 sm:mb-4">
@@ -266,9 +274,7 @@ export default function Home() {
                     </div>
                   </motion.div>
                )) : (
-                 [1, 2, 3, 4].map(i => (
-                   <div key={i} className="w-full shrink-0 bg-slate-950 border border-slate-800 rounded-3xl p-6 h-64 animate-pulse"></div>
-                 ))
+                 <div className="col-span-2 text-center text-slate-500 py-12">No products available at the moment.</div>
                )}
                </div>
              </motion.div>
@@ -647,8 +653,8 @@ function NetworkBackground() {
 
 function FlashSaleBanner({ topProducts }: { topProducts: any[] }) {
   const [timeLeft, setTimeLeft] = useState({ hours: 0, minutes: 0, seconds: 0 });
-  const [product, setProduct] = useState<any>(null);
-  const [discount, setDiscount] = useState("30% OFF");
+  const [product, setProduct] = useState<any>({ name: 'Premium Automation Toolkit' });
+  const [discount, setDiscount] = useState("35% OFF");
 
   useEffect(() => {
     if (topProducts.length > 0) {
@@ -675,19 +681,17 @@ function FlashSaleBanner({ topProducts }: { topProducts: any[] }) {
     return () => clearInterval(interval);
   }, []);
 
-  if (!product) return null;
-
   return (
     <div className="bg-red-600 w-full text-white py-2 px-4 flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-6 z-40 relative shadow-md">
-      <div className="flex items-center gap-2 text-sm font-bold animate-pulse">
-        <Flame size={16} /> 
-        <span>Limited Offer – {timeLeft.hours} Hours {timeLeft.minutes} Minutes Remaining</span>
+      <div className="flex items-center gap-2 text-sm font-bold">
+        <Flame size={16} className="text-yellow-300 animate-pulse" /> 
+        <span>Limited Offer – {String(timeLeft.hours).padStart(2,'0')}:{String(timeLeft.minutes).padStart(2,'0')}:{String(timeLeft.seconds).padStart(2,'0')} Remaining</span>
       </div>
       <div className="flex items-center gap-3">
-        {product.logoBase64 && <img src={product.logoBase64} alt="product" className="w-6 h-6 object-cover rounded bg-white" />}
+        {product.logoBase64 && <img fetchPriority="high" src={product.logoBase64} alt="product" className="w-6 h-6 object-cover rounded bg-white" />}
         <span className="text-sm font-semibold truncate max-w-[150px]">{product.name}</span>
         <span className="bg-white text-red-600 text-xs font-black px-2 py-0.5 rounded-full">{discount}</span>
-        <Link to={`/tools?product=${product.id}`} className="bg-slate-900 text-white text-xs font-bold px-3 py-1 rounded-full hover:bg-slate-800 transition-colors">
+        <Link to={`/tools${product.id ? `?product=${product.id}` : ''}`} className="bg-slate-900 text-white text-xs font-bold px-3 py-1 rounded-full hover:bg-slate-800 transition-colors">
           Buy Now
         </Link>
       </div>
@@ -702,28 +706,28 @@ function LivePurchasePopup({ topProducts }: { topProducts: any[] }) {
   const cities = ["Karachi", "Lahore", "Islamabad", "Peshawar", "Quetta", "Multan"];
 
   useEffect(() => {
-    if (topProducts.length === 0) return;
-    
+    // We can show popup immediately even if topProducts is not loaded yet using fallback
     const showRandomPopup = () => {
-      const p = topProducts[Math.floor(Math.random() * topProducts.length)];
+      const pName = topProducts.length > 0 
+        ? topProducts[Math.floor(Math.random() * topProducts.length)].name 
+        : 'Premium Netflix Tool';
+
       setPopup({
         name: names[Math.floor(Math.random() * names.length)],
         city: cities[Math.floor(Math.random() * cities.length)],
-        product: p.name
+        product: pName
       });
 
-      // hide after 4 seconds
-      setTimeout(() => setPopup(null), 4000);
+      // hide after 4.5 seconds
+      setTimeout(() => setPopup(null), 4500);
     };
 
     const interval = setInterval(() => {
-      if (Math.random() > 0.3) {
-        showRandomPopup();
-      }
-    }, 12000); // Check every 12 seconds
+      showRandomPopup();
+    }, 5000); // Check every 5 seconds
     
     // Initial popup
-    setTimeout(showRandomPopup, 3000);
+    setTimeout(showRandomPopup, 1000);
 
     return () => clearInterval(interval);
   }, [topProducts]);
@@ -732,18 +736,18 @@ function LivePurchasePopup({ topProducts }: { topProducts: any[] }) {
     <AnimatePresence>
       {popup && (
         <motion.div
-           initial={{ opacity: 0, x: -50 }}
-           animate={{ opacity: 1, x: 0 }}
-           exit={{ opacity: 0, x: -50 }}
-           className="fixed bottom-6 left-6 z-50 bg-white border border-slate-200 card-shadow p-3 rounded-xl flex items-center gap-3 max-w-sm pointer-events-none"
+           initial={{ opacity: 0, scale: 0.9, y: 50 }}
+           animate={{ opacity: 1, scale: 1, y: 0 }}
+           exit={{ opacity: 0, scale: 0.9, y: 50 }}
+           className="fixed bottom-[90px] right-4 md:bottom-[90px] md:right-6 z-[100] bg-white border border-slate-200 shadow-2xl p-2.5 rounded-lg flex items-center gap-2 max-w-[240px] pointer-events-none"
         >
-          <div className="bg-green-100 text-green-600 p-2 rounded-full h-fit flex-shrink-0">
-            <ShoppingCart size={16} />
+          <div className="bg-green-100 text-green-600 p-1.5 rounded-full h-fit flex-shrink-0">
+            <ShoppingCart size={14} />
           </div>
           <div>
-            <p className="text-xs text-slate-500 font-medium tracking-wide">JUST PURCHASED!</p>
-            <p className="text-sm text-slate-800 font-bold tracking-tight leading-snug">
-              {popup.name} from {popup.city} just purchased <span className="text-red-600">{popup.product}</span>
+            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wide">Live Purchase!</p>
+            <p className="text-xs text-slate-800 font-bold tracking-tight leading-snug line-clamp-2">
+              {popup.name} from {popup.city} purchased <span className="text-red-600">{popup.product}</span>
             </p>
           </div>
         </motion.div>

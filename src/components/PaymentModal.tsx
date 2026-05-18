@@ -17,7 +17,7 @@ export default function PaymentModal({ item, type, onClose }: { item: any, type:
   
   // Payment state
   const [proofBase64, setProofBase64] = useState('');
-  const [status, setStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle');
+  const [status, setStatus] = useState<'idle' | 'processing' | 'uploading' | 'success' | 'error'>('idle');
   const [paymentMethods, setPaymentMethods] = useState<any[]>([]);
 
   useEffect(() => {
@@ -51,24 +51,31 @@ export default function PaymentModal({ item, type, onClose }: { item: any, type:
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Convert to massive scaled down base64 to fit in Firestore (1MB limit)
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        const MAX_WIDTH = 600;
-        const scaleSize = MAX_WIDTH / img.width;
-        canvas.width = MAX_WIDTH;
-        canvas.height = img.height * scaleSize;
-        const ctx = canvas.getContext('2d');
-        ctx?.drawImage(img, 0, 0, canvas.width, canvas.height);
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.6); // Compress
-        setProofBase64(dataUrl);
-      };
-      img.src = event.target?.result as string;
+    setStatus('processing');
+    const objectUrl = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const MAX_WIDTH = 600;
+      const scaleSize = Math.min(1, MAX_WIDTH / img.width);
+      canvas.width = img.width * scaleSize;
+      canvas.height = img.height * scaleSize;
+      const ctx = canvas.getContext('2d');
+      ctx?.drawImage(img, 0, 0, canvas.width, canvas.height);
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.6); // Compress
+      setProofBase64(dataUrl);
+      setStatus('idle');
+      URL.revokeObjectURL(objectUrl);
     };
-    reader.readAsDataURL(file);
+    img.onerror = () => {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setProofBase64(event.target?.result as string);
+        setStatus('idle');
+      };
+      reader.readAsDataURL(file);
+    };
+    img.src = objectUrl;
   };
 
   const handleSubmitProof = async () => {
@@ -87,6 +94,31 @@ export default function PaymentModal({ item, type, onClose }: { item: any, type:
         status: 'pending', // pending, approved, rejected
         createdAt: serverTimestamp()
       });
+
+      // Notify Admin
+      const adminEmailBody = `
+        <div style="font-family: sans-serif;">
+          <h2 style="color: #ef4444;">New Order Placed!</h2>
+          <p><strong>Item:</strong> ${item.title || item.name}</p>
+          <p><strong>Customer Email:</strong> ${user.email}</p>
+          <p><strong>Price:</strong> PKR ${item.price || 3000}</p>
+          <p>Please check the admin dashboard to approve the transaction.</p>
+        </div>
+      `;
+      try {
+        await fetch('/api/send-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            to: 'Contact@jerryautomation.com',
+            subject: 'New Order: ' + (item.title || item.name),
+            body: adminEmailBody
+          })
+        });
+      } catch (e) {
+        console.error("Failed to notify admin via email", e);
+      }
+      
       setStatus('success');
     } catch (err) {
       console.error(err);
@@ -101,8 +133,8 @@ export default function PaymentModal({ item, type, onClose }: { item: any, type:
           <div className="w-16 h-16 bg-green-500/20 text-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
             <CheckCircle size={32} />
           </div>
-          <h2 className="text-2xl font-bold text-white mb-2">Payment Submitted!</h2>
-          <p className="text-slate-400 mb-6">Your payment proof has been uploaded. An administrator will review and grant access to your account shortly.</p>
+          <h2 className="text-2xl font-bold text-white mb-2">Success!</h2>
+          <p className="text-slate-400 mb-6">Your order has been submitted successfully. An administrator will review and grant access to your account shortly.</p>
           <button onClick={onClose} className="w-full bg-slate-800 hover:bg-slate-700 text-white font-bold py-3 rounded-xl transition">
             Close
           </button>
@@ -197,8 +229,13 @@ export default function PaymentModal({ item, type, onClose }: { item: any, type:
 
             <div className="mb-6">
               <label className="block text-sm font-semibold mb-2 text-slate-300">Upload Payment Screenshot</label>
-              <label className={`w-full border-2 border-dashed ${proofBase64 ? 'border-green-500 bg-green-500/10' : 'border-slate-700 hover:border-red-500 hover:bg-slate-800/50'} rounded-2xl p-6 flex flex-col items-center justify-center cursor-pointer transition-colors min-h-[120px]`}>
-                 {proofBase64 ? (
+              <label className={`w-full border-2 border-dashed ${proofBase64 ? 'border-green-500 bg-green-500/10' : status === 'processing' ? 'border-blue-500 bg-blue-500/10' : 'border-slate-700 hover:border-red-500 hover:bg-slate-800/50'} rounded-2xl p-6 flex flex-col items-center justify-center cursor-pointer transition-colors min-h-[120px]`}>
+                 {status === 'processing' ? (
+                   <div className="flex flex-col items-center text-blue-500">
+                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mb-2"></div>
+                     <span className="font-medium text-sm">Processing Image...</span>
+                   </div>
+                 ) : proofBase64 ? (
                    <div className="flex flex-col items-center text-green-500">
                      <CheckCircle size={32} className="mb-2" />
                      <span className="font-medium text-sm">Image Uploaded</span>
@@ -221,7 +258,7 @@ export default function PaymentModal({ item, type, onClose }: { item: any, type:
             )}
 
             <button 
-              disabled={!proofBase64 || status === 'uploading'} 
+              disabled={!proofBase64 || status === 'uploading' || status === 'processing'} 
               onClick={handleSubmitProof}
               className="w-full bg-red-600 hover:bg-red-500 disabled:opacity-50 disabled:hover:bg-red-600 text-white font-bold py-4 rounded-xl transition shadow-lg shadow-red-500/20 active:scale-[0.98]"
             >

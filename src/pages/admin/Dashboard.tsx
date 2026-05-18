@@ -79,7 +79,8 @@ export default function Dashboard() {
           {[
             { id: 'overview', icon: LayoutDashboard, label: 'Overview' },
             { id: 'analytics', icon: LayoutDashboard, label: 'Analytics' },
-            { id: 'products', icon: Package, label: 'Products' },
+            { id: 'products', icon: Package, label: 'Products (Tools)' },
+            { id: 'courses', icon: Package, label: 'Courses' },
             { id: 'orders', icon: ShoppingBag, label: 'Orders', badge: orders.filter(o=>o.status==='pending').length },
             { id: 'transactions', icon: ShoppingBag, label: 'Payments', badge: transactions.filter(t=>t.status==='pending').length },
             { id: 'paymentsettings', icon: LayoutDashboard, label: 'Payment Accounts' },
@@ -179,7 +180,8 @@ export default function Dashboard() {
            )}
 
            {activeTab === 'analytics' && <AnalyticsManager />}
-           {activeTab === 'products' && <ProductsManager products={products} refresh={fetchData} />}
+           {activeTab === 'products' && <ProductsManager products={products} type="Tool" refresh={fetchData} />}
+           {activeTab === 'courses' && <ProductsManager products={products} type="Course" refresh={fetchData} />}
            {activeTab === 'orders' && <OrdersManager orders={orders} refresh={fetchData} />}
            {activeTab === 'transactions' && <TransactionsManager transactions={transactions} refresh={fetchData} />}
            {activeTab === 'paymentsettings' && <PaymentSettingsManager />}
@@ -198,18 +200,16 @@ export default function Dashboard() {
   );
 }
 
-function DollarSign2(props: any) {
-  return <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
-}
-
-function ProductsManager({ products, refresh }: { products: any[], refresh: () => void }) {
+function ProductsManager({ products, type, refresh }: { products: any[], type: string, refresh: () => void }) {
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState<string|null>(null);
   const [formData, setFormData] = useState({ 
-     name: '', price: 0, category: 'Course', description: '', is_active: true, badge: '',
+     name: '', price: 0, category: type, description: '', is_active: true, badge: '',
      imageLink: '', videoLink: '', logoBase64: '', detail: ''
   });
   const [lessons, setLessons] = useState<any[]>([]);
+
+  const filteredProducts = products.filter(p => type === 'Course' ? p.category === 'Course' : p.category !== 'Course');
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -221,7 +221,7 @@ function ProductsManager({ products, refresh }: { products: any[], refresh: () =
           await addDoc(collection(db, 'products'), { ...productData, createdAt: serverTimestamp(), features: [] });
        }
        setShowModal(false);
-       setFormData({ name: '', price: 0, category: 'Course', description: '', is_active: true, badge: '', imageLink: '', videoLink: '', logoBase64: '', detail: '' });
+       setFormData({ name: '', price: 0, category: type, description: '', is_active: true, badge: '', imageLink: '', videoLink: '', logoBase64: '', detail: '' });
        setLessons([]);
        setEditingId(null);
        refresh();
@@ -262,7 +262,7 @@ function ProductsManager({ products, refresh }: { products: any[], refresh: () =
                </tr>
              </thead>
              <tbody className="divide-y divide-slate-100">
-               {products.map(p => (
+               {filteredProducts.map(p => (
                  <tr key={p.id} className="hover:bg-slate-50/50">
                     <td className="px-6 py-4">
                        <div className="font-bold">{p.name}</div>
@@ -274,12 +274,12 @@ function ProductsManager({ products, refresh }: { products: any[], refresh: () =
                        {p.is_active ? <span className="text-green-600 bg-green-50 px-2.5 py-1 rounded-lg text-xs font-bold">Active</span> : <span className="text-slate-500 bg-slate-100 px-2.5 py-1 rounded-lg text-xs font-bold">Inactive</span>}
                     </td>
                     <td className="px-6 py-4 text-right space-x-2">
-                       <button onClick={() => { setFormData({ name: '', price: 0, category: 'Course', description: '', is_active: true, badge: '', imageLink: '', videoLink: '', logoBase64: '', detail: '', ...p} as any); setLessons(p.lessons || []); setEditingId(p.id); setShowModal(true); }} className="text-blue-600 hover:bg-blue-50 p-2 rounded-xl transition-colors"><Edit size={16}/></button>
+                       <button onClick={() => { setFormData({ name: '', price: 0, category: type, description: '', is_active: true, badge: '', imageLink: '', videoLink: '', logoBase64: '', detail: '', ...p} as any); setLessons(p.lessons || []); setEditingId(p.id); setShowModal(true); }} className="text-blue-600 hover:bg-blue-50 p-2 rounded-xl transition-colors"><Edit size={16}/></button>
                        <button onClick={() => handleDelete(p.id)} className="text-red-600 hover:bg-red-50 p-2 rounded-xl transition-colors"><Trash2 size={16}/></button>
                     </td>
                  </tr>
                ))}
-               {products.length === 0 && <tr><td colSpan={5} className="text-center py-12 text-slate-500">No products found. Add some to get started.</td></tr>}
+               {filteredProducts.length === 0 && <tr><td colSpan={5} className="text-center py-12 text-slate-500">No {type === 'Course' ? 'courses' : 'products'} found. Add some to get started.</td></tr>}
              </tbody>
           </table>
        </div>
@@ -315,7 +315,14 @@ function ProductsManager({ products, refresh }: { products: any[], refresh: () =
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-semibold mb-1">Product Logo Upload</label>
+                      <label className="block text-sm font-semibold mb-1">Product Logo Upload / Link</label>
+                      <input 
+                        type="text"
+                        placeholder="Image URL..."
+                        value={formData.logoBase64}
+                        onChange={e => setFormData({...formData, logoBase64: e.target.value})}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-1.5 text-sm mb-2"
+                      />
                       <input 
                         type="file" 
                         accept="image/*"

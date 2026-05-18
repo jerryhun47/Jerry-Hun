@@ -42,7 +42,11 @@ async function startServer() {
       res.json({ success: true });
     } catch (error: any) {
       console.error("Email send error:", error);
-      res.status(500).json({ error: error.message });
+      let errorMessage = error.message;
+      if (errorMessage.includes('535-5.7.8')) {
+        errorMessage = "SMTP Authentication failed. If using Gmail, make sure you are using an App Password instead of your regular password. Go to https://myaccount.google.com/apppasswords to generate one.";
+      }
+      res.status(500).json({ error: errorMessage });
     }
   });
 

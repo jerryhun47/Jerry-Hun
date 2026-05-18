@@ -105,5 +105,17 @@ service cloud.firestore {
       allow read: if true;
       allow write: if isAdmin();
     }
+
+    // Reviews
+    match /reviews/{reviewId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Announcements
+    match /announcements/{annId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
   }
 }
