@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { db, auth, signOut } from '../../lib/firebase';
 import { collection, getDocs, doc, deleteDoc, updateDoc, addDoc, serverTimestamp, query, orderBy } from 'firebase/firestore';
-import { LayoutDashboard, ShoppingBag, MessageSquare, Package, LogOut, Plus, Trash2, Edit, X } from 'lucide-react';
+import { LayoutDashboard, ShoppingBag, MessageSquare, Package, LogOut, Plus, Trash2, Edit, X, Menu, DollarSign as DollarSign2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import WebsiteEditor from './WebsiteEditor';
 
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState('overview');
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [stats, setStats] = useState({ products: 0, orders: 0, revenue: 0, messages: 0 });
   
   const [products, setProducts] = useState<any[]>([]);
@@ -14,6 +16,11 @@ export default function Dashboard() {
   const [transactions, setTransactions] = useState<any[]>([]);
 
   const navigate = useNavigate();
+
+  // Close mobile menu when tab changes
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [activeTab]);
 
   useEffect(() => {
     fetchData();
@@ -53,12 +60,20 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex">
+    <div className="min-h-screen bg-slate-50 flex overflow-hidden">
+      {/* Mobile Menu Overlay */}
+      {isMobileMenuOpen && (
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-40 md:hidden" onClick={() => setIsMobileMenuOpen(false)} />
+      )}
+
       {/* Sidebar */}
-      <aside className="w-64 bg-slate-900 text-slate-300 flex flex-col hidden md:flex h-screen sticky top-0">
-        <div className="p-6 border-b border-slate-800">
-           <span className="font-bold text-xl text-white tracking-tight">Jerry<span className="text-red-500">Automation</span></span>
-           <span className="block text-xs text-slate-500 mt-1 uppercase tracking-widest font-black">Admin Panel</span>
+      <aside className={`fixed md:sticky top-0 left-0 h-screen w-64 bg-slate-900 text-slate-300 flex flex-col z-50 transform transition-transform duration-300 ease-in-out ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}>
+        <div className="p-6 border-b border-slate-800 flex justify-between items-center">
+           <div className="flex flex-col">
+             <span className="font-bold text-xl text-white tracking-tight">Jerry<span className="text-red-500">Automation</span></span>
+             <span className="block text-xs text-slate-500 mt-1 uppercase tracking-widest font-black">Admin Panel</span>
+           </div>
+           <button className="md:hidden text-slate-400 hover:text-white" onClick={() => setIsMobileMenuOpen(false)}><X size={24} /></button>
         </div>
         <nav className="flex-1 p-4 space-y-1 overflow-y-auto minimal-scrollbar text-sm">
           {[
@@ -72,11 +87,10 @@ export default function Dashboard() {
             { id: 'users', icon: LayoutDashboard, label: 'Users' },
             { id: 'announcements', icon: MessageSquare, label: 'Announcements' },
             { id: 'discounts', icon: ShoppingBag, label: 'Discounts' },
-            { id: 'testimonials', icon: MessageSquare, label: 'Testimonials' },
+            { id: 'reviews', icon: MessageSquare, label: 'Reviews' },
+            { id: 'website_builder', icon: Edit, label: 'Live Website Editor' },
             { id: 'broadcasts', icon: MessageSquare, label: 'Broadcasts' },
             { id: 'banners', icon: LayoutDashboard, label: 'Banners' },
-            { id: 'sections', icon: LayoutDashboard, label: 'Sections Toggle' },
-            { id: 'homepage', icon: Edit, label: 'Homepage Text' },
             { id: 'media', icon: LayoutDashboard, label: 'Media Manager' },
             { id: 'seo', icon: LayoutDashboard, label: 'SEO Settings' },
             { id: 'notifications', icon: MessageSquare, label: 'Notifications' },
@@ -95,8 +109,14 @@ export default function Dashboard() {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 p-8 overflow-y-auto w-full">
-        <div className="max-w-6xl mx-auto">
+      <main className="flex-1 overflow-y-auto w-full h-screen relative">
+        {/* Mobile Header */}
+        <div className="md:hidden bg-white border-b border-slate-200 p-4 flex justify-between items-center sticky top-0 z-30">
+           <span className="font-bold text-lg">Admin Dashboard</span>
+           <button onClick={() => setIsMobileMenuOpen(true)} className="p-2 bg-slate-100 rounded-lg hover:bg-slate-200"><Menu size={24}/></button>
+        </div>
+        
+        <div className="max-w-6xl mx-auto p-4 md:p-8">
            
            {activeTab === 'overview' && (
              <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -164,8 +184,11 @@ export default function Dashboard() {
            {activeTab === 'transactions' && <TransactionsManager transactions={transactions} refresh={fetchData} />}
            {activeTab === 'paymentsettings' && <PaymentSettingsManager />}
            {activeTab === 'messages' && <MessagesManager contacts={contacts} refresh={fetchData} />}
+           {activeTab === 'reviews' && <ReviewsManager />}
+           {activeTab === 'announcements' && <AnnouncementsManager />}
+           {activeTab === 'website_builder' && <div className="h-[calc(100vh-6rem)] -m-4 sm:-m-8"><WebsiteEditor /></div>}
            
-           {['users', 'announcements', 'discounts', 'testimonials', 'broadcasts', 'banners', 'sections', 'homepage', 'media', 'seo', 'notifications'].includes(activeTab) && (
+           {['users', 'discounts', 'broadcasts', 'banners', 'media', 'seo', 'notifications'].includes(activeTab) && (
               <PlaceholderManager tabName={activeTab} />
            )}
 
@@ -184,7 +207,7 @@ function ProductsManager({ products, refresh }: { products: any[], refresh: () =
   const [editingId, setEditingId] = useState<string|null>(null);
   const [formData, setFormData] = useState({ 
      name: '', price: 0, category: 'Course', description: '', is_active: true, badge: '',
-     imageLink: '', videoLink: ''
+     imageLink: '', videoLink: '', logoBase64: '', detail: ''
   });
   const [lessons, setLessons] = useState<any[]>([]);
 
@@ -198,7 +221,7 @@ function ProductsManager({ products, refresh }: { products: any[], refresh: () =
           await addDoc(collection(db, 'products'), { ...productData, createdAt: serverTimestamp(), features: [] });
        }
        setShowModal(false);
-       setFormData({ name: '', price: 0, category: 'Course', description: '', is_active: true, badge: '', imageLink: '', videoLink: '' });
+       setFormData({ name: '', price: 0, category: 'Course', description: '', is_active: true, badge: '', imageLink: '', videoLink: '', logoBase64: '', detail: '' });
        setLessons([]);
        setEditingId(null);
        refresh();
@@ -251,7 +274,7 @@ function ProductsManager({ products, refresh }: { products: any[], refresh: () =
                        {p.is_active ? <span className="text-green-600 bg-green-50 px-2.5 py-1 rounded-lg text-xs font-bold">Active</span> : <span className="text-slate-500 bg-slate-100 px-2.5 py-1 rounded-lg text-xs font-bold">Inactive</span>}
                     </td>
                     <td className="px-6 py-4 text-right space-x-2">
-                       <button onClick={() => { setFormData(p as any); setLessons(p.lessons || []); setEditingId(p.id); setShowModal(true); }} className="text-blue-600 hover:bg-blue-50 p-2 rounded-xl transition-colors"><Edit size={16}/></button>
+                       <button onClick={() => { setFormData({ name: '', price: 0, category: 'Course', description: '', is_active: true, badge: '', imageLink: '', videoLink: '', logoBase64: '', detail: '', ...p} as any); setLessons(p.lessons || []); setEditingId(p.id); setShowModal(true); }} className="text-blue-600 hover:bg-blue-50 p-2 rounded-xl transition-colors"><Edit size={16}/></button>
                        <button onClick={() => handleDelete(p.id)} className="text-red-600 hover:bg-red-50 p-2 rounded-xl transition-colors"><Trash2 size={16}/></button>
                     </td>
                  </tr>
@@ -290,7 +313,27 @@ function ProductsManager({ products, refresh }: { products: any[], refresh: () =
                     <div><label className="block text-sm font-semibold mb-1">Image Link (Optional)</label><input type="text" value={formData.imageLink} onChange={e=>setFormData({...formData, imageLink: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2" placeholder="https://" /></div>
                     <div><label className="block text-sm font-semibold mb-1">Video Link (Optional)</label><input type="text" value={formData.videoLink} onChange={e=>setFormData({...formData, videoLink: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2" placeholder="YouTube URL" /></div>
                   </div>
-                  <div><label className="block text-sm font-semibold mb-1">Description (Markdown Supported)</label><textarea required value={formData.description} onChange={e=>setFormData({...formData, description: e.target.value})} rows={5} className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2" placeholder="Write full rich description here..."></textarea></div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-semibold mb-1">Product Logo Upload</label>
+                      <input 
+                        type="file" 
+                        accept="image/*"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const reader = new FileReader();
+                            reader.onload = (event) => setFormData({...formData, logoBase64: event.target?.result as string});
+                            reader.readAsDataURL(file);
+                          }
+                        }} 
+                        className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-1.5 text-sm" 
+                      />
+                      {formData.logoBase64 && <img src={formData.logoBase64} alt="Preview" className="h-10 mt-2 object-contain" />}
+                    </div>
+                  </div>
+                  <div><label className="block text-sm font-semibold mb-1">Short Description</label><textarea required value={formData.description} onChange={e=>setFormData({...formData, description: e.target.value})} rows={2} className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2" placeholder="Write a short description..."></textarea></div>
+                  <div><label className="block text-sm font-semibold mb-1">Product Detail (Rich Content/Paragraph)</label><textarea value={formData.detail} onChange={e=>setFormData({...formData, detail: e.target.value})} rows={5} className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2" placeholder="Write full product detail here... Markdown is supported."></textarea></div>
 
                   {formData.category === 'Course' && (
                     <div className="border border-slate-200 rounded-xl p-4 bg-slate-50 mt-4">
@@ -393,10 +436,43 @@ function OrdersManager({ orders, refresh }: { orders: any[], refresh: () => void
 }
 
 function TransactionsManager({ transactions, refresh }: { transactions: any[], refresh: () => void }) {
-  const updateStatus = async (id: string, status: string) => {
+  const updateStatus = async (id: string, status: string, userEmail?: string, itemType?: string) => {
     try {
       await updateDoc(doc(db, 'transactions', id), { status, updatedAt: serverTimestamp() });
       refresh();
+      
+      if (status === 'approved' && userEmail) {
+        try {
+          const body = `
+            <div style="font-family: sans-serif; max-w: 600px; margin: 0 auto; color: #333;">
+              <h2 style="color: #ef4444;">Order Confirmed!</h2>
+              <p>Hello,</p>
+              <p>Your payment for <strong>${itemType || 'your item'}</strong> has been verified. Thank you for your purchase!</p>
+              <div style="background-color: #f8fafc; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #e2e8f0;">
+                <h3 style="margin-top: 0; color: #0f172a;">Your Access Credentials</h3>
+                <p><strong>Email:</strong> Jerrytools121@gmail.com</p>
+                <p><strong>Password:</strong> Tesla@123</p>
+              </div>
+              <p>If you have any questions, feel free to contact us.</p>
+              <p>Best regards,<br/>Jerry Automation</p>
+            </div>
+          `;
+
+          await fetch('/api/send-email', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              to: userEmail,
+              subject: 'Order Confirmation & Access Details - Jerry Automation',
+              body
+            })
+          });
+          alert("Order approved and access email sent successfully.");
+        } catch (err) {
+          console.error("Failed to send email", err);
+          alert("Approved, but failed to send email. Ensure SMTP is configured.");
+        }
+      }
     } catch (e) {
       console.error(e);
       alert("Error updating transaction");
@@ -460,7 +536,7 @@ function TransactionsManager({ transactions, refresh }: { transactions: any[], r
                    <label className="text-xs font-bold text-slate-500 uppercase">Action</label>
                    {t.status === 'pending' && (
                      <>
-                        <button onClick={() => updateStatus(t.id, 'approved')} className="px-4 py-2 bg-green-100 text-green-700 font-bold rounded-xl hover:bg-green-200">Approve Access</button>
+                        <button onClick={() => updateStatus(t.id, 'approved', t.userEmail, t.itemType)} className="px-4 py-2 bg-green-100 text-green-700 font-bold rounded-xl hover:bg-green-200">Approve Access</button>
                         <button onClick={() => updateStatus(t.id, 'rejected')} className="px-4 py-2 bg-red-100 text-red-700 font-bold rounded-xl hover:bg-red-200 mt-2">Reject Image</button>
                      </>
                    )}
@@ -799,6 +875,275 @@ function PaymentSettingsManager() {
              </form>
           </div>
         </div>
+       )}
+    </div>
+  );
+}
+
+function ReviewsManager() {
+  const [reviews, setReviews] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [newReview, setNewReview] = useState({ name: '', city: '', text: '', rating: 5, image: '' });
+
+  const fetchReviews = async () => {
+    try {
+      const snap = await getDocs(query(collection(db, 'reviews'), orderBy('createdAt', 'desc')));
+      setReviews(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchReviews();
+  }, []);
+
+  const handleToggleApproval = async (id: string, currentStatus: boolean) => {
+    try {
+      await updateDoc(doc(db, 'reviews', id), { approved: !currentStatus });
+      fetchReviews();
+    } catch (err) {
+      alert("Error toggling status");
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if(confirm("Are you sure you want to delete this review?")) {
+      await deleteDoc(doc(db, 'reviews', id));
+      fetchReviews();
+    }
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setNewReview({...newReview, image: reader.result as string});
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleAddReview = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await addDoc(collection(db, 'reviews'), {
+        ...newReview,
+        approved: true, // Auto approve admin-added reviews
+        createdAt: serverTimestamp()
+      });
+      setShowAddModal(false);
+      setNewReview({ name: '', city: '', text: '', rating: 5, image: '' });
+      fetchReviews();
+    } catch (err) {
+      alert("Error adding review");
+    }
+  };
+
+  return (
+    <div className="space-y-6 animate-in fade-in">
+       <div className="flex justify-between items-center">
+          <div>
+            <h2 className="text-2xl font-black">Reviews Management</h2>
+            <p className="text-slate-500">View, approve, and add client reviews manually.</p>
+          </div>
+          <button onClick={() => setShowAddModal(true)} className="bg-red-600 hover:bg-red-700 text-white px-5 py-2.5 rounded-xl font-bold flex items-center gap-2">
+             <Plus size={18} /> Add Review
+          </button>
+       </div>
+
+       <div className="bg-white rounded-3xl border border-slate-200 card-shadow overflow-hidden">
+          <table className="w-full text-left text-sm">
+             <thead className="bg-slate-50 border-b border-slate-100 uppercase tracking-wider text-slate-500 font-semibold">
+                <tr>
+                   <th className="p-4">Client</th>
+                   <th className="p-4">Review Text</th>
+                   <th className="p-4">Rating</th>
+                   <th className="p-4">Status</th>
+                   <th className="p-4 text-right">Actions</th>
+                </tr>
+             </thead>
+             <tbody className="divide-y divide-slate-100">
+                {reviews.map(rev => (
+                   <tr key={rev.id} className="hover:bg-slate-50/50">
+                      <td className="p-4">
+                        <div className="flex items-center gap-3">
+                           {rev.image ? <img src={rev.image} className="w-10 h-10 object-cover rounded-full" /> : <div className="w-10 h-10 bg-slate-200 rounded-full" />}
+                           <div>
+                             <p className="font-bold text-slate-900">{rev.name}</p>
+                             <p className="text-xs text-slate-500">{rev.city || 'N/A'}</p>
+                           </div>
+                        </div>
+                      </td>
+                      <td className="p-4 text-slate-600 max-w-xs truncate" title={rev.text}>{rev.text}</td>
+                      <td className="p-4 font-bold text-slate-900">{rev.rating} / 5</td>
+                      <td className="p-4">
+                         <span className={`px-3 py-1 rounded-full text-xs font-bold ${rev.approved ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                            {rev.approved ? 'Approved' : 'Pending'}
+                         </span>
+                      </td>
+                      <td className="p-4 text-right">
+                         <button onClick={() => handleToggleApproval(rev.id, rev.approved)} className="text-blue-500 hover:text-blue-700 font-bold mr-4">
+                           {rev.approved ? 'Hide' : 'Approve'}
+                         </button>
+                         <button onClick={() => handleDelete(rev.id)} className="text-red-500 hover:text-red-700 font-bold p-2"><Trash2 size={16} /></button>
+                      </td>
+                   </tr>
+                ))}
+                {reviews.length === 0 && !loading && (
+                   <tr><td colSpan={5} className="p-8 text-center text-slate-500">No reviews found.</td></tr>
+                )}
+             </tbody>
+          </table>
+       </div>
+
+       {showAddModal && (
+         <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-3xl w-full max-w-lg p-6 relative max-h-[90vh] overflow-y-auto">
+               <button onClick={() => setShowAddModal(false)} className="absolute top-4 right-4 text-slate-400 hover:text-slate-900"><X size={24}/></button>
+               <h3 className="text-2xl font-bold mb-4">Add Manual Review</h3>
+               <form onSubmit={handleAddReview} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-semibold mb-2">Name</label>
+                    <input type="text" required value={newReview.name} onChange={e => setNewReview({...newReview, name: e.target.value})} className="w-full border rounded-lg px-4 py-2" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold mb-2">City</label>
+                    <input type="text" value={newReview.city} onChange={e => setNewReview({...newReview, city: e.target.value})} className="w-full border rounded-lg px-4 py-2" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold mb-2">Review Text</label>
+                    <textarea required value={newReview.text} onChange={e => setNewReview({...newReview, text: e.target.value})} className="w-full border rounded-lg px-4 py-2" rows={3}></textarea>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold mb-2">Rating</label>
+                    <input type="number" min="1" max="5" value={newReview.rating} onChange={e => setNewReview({...newReview, rating: Number(e.target.value)})} className="w-full border rounded-lg px-4 py-2" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold mb-2">Image (Optional Base64 Upload)</label>
+                    <input type="file" accept="image/*" onChange={handleImageUpload} className="w-full border rounded-lg px-4 py-2" />
+                  </div>
+                  <button type="submit" className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-xl">Save Review</button>
+               </form>
+            </div>
+         </div>
+       )}
+    </div>
+  );
+}
+
+function AnnouncementsManager() {
+  const [announcements, setAnnouncements] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [newAnnouncement, setNewAnnouncement] = useState({ text: '', isActive: true });
+
+  const fetchAnnouncements = async () => {
+    try {
+      const snap = await getDocs(query(collection(db, 'announcements'), orderBy('createdAt', 'desc')));
+      setAnnouncements(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchAnnouncements();
+  }, []);
+
+  const handleToggleActive = async (id: string, currentStatus: boolean) => {
+    try {
+      await updateDoc(doc(db, 'announcements', id), { isActive: !currentStatus });
+      fetchAnnouncements();
+    } catch (err) {
+      alert("Error toggling status");
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if(confirm("Are you sure you want to delete this announcement?")) {
+      await deleteDoc(doc(db, 'announcements', id));
+      fetchAnnouncements();
+    }
+  };
+
+  const handleAddAnnouncement = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await addDoc(collection(db, 'announcements'), {
+        ...newAnnouncement,
+        createdAt: serverTimestamp()
+      });
+      setShowAddModal(false);
+      setNewAnnouncement({ text: '', isActive: true });
+      fetchAnnouncements();
+    } catch (err) {
+      alert("Error adding announcement");
+    }
+  };
+
+  return (
+    <div className="space-y-6 animate-in fade-in">
+       <div className="flex justify-between items-center">
+          <div>
+            <h2 className="text-2xl font-black">Announcements</h2>
+            <p className="text-slate-500">Manage scrolling announcements at the top of the website.</p>
+          </div>
+          <button onClick={() => setShowAddModal(true)} className="bg-red-600 hover:bg-red-700 text-white px-5 py-2.5 rounded-xl font-bold flex items-center gap-2">
+             <Plus size={18} /> Add New
+          </button>
+       </div>
+
+       <div className="grid gap-4">
+          {announcements.map(ann => (
+             <div key={ann.id} className="bg-white p-6 rounded-3xl border border-slate-200 card-shadow flex justify-between items-center gap-6">
+                <div>
+                   <p className="font-bold text-slate-800">{ann.text}</p>
+                   <span className={`inline-block mt-2 px-3 py-1 rounded-full text-xs font-bold ${ann.isActive ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-600'}`}>
+                      {ann.isActive ? 'Active' : 'Hidden'}
+                   </span>
+                </div>
+                <div className="flex gap-2 min-w-[150px]">
+                   <button onClick={() => handleToggleActive(ann.id, ann.isActive)} className="px-4 py-2 bg-slate-100 text-slate-700 font-bold rounded-xl hover:bg-slate-200">
+                      {ann.isActive ? 'Hide' : 'Show'}
+                   </button>
+                   <button onClick={() => handleDelete(ann.id)} className="px-4 py-2 bg-red-50 text-red-600 hover:bg-red-100 font-bold rounded-xl">
+                      Delete
+                   </button>
+                </div>
+             </div>
+          ))}
+          {announcements.length === 0 && !loading && (
+             <div className="text-center py-12 bg-white rounded-3xl border border-slate-200 text-slate-500">
+                No announcements records yet. Click "Add New" to create one.
+             </div>
+          )}
+       </div>
+
+       {showAddModal && (
+         <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-3xl w-full max-w-lg p-6 relative">
+               <button onClick={() => setShowAddModal(false)} className="absolute top-4 right-4 text-slate-400 hover:text-slate-900"><X size={24}/></button>
+               <h3 className="text-2xl font-bold mb-4">Add Announcement</h3>
+               <form onSubmit={handleAddAnnouncement} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-semibold mb-2">Announcement Text</label>
+                    <textarea required value={newAnnouncement.text} onChange={e => setNewAnnouncement({...newAnnouncement, text: e.target.value})} className="w-full border rounded-lg px-4 py-2" rows={3} placeholder="E.g., Huge 50% discount on all courses starting tomorrow!"></textarea>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input type="checkbox" id="isActive" checked={newAnnouncement.isActive} onChange={e => setNewAnnouncement({...newAnnouncement, isActive: e.target.checked})} className="w-4 h-4" />
+                    <label htmlFor="isActive" className="text-sm font-semibold">Active immediately</label>
+                  </div>
+                  <button type="submit" className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-xl">Save</button>
+               </form>
+            </div>
+         </div>
        )}
     </div>
   );

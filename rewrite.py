@@ -1,4 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import json
+
+def rewrite_home():
+    with open("src/pages/Home.tsx", "r", encoding="utf-8") as f:
+        content = f.read()
+    
+    # We will build a new Home.tsx completely to satisfy all requirements exactly.
+    # To do this safely, we write a whole React component.
+    
+    new_code = """import React, { useState, useEffect } from 'react';
 import { Play, Flame, Rocket, Wrench, Trophy, GraduationCap, DollarSign, CheckCircle, Star, Target, Video, Settings, Send, Quote, ArrowRight, ShoppingCart, ShieldCheck, Tag, Upload, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { db } from '../lib/firebase';
@@ -152,23 +161,18 @@ export default function Home() {
   };
 
   return (
-    <div className="w-full relative overflow-hidden font-sans bg-black">
-      <FlashSaleBanner topProducts={topProducts} />
-      <LivePurchasePopup topProducts={topProducts} />
-      
-      <div className="absolute top-0 left-0 w-full h-[150vh] overflow-hidden pointer-events-none z-0">
-        <div className="absolute inset-0 bg-gradient-to-b from-red-900/40 via-red-950/20 to-black z-0"></div>
-        <NetworkBackground />
-        <div className="hero-orb bg-red-600 w-96 h-96 top-0 left-10 mt-10 sm:mt-0 z-0"></div>
-        <div className="hero-orb bg-red-500 w-96 h-96 top-40 right-10 animation-delay-2000 z-0"></div>
-        <div className="hero-orb bg-red-800 w-96 h-96 -bottom-20 left-1/2 animation-delay-4000 z-0"></div>
+    <div className="w-full relative overflow-hidden font-sans">
+      <div className="absolute top-0 left-0 w-full h-[80vh] overflow-hidden -z-10">
+        <div className="hero-orb bg-red-600 w-96 h-96 top-0 left-10 mt-10 sm:mt-0"></div>
+        <div className="hero-orb bg-red-500 w-96 h-96 top-40 right-10 animation-delay-2000"></div>
+        <div className="hero-orb bg-red-800 w-96 h-96 -bottom-20 left-1/2 animation-delay-4000"></div>
       </div>
 
       {/* Hero Section */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 lg:py-20 mt-2 relative z-10">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 lg:py-20 mt-10">
         <div className="grid lg:grid-cols-2 gap-10 lg:gap-12 items-center">
           <motion.div {...fadeUp}>
-            <div className="flex items-center gap-4 mb-2">
+            <div className="flex items-center gap-4 mb-4 lg:mb-6">
               <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-900 text-red-500 border border-slate-800 text-xs md:text-sm font-semibold">
                 <Flame size={16} /> Pakistan Top Tools Seller
               </div>
@@ -277,7 +281,7 @@ export default function Home() {
       </section>
 
       {/* About Section */}
-      <section id="about" className="py-12 bg-slate-900 border-y border-slate-800 relative">
+      <section id="about" className="py-12 border-y border-slate-900/50 relative">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
            <motion.div {...fadeUp} className="mb-8 text-center">
              <span className="text-red-500 font-bold uppercase tracking-wider text-sm">About Me</span>
@@ -286,22 +290,22 @@ export default function Home() {
            
            <div className="grid md:grid-cols-2 gap-12 items-center">
               <motion.div variants={staggerContainer} initial="hidden" whileInView="show" viewport={{ once: true, margin: "-50px" }} className="grid grid-cols-2 gap-4">
-                 <motion.div variants={staggerItem} className="card-shadow p-6 rounded-2xl bg-slate-950 border border-slate-800 hover:-translate-y-2 transition-transform duration-300">
+                 <motion.div variants={staggerItem} className="card-shadow p-6 rounded-2xl bg-slate-900 border border-slate-800 hover:-translate-y-2 transition-transform duration-300">
                     <Trophy className="text-red-500 mb-4" size={32} />
                     <h4 className="font-bold text-white">Top Educator</h4>
                     <p className="text-sm text-slate-400">YouTube Automation Niche</p>
                  </motion.div>
-                 <motion.div variants={staggerItem} className="card-shadow p-6 rounded-2xl bg-slate-950 border border-slate-800 transform md:translate-y-6 hover:-translate-y-2 transition-transform duration-300">
+                 <motion.div variants={staggerItem} className="card-shadow p-6 rounded-2xl bg-slate-900 border border-slate-800 transform md:translate-y-6 hover:-translate-y-2 transition-transform duration-300">
                     <GraduationCap className="text-red-500 mb-4" size={32} />
                     <h4 className="font-bold text-white">5000+ Students</h4>
                     <p className="text-sm text-slate-400">Successfully Trained</p>
                  </motion.div>
-                 <motion.div variants={staggerItem} className="card-shadow p-6 rounded-2xl bg-slate-950 border border-slate-800 hover:-translate-y-2 transition-transform duration-300">
+                 <motion.div variants={staggerItem} className="card-shadow p-6 rounded-2xl bg-slate-900 border border-slate-800 hover:-translate-y-2 transition-transform duration-300">
                     <DollarSign className="text-red-500 mb-4" size={32} />
                     <h4 className="font-bold text-white">$10K+ Monthly</h4>
                     <p className="text-sm text-slate-400">Student Earnings</p>
                  </motion.div>
-                 <motion.div variants={staggerItem} className="card-shadow p-6 rounded-2xl bg-slate-950 border border-slate-800 transform md:translate-y-6 hover:-translate-y-2 transition-transform duration-300">
+                 <motion.div variants={staggerItem} className="card-shadow p-6 rounded-2xl bg-slate-900 border border-slate-800 transform md:translate-y-6 hover:-translate-y-2 transition-transform duration-300">
                     <Wrench className="text-red-500 mb-4" size={32} />
                     <h4 className="font-bold text-white">Premium Tools</h4>
                     <p className="text-sm text-slate-400">Built for Automation</p>
@@ -321,7 +325,7 @@ export default function Home() {
       </section>
 
       {/* Services/Process */}
-      <section id="services" className="py-12 bg-slate-950 border-y border-slate-900/50">
+      <section id="services" className="py-12 bg-slate-900/40 backdrop-blur-sm border-y border-slate-900/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
            <motion.div {...fadeUp} className="mb-12 text-center max-w-2xl mx-auto">
              <span className="text-red-500 font-bold uppercase tracking-wider text-sm">YouTube Automation</span>
@@ -330,23 +334,23 @@ export default function Home() {
            </motion.div>
            
            <motion.div variants={staggerContainer} initial="hidden" whileInView="show" viewport={{ once: true, margin: "-50px" }} className="grid md:grid-cols-4 gap-6">
-              <motion.div variants={staggerItem} className="bg-slate-900 p-6 rounded-2xl border border-slate-800 card-shadow text-center relative pointer-events-none md:pointer-events-auto hover:-translate-y-2 transition-transform duration-300">
-                 <div className="w-12 h-12 bg-slate-950 border border-slate-800 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4"><Target /></div>
+              <motion.div variants={staggerItem} className="bg-slate-950 p-6 rounded-2xl border border-slate-800 card-shadow text-center relative pointer-events-none md:pointer-events-auto hover:-translate-y-2 transition-transform duration-300">
+                 <div className="w-12 h-12 bg-slate-900 border border-slate-800 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4"><Target /></div>
                  <h3 className="font-bold mb-2 text-white">01. Niche Selection</h3>
                  <p className="text-sm text-slate-400">Find profitable niches and analyze the competition effectively</p>
               </motion.div>
-              <motion.div variants={staggerItem} className="bg-slate-900 p-6 rounded-2xl border border-slate-800 card-shadow text-center hover:-translate-y-2 transition-transform duration-300">
-                 <div className="w-12 h-12 bg-slate-950 border border-slate-800 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4"><Video /></div>
+              <motion.div variants={staggerItem} className="bg-slate-950 p-6 rounded-2xl border border-slate-800 card-shadow text-center hover:-translate-y-2 transition-transform duration-300">
+                 <div className="w-12 h-12 bg-slate-900 border border-slate-800 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4"><Video /></div>
                  <h3 className="font-bold mb-2 text-white">02. Content System</h3>
                  <p className="text-sm text-slate-400">Create content using AI tools without ever showing your face</p>
               </motion.div>
-              <motion.div variants={staggerItem} className="bg-slate-900 p-6 rounded-2xl border border-slate-800 card-shadow text-center hover:-translate-y-2 transition-transform duration-300">
-                 <div className="w-12 h-12 bg-slate-950 border border-slate-800 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4"><Settings /></div>
+              <motion.div variants={staggerItem} className="bg-slate-950 p-6 rounded-2xl border border-slate-800 card-shadow text-center hover:-translate-y-2 transition-transform duration-300">
+                 <div className="w-12 h-12 bg-slate-900 border border-slate-800 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4"><Settings /></div>
                  <h3 className="font-bold mb-2 text-white">03. Full Automation</h3>
                  <p className="text-sm text-slate-400">Master upload scheduling, SEO optimization, and channel growth</p>
               </motion.div>
-              <motion.div variants={staggerItem} className="bg-slate-900 p-6 rounded-2xl border border-slate-800 card-shadow text-center hover:-translate-y-2 transition-transform duration-300">
-                 <div className="w-12 h-12 bg-slate-950 border border-slate-800 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4"><DollarSign /></div>
+              <motion.div variants={staggerItem} className="bg-slate-950 p-6 rounded-2xl border border-slate-800 card-shadow text-center hover:-translate-y-2 transition-transform duration-300">
+                 <div className="w-12 h-12 bg-slate-900 border border-slate-800 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4"><DollarSign /></div>
                  <h3 className="font-bold mb-2 text-white">04. Monetization</h3>
                  <p className="text-sm text-slate-400">Learn AdSense, sponsorships, and multiple income streams</p>
               </motion.div>
@@ -355,12 +359,12 @@ export default function Home() {
       </section>
 
       {/* Cards Sections */}
-      <section className="py-12 bg-slate-900/40 backdrop-blur-sm border-y border-slate-800 relative z-10 overflow-hidden">
+      <section className="py-12 border-y border-slate-900/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
            <div className="grid md:grid-cols-2 gap-8">
               {/* Affordable */}
-              <motion.div {...fadeUp} className="bg-slate-950 border border-slate-800 rounded-3xl p-8 hover:border-slate-700 transition flex flex-col items-center text-center card-shadow">
-                 <div className="w-16 h-16 bg-slate-900 border border-slate-800 text-red-500 rounded-2xl flex items-center justify-center mb-6 shadow-lg shadow-red-500/10">
+              <motion.div {...fadeUp} className="bg-slate-900/60 backdrop-blur-sm border border-slate-800 rounded-3xl p-8 hover:border-slate-700 transition flex flex-col items-center text-center">
+                 <div className="w-16 h-16 bg-slate-950 border border-slate-800 text-red-500 rounded-2xl flex items-center justify-center mb-6 shadow-lg shadow-red-500/10">
                     <Tag size={32} />
                  </div>
                  <h2 className="text-2xl font-black mb-4 text-white">Why Our Tools Are So Affordable</h2>
@@ -370,8 +374,8 @@ export default function Home() {
               </motion.div>
 
               {/* Warranty */}
-              <motion.div {...fadeUp} transition={{ delay: 0.1 }} className="bg-slate-950 border border-slate-800 rounded-3xl p-8 hover:border-slate-700 transition flex flex-col items-center text-center card-shadow">
-                 <div className="w-16 h-16 bg-slate-900 border border-slate-800 text-red-500 rounded-2xl flex items-center justify-center mb-6 shadow-lg shadow-red-500/10">
+              <motion.div {...fadeUp} transition={{ delay: 0.1 }} className="bg-slate-900/60 backdrop-blur-sm border border-slate-800 rounded-3xl p-8 hover:border-slate-700 transition flex flex-col items-center text-center">
+                 <div className="w-16 h-16 bg-slate-950 border border-slate-800 text-red-500 rounded-2xl flex items-center justify-center mb-6 shadow-lg shadow-red-500/10">
                     <ShieldCheck size={32} />
                  </div>
                  <h2 className="text-2xl font-black mb-4 text-white">Warranty Policy</h2>
@@ -384,29 +388,18 @@ export default function Home() {
       </section>
 
       {/* Client Reviews Section (Slider) */}
-      <section className="py-16 bg-slate-950 border-y border-slate-800 relative z-10 overflow-hidden">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="py-12 bg-slate-900/40 backdrop-blur-sm border-y border-slate-800 relative z-10 overflow-hidden">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
            <motion.div {...fadeUp} className="mb-10 text-center">
              <span className="text-red-500 font-bold uppercase tracking-wider text-sm">Success Stories</span>
-             <h2 className="text-2xl md:text-3xl lg:text-5xl font-black mt-2 mb-8 text-white">Client Reviews</h2>
-
-             {/* Main Video Embed */}
-             <div className="max-w-4xl mx-auto mb-10 rounded-3xl overflow-hidden border border-slate-800 shadow-2xl bg-black">
-                <iframe 
-                  src="https://drive.google.com/file/d/1xbrRWRazzjYJGYkcQArPJBEVxrJOzbgc/preview" 
-                  className="w-full aspect-video" 
-                  allow="autoplay"
-                  loading="lazy"
-                ></iframe>
-             </div>
-
+             <h2 className="text-2xl md:text-3xl lg:text-5xl font-black mt-2 mb-6 text-white">Client Reviews</h2>
              <button onClick={() => setShowReviewModal(true)} className="bg-red-600 hover:bg-red-500 text-white px-6 py-2 rounded-full font-bold transition-all shadow-md text-sm mx-auto flex items-center gap-2">
                 <Quote size={16} /> Post Review
              </button>
            </motion.div>
            
            {reviewsList.length > 0 && (
-             <div className="relative w-full max-w-2xl mx-auto min-h-[300px] flex items-center justify-center">
+             <div className="relative w-full max-w-xl mx-auto min-h-[300px] flex items-center justify-center">
                <AnimatePresence mode="wait">
                  <motion.div 
                     key={currentReviewIndex}
@@ -414,7 +407,7 @@ export default function Home() {
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -50 }}
                     transition={{ duration: 0.5 }}
-                    className="bg-slate-900 p-6 md:p-8 rounded-3xl border border-slate-800 card-shadow text-center w-full relative"
+                    className="bg-slate-950 p-6 md:p-8 rounded-3xl border border-slate-800 card-shadow text-center w-full relative"
                  >
                     <Quote className="absolute top-6 left-6 text-slate-800 opacity-50" size={32} />
                     <div className="flex justify-center gap-1 mb-4">
@@ -423,7 +416,7 @@ export default function Home() {
                     
                     {reviewsList[currentReviewIndex].image && (
                        <div className="mb-4 flex justify-center">
-                          <img src={reviewsList[currentReviewIndex].image} alt="Review" className="w-auto h-32 md:h-40 object-cover rounded-xl border border-slate-800 pointer-events-none select-none" />
+                          <img src={reviewsList[currentReviewIndex].image} alt="Review" className="w-auto h-32 md:h-40 object-cover rounded-xl border border-slate-800" />
                        </div>
                     )}
                     
@@ -487,7 +480,7 @@ export default function Home() {
       </AnimatePresence>
 
       {/* Contact Section */}
-      <section id="contact" className="py-12 relative bg-slate-900 border-y border-slate-800">
+      <section id="contact" className="py-12 relative">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
            <div className="grid lg:grid-cols-2 gap-16">
               <motion.div {...fadeUp}>
@@ -497,7 +490,7 @@ export default function Home() {
                  
                  <div className="space-y-6">
                     <div className="flex items-center gap-4">
-                       <div className="w-12 h-12 bg-slate-950 border border-slate-800 rounded-full flex items-center justify-center text-red-500">
+                       <div className="w-12 h-12 bg-slate-900 border border-slate-800 rounded-full flex items-center justify-center text-red-500">
                           <Send size={24} />
                        </div>
                        <div>
@@ -508,25 +501,25 @@ export default function Home() {
                  </div>
               </motion.div>
 
-              <motion.div {...fadeUp} transition={{ delay: 0.2, duration: 0.6 }} className="card-shadow p-8 rounded-3xl bg-slate-950 border border-slate-800">
+              <motion.div {...fadeUp} transition={{ delay: 0.2, duration: 0.6 }} className="card-shadow p-8 rounded-3xl bg-slate-900 border border-slate-800">
                  <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="grid md:grid-cols-2 gap-4">
                        <div>
                           <label className="block text-sm font-semibold mb-2 text-slate-300">Your Name *</label>
-                          <input type="text" required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full bg-slate-900 border border-slate-800 text-white rounded-lg px-4 py-3 focus:outline-none focus:ring-1 focus:ring-red-500 transition-shadow" placeholder="Ali Khan" />
+                          <input type="text" required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full bg-slate-950 border border-slate-800 text-white rounded-lg px-4 py-3 focus:outline-none focus:ring-1 focus:ring-red-500 transition-shadow" placeholder="Ali Khan" />
                        </div>
                        <div>
                           <label className="block text-sm font-semibold mb-2 text-slate-300">Email *</label>
-                          <input type="email" required value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className="w-full bg-slate-900 border border-slate-800 text-white rounded-lg px-4 py-3 focus:outline-none focus:ring-1 focus:ring-red-500 transition-shadow" placeholder="ali@email.com" />
+                          <input type="email" required value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className="w-full bg-slate-950 border border-slate-800 text-white rounded-lg px-4 py-3 focus:outline-none focus:ring-1 focus:ring-red-500 transition-shadow" placeholder="ali@email.com" />
                        </div>
                     </div>
                     <div>
                        <label className="block text-sm font-semibold mb-2 text-slate-300">Phone Number</label>
-                       <input type="tel" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} className="w-full bg-slate-900 border border-slate-800 text-white rounded-lg px-4 py-3 focus:outline-none focus:ring-1 focus:ring-red-500 transition-shadow" placeholder="+92-3XX-XXXXXXX" />
+                       <input type="tel" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} className="w-full bg-slate-950 border border-slate-800 text-white rounded-lg px-4 py-3 focus:outline-none focus:ring-1 focus:ring-red-500 transition-shadow" placeholder="+92-3XX-XXXXXXX" />
                     </div>
                     <div>
                        <label className="block text-sm font-semibold mb-2 text-slate-300">Subject *</label>
-                       <select required value={formData.subject} onChange={e => setFormData({...formData, subject: e.target.value})} className="w-full bg-slate-900 border border-slate-800 text-white rounded-lg px-4 py-3 focus:outline-none focus:ring-1 focus:ring-red-500 transition-shadow">
+                       <select required value={formData.subject} onChange={e => setFormData({...formData, subject: e.target.value})} className="w-full bg-slate-950 border border-slate-800 text-white rounded-lg px-4 py-3 focus:outline-none focus:ring-1 focus:ring-red-500 transition-shadow">
                           <option value="">Select Subject</option>
                           <option value="course">Course Inquiry</option>
                           <option value="tools">Tools Purchase</option>
@@ -536,7 +529,7 @@ export default function Home() {
                     </div>
                     <div>
                        <label className="block text-sm font-semibold mb-2 text-slate-300">Message *</label>
-                       <textarea required value={formData.message} onChange={e => setFormData({...formData, message: e.target.value})} rows={4} className="w-full bg-slate-900 border border-slate-800 text-white rounded-lg px-4 py-3 focus:outline-none focus:ring-1 focus:ring-red-500 transition-shadow" placeholder="Write your question here..."></textarea>
+                       <textarea required value={formData.message} onChange={e => setFormData({...formData, message: e.target.value})} rows={4} className="w-full bg-slate-950 border border-slate-800 text-white rounded-lg px-4 py-3 focus:outline-none focus:ring-1 focus:ring-red-500 transition-shadow" placeholder="Write your question here..."></textarea>
                     </div>
                     <button disabled={submitStatus === 'loading'} type="submit" className="w-full bg-red-600 hover:bg-red-500 disabled:opacity-50 text-white font-bold py-4 rounded-xl transition-colors shadow-lg shadow-red-500/20 active:scale-[0.98]">
                        {submitStatus === 'loading' ? 'Sending...' : 'Send Message'}
@@ -550,16 +543,16 @@ export default function Home() {
       </section>
 
       {/* Social Links / Connect With Us */}
-      <section className="py-8 bg-slate-950 border-y border-slate-800">
+      <section className="py-8 bg-slate-900 border-y border-slate-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-center">
            <div className="flex items-center gap-6">
-              <a href="https://www.tiktok.com/@jerryofficial471?is_from_webapp=1&sender_device=pc" target="_blank" rel="noopener noreferrer" className="bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white p-3 rounded-full transition border border-slate-800 hover:border-slate-600 shadow-md">
+              <a href="https://www.tiktok.com/@jerryofficial471?is_from_webapp=1&sender_device=pc" target="_blank" rel="noopener noreferrer" className="bg-slate-950 hover:bg-slate-800 text-slate-400 hover:text-white p-3 rounded-full transition border border-slate-800 hover:border-slate-600 shadow-md">
                  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1.04-.1z" /></svg>
               </a>
-              <a href="https://www.youtube.com/@jerryofficial1121" target="_blank" rel="noopener noreferrer" className="bg-slate-900 hover:bg-slate-800 text-red-500 p-3 rounded-full transition border border-slate-800 hover:border-red-500 shadow-md">
+              <a href="https://www.youtube.com/@jerryofficial1121" target="_blank" rel="noopener noreferrer" className="bg-slate-950 hover:bg-slate-800 text-red-500 p-3 rounded-full transition border border-slate-800 hover:border-red-500 shadow-md">
                  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" /></svg>
               </a>
-              <a href="https://whatsapp.com/channel/0029Vb7nPWkCXC3Sg6n05b1i" target="_blank" rel="noopener noreferrer" className="bg-slate-900 hover:bg-slate-800 text-green-500 p-3 rounded-full transition border border-slate-800 hover:border-green-500 shadow-md">
+              <a href="https://whatsapp.com/channel/0029Vb7nPWkCXC3Sg6n05b1i" target="_blank" rel="noopener noreferrer" className="bg-slate-950 hover:bg-slate-800 text-green-500 p-3 rounded-full transition border border-slate-800 hover:border-green-500 shadow-md">
                  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z" /></svg>
               </a>
            </div>
@@ -569,185 +562,8 @@ export default function Home() {
     </div>
   );
 }
-
-function NetworkBackground() {
-  const canvasRef = React.useRef<HTMLCanvasElement>(null);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    let particles: any[] = [];
-    let animationFrameId: number;
-    let width = window.innerWidth;
-    let height = window.innerHeight;
-
-    const init = () => {
-      width = window.innerWidth;
-      height = window.innerHeight;
-      canvas.width = width;
-      canvas.height = height;
-      particles = [];
-      const count = Math.min(width * height / 15000, 80);
-      for(let i=0; i<count; i++) {
-        particles.push({
-          x: Math.random() * width,
-          y: Math.random() * height,
-          vx: (Math.random() - 0.5) * 0.5,
-          vy: (Math.random() - 0.5) * 0.5,
-          radius: Math.random() * 2 + 1
-        });
-      }
-    };
-
-    const draw = () => {
-      ctx.clearRect(0, 0, width, height);
-      ctx.fillStyle = 'rgba(239, 68, 68, 0.4)';
-      ctx.strokeStyle = 'rgba(239, 68, 68, 0.1)';
-      
-      for(let i=0; i<particles.length; i++) {
-        const p = particles[i];
-        p.x += p.vx;
-        p.y += p.vy;
-        if(p.x < 0 || p.x > width) p.vx *= -1;
-        if(p.y < 0 || p.y > height) p.vy *= -1;
+"""
+    with open("src/pages/Home.tsx", "w", encoding="utf-8") as f:
+        f.write(new_code)
         
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-        ctx.fill();
-
-        for(let j=i+1; j<particles.length; j++) {
-          const p2 = particles[j];
-          const dist = Math.hypot(p.x - p2.x, p.y - p2.y);
-          if(dist < 120) {
-            ctx.beginPath();
-            ctx.moveTo(p.x, p.y);
-            ctx.lineTo(p2.x, p2.y);
-            ctx.stroke();
-          }
-        }
-      }
-      animationFrameId = requestAnimationFrame(draw);
-    };
-
-    init();
-    draw();
-    window.addEventListener('resize', init);
-
-    return () => {
-      cancelAnimationFrame(animationFrameId);
-      window.removeEventListener('resize', init);
-    };
-  }, []);
-
-  return <canvas ref={canvasRef} className="absolute inset-0 w-full h-full pointer-events-none opacity-50 z-0" />;
-}
-
-function FlashSaleBanner({ topProducts }: { topProducts: any[] }) {
-  const [timeLeft, setTimeLeft] = useState({ hours: 0, minutes: 0, seconds: 0 });
-  const [product, setProduct] = useState<any>(null);
-  const [discount, setDiscount] = useState("30% OFF");
-
-  useEffect(() => {
-    if (topProducts.length > 0) {
-      // Pick random product and random discount from 20 to 50
-      setProduct(topProducts[Math.floor(Math.random() * topProducts.length)]);
-      setDiscount(`${Math.floor(Math.random() * 30 + 20)}% OFF`);
-    }
-  }, [topProducts]);
-
-  useEffect(() => {
-    const calcTime = () => {
-      const now = new Date();
-      const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0);
-      let diff = endOfDay.getTime() - now.getTime();
-      if(diff < 0) diff = 0;
-      setTimeLeft({
-        hours: Math.floor((diff / (1000 * 60 * 60)) % 24),
-        minutes: Math.floor((diff / 1000 / 60) % 60),
-        seconds: Math.floor((diff / 1000) % 60)
-      });
-    };
-    calcTime();
-    const interval = setInterval(calcTime, 1000);
-    return () => clearInterval(interval);
-  }, []);
-
-  if (!product) return null;
-
-  return (
-    <div className="bg-red-600 w-full text-white py-2 px-4 flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-6 z-40 relative shadow-md">
-      <div className="flex items-center gap-2 text-sm font-bold animate-pulse">
-        <Flame size={16} /> 
-        <span>Limited Offer – {timeLeft.hours} Hours {timeLeft.minutes} Minutes Remaining</span>
-      </div>
-      <div className="flex items-center gap-3">
-        {product.logoBase64 && <img src={product.logoBase64} alt="product" className="w-6 h-6 object-cover rounded bg-white" />}
-        <span className="text-sm font-semibold truncate max-w-[150px]">{product.name}</span>
-        <span className="bg-white text-red-600 text-xs font-black px-2 py-0.5 rounded-full">{discount}</span>
-        <Link to={`/tools?product=${product.id}`} className="bg-slate-900 text-white text-xs font-bold px-3 py-1 rounded-full hover:bg-slate-800 transition-colors">
-          Buy Now
-        </Link>
-      </div>
-    </div>
-  );
-}
-
-function LivePurchasePopup({ topProducts }: { topProducts: any[] }) {
-  const [popup, setPopup] = useState<any>(null);
-
-  const names = ["Ali", "Usman", "Hamza", "Ayesha", "Zain", "Bilal", "Fatima", "Omer"];
-  const cities = ["Karachi", "Lahore", "Islamabad", "Peshawar", "Quetta", "Multan"];
-
-  useEffect(() => {
-    if (topProducts.length === 0) return;
-    
-    const showRandomPopup = () => {
-      const p = topProducts[Math.floor(Math.random() * topProducts.length)];
-      setPopup({
-        name: names[Math.floor(Math.random() * names.length)],
-        city: cities[Math.floor(Math.random() * cities.length)],
-        product: p.name
-      });
-
-      // hide after 4 seconds
-      setTimeout(() => setPopup(null), 4000);
-    };
-
-    const interval = setInterval(() => {
-      if (Math.random() > 0.3) {
-        showRandomPopup();
-      }
-    }, 12000); // Check every 12 seconds
-    
-    // Initial popup
-    setTimeout(showRandomPopup, 3000);
-
-    return () => clearInterval(interval);
-  }, [topProducts]);
-
-  return (
-    <AnimatePresence>
-      {popup && (
-        <motion.div
-           initial={{ opacity: 0, x: -50 }}
-           animate={{ opacity: 1, x: 0 }}
-           exit={{ opacity: 0, x: -50 }}
-           className="fixed bottom-6 left-6 z-50 bg-white border border-slate-200 card-shadow p-3 rounded-xl flex items-center gap-3 max-w-sm pointer-events-none"
-        >
-          <div className="bg-green-100 text-green-600 p-2 rounded-full h-fit flex-shrink-0">
-            <ShoppingCart size={16} />
-          </div>
-          <div>
-            <p className="text-xs text-slate-500 font-medium tracking-wide">JUST PURCHASED!</p>
-            <p className="text-sm text-slate-800 font-bold tracking-tight leading-snug">
-              {popup.name} from {popup.city} just purchased <span className="text-red-600">{popup.product}</span>
-            </p>
-          </div>
-        </motion.div>
-      )}
-    </AnimatePresence>
-  );
-}
+rewrite_home()

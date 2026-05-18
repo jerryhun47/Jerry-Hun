@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, MessageCircle } from 'lucide-react';
 import { motion, useScroll, useTransform } from 'motion/react';
 import BackgroundEffects from './BackgroundEffects';
 import ParticleSystem from './ParticleSystem';
+import NetworkBackground from './NetworkBackground';
+import FrontendAnnouncements from './FrontendAnnouncements';
 
 export default function Layout() {
   const [isOpen, setIsOpen] = useState(false);
@@ -31,6 +33,7 @@ export default function Layout() {
     <div className="flex flex-col min-h-screen bg-slate-950 font-sans text-slate-300 relative z-0">
       <BackgroundEffects />
       <ParticleSystem />
+      <NetworkBackground />
       <nav className="fixed top-0 w-full z-50 glass-effect bg-slate-950/40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16 relative">
@@ -40,11 +43,11 @@ export default function Layout() {
                 {isOpen ? <X size={24} /> : <Menu size={24} />}
               </button>
               
-              <Link to="/" className="flex items-center group pointer-events-auto shrink-0">
+              <Link to="/" className="flex items-center group pointer-events-auto shrink-0 ml-4">
                   <motion.div className="w-10 h-10 flex items-center justify-center overflow-hidden shrink-0">
                     <img src="/logo.png" alt="Jerry Automation Logo" className="w-full h-full object-contain" />
                   </motion.div>
-                  <motion.span className="font-bold text-lg sm:text-xl tracking-tight text-white group-hover:text-slate-200 transition-colors ml-2 shrink-0 whitespace-nowrap">
+                  <motion.span className="font-bold text-lg sm:text-xl tracking-tight text-white group-hover:text-slate-200 transition-colors ml-1 shrink-0 whitespace-nowrap">
                     Jerry <span className="text-red-500 font-extrabold hidden sm:inline">Automation</span>
                   </motion.span>
               </Link>
@@ -78,7 +81,12 @@ export default function Layout() {
         )}
       </nav>
 
-      <main className="flex-1 relative z-10">
+      {/* Global Announcement Bar fixed below Header */}
+      <div className="fixed top-16 w-full z-40">
+         <FrontendAnnouncements />
+      </div>
+
+      <main className="flex-1 relative z-10 pt-24">
         <Outlet />
       </main>
 
@@ -98,16 +106,15 @@ export default function Layout() {
             <ul className="space-y-2">
               <li><Link to="/" className="hover:text-red-400 transition-colors">Home</Link></li>
               <li><Link to="/tools" className="hover:text-red-400 transition-colors">Tools Store</Link></li>
-              <li><Link to="/admin/login" className="hover:text-red-400 transition-colors text-xs opacity-50">Admin Panel</Link></li>
+              <li><Link to="/courses" className="hover:text-red-400 transition-colors">Courses</Link></li>
             </ul>
           </div>
           <div>
-            <h4 className="text-white font-semibold mb-4">Newsletter</h4>
-            <p className="mb-4 text-sm">Get daily YouTube automation tips in your inbox.</p>
-            <div className="flex">
-              <input type="email" placeholder="Your email" className="bg-slate-900 border border-slate-800 text-white px-4 py-2 rounded-l-lg w-full focus:outline-none focus:ring-1 focus:ring-red-500 placeholder:text-slate-500 transition-all" />
-              <button className="bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded-r-lg transition-colors font-medium cursor-pointer">Subscribe</button>
-            </div>
+            <h4 className="text-white font-semibold mb-4">Legal</h4>
+            <ul className="space-y-2">
+              <li><Link to="/privacy-policy" className="hover:text-red-400 transition-colors">Privacy Policy</Link></li>
+              <li><Link to="/terms-conditions" className="hover:text-red-400 transition-colors">Terms & Conditions</Link></li>
+            </ul>
           </div>
         </div>
         <div className="max-w-7xl mx-auto px-4 pb-4 sm:px-6 lg:px-8 mt-12 pt-8 border-t border-slate-900 text-center text-sm flex flex-col md:flex-row justify-between items-center text-slate-500">
@@ -115,6 +122,11 @@ export default function Layout() {
             <Link to="/admin/login" className="hover:text-red-400 mt-4 md:mt-0 transition-colors">Admin Login</Link>
         </div>
       </footer>
+      
+      {/* Floating WhatsApp Button */}
+      <a href="https://wa.me/923271991893" target="_blank" rel="noopener noreferrer" className="fixed bottom-6 right-6 z-[100] bg-green-500 hover:bg-green-400 text-white p-4 rounded-full shadow-lg shadow-green-500/30 transition-transform hover:scale-110 flex items-center justify-center">
+        <MessageCircle size={32} />
+      </a>
     </div>
   );
 }

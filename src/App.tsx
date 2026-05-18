@@ -10,6 +10,8 @@ import Layout from './components/Layout';
 import Home from './pages/Home';
 import ToolsStore from './pages/ToolsStore';
 import Courses from './pages/Courses';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import TermsConditions from './pages/TermsConditions';
 import Login from './pages/admin/Login';
 import Dashboard from './pages/admin/Dashboard';
 import { useVisitorTracking } from './lib/useVisitorTracking';
@@ -36,6 +38,8 @@ export default function App() {
             <Route index element={<Home />} />
             <Route path="tools" element={<ToolsStore />} />
             <Route path="courses" element={<Courses />} />
+            <Route path="privacy-policy" element={<PrivacyPolicy />} />
+            <Route path="terms-conditions" element={<TermsConditions />} />
           </Route>
           <Route path="/admin/login" element={<Login />} />
           <Route path="/admin" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />

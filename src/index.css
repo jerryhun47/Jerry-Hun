@@ -9,6 +9,9 @@
 }
 
 @layer base {
+  html {
+    scroll-behavior: smooth;
+  }
   body {
     @apply bg-slate-950 text-slate-300 font-sans antialiased;
   }
@@ -23,7 +26,7 @@
 }
 
 .hero-orb {
-  @apply absolute rounded-full mix-blend-screen filter blur-[100px] opacity-20 animate-pulse bg-red-600;
+  @apply absolute rounded-full mix-blend-screen filter blur-[140px] opacity-[0.08] animate-pulse bg-gradient-to-r from-red-600/50 to-red-900/50;
 }
 
 .glass-effect {
