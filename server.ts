@@ -19,8 +19,23 @@ async function startServer() {
     try {
       const { to, subject, body } = req.body;
 
+      if (process.env.RESEND_API_KEY) {
+        // Use Resend
+        const { Resend } = require("resend");
+        const resend = new Resend(process.env.RESEND_API_KEY);
+        
+        await resend.emails.send({
+          from: 'Jerry Automation <onboarding@resend.dev>', // or a verified domain if they have one
+          to: [to],
+          subject,
+          html: body,
+        });
+        
+        return res.json({ success: true });
+      }
+
       if (!process.env.SMTP_EMAIL || !process.env.SMTP_PASSWORD) {
-        return res.status(500).json({ error: "SMTP credentials not configured" });
+        return res.status(500).json({ error: "No email service configured. Please provide RESEND_API_KEY or SMTP credentials." });
       }
 
       const transporter = nodemailer.createTransport({
@@ -32,7 +47,7 @@ async function startServer() {
       });
 
       const mailOptions = {
-        from: '"Jerry Automation" <Contact@jerryautomation.com>', // User requested this sender alias
+        from: '"Jerry Automation" <' + process.env.SMTP_EMAIL + '>',
         to,
         subject,
         html: body,

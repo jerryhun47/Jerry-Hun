@@ -330,7 +330,27 @@ function ProductsManager({ products, type, refresh }: { products: any[], type: s
                           const file = e.target.files?.[0];
                           if (file) {
                             const reader = new FileReader();
-                            reader.onload = (event) => setFormData({...formData, logoBase64: event.target?.result as string});
+                            reader.onload = (event) => {
+                              const dataUrl = event.target?.result as string;
+                              const img = new Image();
+                              img.onload = () => {
+                                try {
+                                  const canvas = document.createElement('canvas');
+                                  const MAX_WIDTH = 500;
+                                  let scaleSize = 1;
+                                  if (img.width > MAX_WIDTH) scaleSize = MAX_WIDTH / img.width;
+                                  canvas.width = img.width * scaleSize;
+                                  canvas.height = img.height * scaleSize;
+                                  const ctx = canvas.getContext('2d');
+                                  ctx?.drawImage(img, 0, 0, canvas.width, canvas.height);
+                                  setFormData({...formData, logoBase64: canvas.toDataURL('image/webp', 0.5)});
+                                } catch (err) {
+                                  setFormData({...formData, logoBase64: dataUrl});
+                                }
+                              };
+                              img.onerror = () => setFormData({...formData, logoBase64: dataUrl});
+                              img.src = dataUrl;
+                            };
                             reader.readAsDataURL(file);
                           }
                         }} 
@@ -778,7 +798,27 @@ function PaymentSettingsManager() {
     const file = e.target.files?.[0];
     if (file) {
        const reader = new FileReader();
-       reader.onloadend = () => { setFormData({ ...formData, qrBase64: reader.result as string }); };
+       reader.onloadend = () => {
+         const dataUrl = reader.result as string;
+         const img = new Image();
+         img.onload = () => {
+           try {
+             const canvas = document.createElement('canvas');
+             const MAX_WIDTH = 500;
+             let scaleSize = 1;
+             if (img.width > MAX_WIDTH) scaleSize = MAX_WIDTH / img.width;
+             canvas.width = img.width * scaleSize;
+             canvas.height = img.height * scaleSize;
+             const ctx = canvas.getContext('2d');
+             ctx?.drawImage(img, 0, 0, canvas.width, canvas.height);
+             setFormData({ ...formData, qrBase64: canvas.toDataURL('image/webp', 0.5) });
+           } catch(err) {
+             setFormData({ ...formData, qrBase64: dataUrl });
+           }
+         };
+         img.onerror = () => setFormData({ ...formData, qrBase64: dataUrl });
+         img.src = dataUrl;
+       };
        reader.readAsDataURL(file);
     }
   };
@@ -929,7 +969,25 @@ function ReviewsManager() {
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setNewReview({...newReview, image: reader.result as string});
+         const dataUrl = reader.result as string;
+         const img = new Image();
+         img.onload = () => {
+           try {
+             const canvas = document.createElement('canvas');
+             const MAX_WIDTH = 500;
+             let scaleSize = 1;
+             if (img.width > MAX_WIDTH) scaleSize = MAX_WIDTH / img.width;
+             canvas.width = img.width * scaleSize;
+             canvas.height = img.height * scaleSize;
+             const ctx = canvas.getContext('2d');
+             ctx?.drawImage(img, 0, 0, canvas.width, canvas.height);
+             setNewReview({ ...newReview, image: canvas.toDataURL('image/webp', 0.5) });
+           } catch(err) {
+             setNewReview({ ...newReview, image: dataUrl });
+           }
+         };
+         img.onerror = () => setNewReview({ ...newReview, image: dataUrl });
+         img.src = dataUrl;
       };
       reader.readAsDataURL(file);
     }

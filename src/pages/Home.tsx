@@ -251,15 +251,23 @@ export default function Home() {
                <div className="grid grid-cols-2 gap-4 sm:gap-6">
                {loadingProducts ? (
                  [1, 2, 3, 4].map(i => (
-                   <div key={i} className="w-full shrink-0 bg-slate-950 border border-slate-800 rounded-3xl p-6 h-64 animate-pulse"></div>
+                   <div key={i} className="w-full aspect-square shrink-0 bg-slate-950 border border-slate-800 rounded-3xl p-4 sm:p-6 shadow-xl flex flex-col animate-pulse">
+                      <div className="w-12 h-12 md:w-16 md:h-16 bg-slate-800 rounded-xl mb-4"></div>
+                      <div className="w-16 h-3 bg-slate-800 rounded mb-2"></div>
+                      <div className="w-3/4 h-5 sm:h-6 bg-slate-800 rounded mb-4"></div>
+                      <div className="w-full h-3 bg-slate-800 rounded mb-2"></div>
+                      <div className="w-2/3 h-3 bg-slate-800 rounded mb-4 flex-1"></div>
+                      <div className="flex justify-between items-end border-t border-slate-800 pt-3">
+                         <div className="w-20 h-5 sm:h-6 bg-slate-800 rounded"></div>
+                         <div className="w-10 h-10 bg-slate-800 rounded-xl"></div>
+                      </div>
+                   </div>
                  ))
                ) : topProducts.length > 0 ? topProducts.slice(0, 4).map(product => (
                   <motion.div variants={staggerItem} key={product.id} className="w-full aspect-square shrink-0 bg-slate-950 border border-slate-800 rounded-3xl p-4 sm:p-6 shadow-xl flex flex-col relative group hover:border-slate-700 transition-colors">
                     {product.badge && <div className="absolute top-4 right-4 bg-slate-800 border border-slate-700 text-red-400 text-xs font-bold px-2 py-1 sm:px-3 sm:py-1 rounded-full z-10">{product.badge}</div>}
                     
-                    {product.logoBase64 && (
-                       <img loading="lazy" src={product.logoBase64} alt={product.name} className="w-12 h-12 md:w-16 md:h-16 object-contain bg-white rounded-xl p-2 mb-4 shrink-0 transition-transform group-hover:scale-105" />
-                    )}
+                    <img loading="lazy" src={product.logoBase64 || '/placeholder-image.webp'} onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/Client_Review.png' }} alt={product.name} className="w-12 h-12 md:w-16 md:h-16 object-cover bg-white rounded-xl p-0.5 mb-4 shrink-0 transition-transform group-hover:scale-105 border border-slate-200" />
 
                     <div className="mb-2 sm:mb-4">
                       <span className="text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider">{product.category}</span>
@@ -396,14 +404,14 @@ export default function Home() {
              <span className="text-red-500 font-bold uppercase tracking-wider text-sm">Success Stories</span>
              <h2 className="text-2xl md:text-3xl lg:text-5xl font-black mt-2 mb-8 text-white">Client Reviews</h2>
 
-             {/* Main Video Embed */}
-             <div className="max-w-4xl mx-auto mb-10 rounded-3xl overflow-hidden border border-slate-800 shadow-2xl bg-black">
-                <iframe 
-                  src="https://drive.google.com/file/d/1xbrRWRazzjYJGYkcQArPJBEVxrJOzbgc/preview" 
-                  className="w-full aspect-video" 
-                  allow="autoplay"
-                  loading="lazy"
-                ></iframe>
+             {/* Main Review Image Embed */}
+             <div className="max-w-4xl mx-auto mb-10 rounded-3xl overflow-hidden border border-slate-800 shadow-2xl bg-slate-900 pointer-events-none select-none">
+                <img 
+                  src="/Client_Review.png" 
+                  alt="Client Review"
+                  className="w-full aspect-video object-contain bg-slate-900 pointer-events-none select-none"
+                  draggable={false}
+                />
              </div>
 
              <button onClick={() => setShowReviewModal(true)} className="bg-red-600 hover:bg-red-500 text-white px-6 py-2 rounded-full font-bold transition-all shadow-md text-sm mx-auto flex items-center gap-2">
@@ -651,13 +659,25 @@ function NetworkBackground() {
   return <canvas ref={canvasRef} className="absolute inset-0 w-full h-full pointer-events-none opacity-50 z-0" />;
 }
 
+const getRemainingTime = () => {
+  const now = new Date();
+  const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0);
+  let diff = endOfDay.getTime() - now.getTime();
+  if (diff < 0) diff = 0;
+  return {
+    hours: Math.floor((diff / (1000 * 60 * 60)) % 24),
+    minutes: Math.floor((diff / 1000 / 60) % 60),
+    seconds: Math.floor((diff / 1000) % 60)
+  };
+};
+
 function FlashSaleBanner({ topProducts }: { topProducts: any[] }) {
-  const [timeLeft, setTimeLeft] = useState({ hours: 0, minutes: 0, seconds: 0 });
-  const [product, setProduct] = useState<any>({ name: 'Premium Automation Toolkit' });
+  const [timeLeft, setTimeLeft] = useState(getRemainingTime());
+  const [product, setProduct] = useState<any>({ name: 'Premium Automation Toolkit', logoBase64: '' });
   const [discount, setDiscount] = useState("35% OFF");
 
   useEffect(() => {
-    if (topProducts.length > 0) {
+    if (topProducts && topProducts.length > 0) {
       // Pick random product and random discount from 20 to 50
       setProduct(topProducts[Math.floor(Math.random() * topProducts.length)]);
       setDiscount(`${Math.floor(Math.random() * 30 + 20)}% OFF`);
@@ -665,19 +685,10 @@ function FlashSaleBanner({ topProducts }: { topProducts: any[] }) {
   }, [topProducts]);
 
   useEffect(() => {
-    const calcTime = () => {
-      const now = new Date();
-      const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0);
-      let diff = endOfDay.getTime() - now.getTime();
-      if(diff < 0) diff = 0;
-      setTimeLeft({
-        hours: Math.floor((diff / (1000 * 60 * 60)) % 24),
-        minutes: Math.floor((diff / 1000 / 60) % 60),
-        seconds: Math.floor((diff / 1000) % 60)
-      });
-    };
-    calcTime();
-    const interval = setInterval(calcTime, 1000);
+    // Update every second immediately
+    const interval = setInterval(() => {
+      setTimeLeft(getRemainingTime());
+    }, 1000);
     return () => clearInterval(interval);
   }, []);
 

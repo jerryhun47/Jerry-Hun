@@ -52,30 +52,39 @@ export default function PaymentModal({ item, type, onClose }: { item: any, type:
     if (!file) return;
 
     setStatus('processing');
-    const objectUrl = URL.createObjectURL(file);
-    const img = new Image();
-    img.onload = () => {
-      const canvas = document.createElement('canvas');
-      const MAX_WIDTH = 600;
-      const scaleSize = Math.min(1, MAX_WIDTH / img.width);
-      canvas.width = img.width * scaleSize;
-      canvas.height = img.height * scaleSize;
-      const ctx = canvas.getContext('2d');
-      ctx?.drawImage(img, 0, 0, canvas.width, canvas.height);
-      const dataUrl = canvas.toDataURL('image/jpeg', 0.6); // Compress
-      setProofBase64(dataUrl);
-      setStatus('idle');
-      URL.revokeObjectURL(objectUrl);
-    };
-    img.onerror = () => {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        setProofBase64(event.target?.result as string);
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const dataUrl = event.target?.result as string;
+      const img = new Image();
+      img.onload = () => {
+        try {
+          const canvas = document.createElement('canvas');
+          const MAX_WIDTH = 500;
+          let scaleSize = 1;
+          if (img.width > MAX_WIDTH) {
+            scaleSize = MAX_WIDTH / img.width;
+          }
+          canvas.width = img.width * scaleSize;
+          canvas.height = img.height * scaleSize;
+          const ctx = canvas.getContext('2d');
+          ctx?.drawImage(img, 0, 0, canvas.width, canvas.height);
+          const compressedDataUrl = canvas.toDataURL('image/webp', 0.5);
+          setProofBase64(compressedDataUrl);
+          setStatus('idle');
+        } catch (err) {
+          // Fallback if canvas fails
+          setProofBase64(dataUrl);
+          setStatus('idle');
+        }
+      };
+      img.onerror = () => {
+        setProofBase64(dataUrl);
         setStatus('idle');
       };
-      reader.readAsDataURL(file);
+      img.src = dataUrl;
     };
-    img.src = objectUrl;
+    reader.onerror = () => setStatus('idle');
+    reader.readAsDataURL(file);
   };
 
   const handleSubmitProof = async () => {
