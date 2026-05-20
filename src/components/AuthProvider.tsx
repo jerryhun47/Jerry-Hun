@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { auth, db } from '../lib/firebase';
 import { onAuthStateChanged, User, signInWithPopup, GoogleAuthProvider, signOut as fbSignOut } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 
 interface UserData {
   isAdmin?: boolean;
@@ -39,7 +39,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signInWithGoogle = async () => {
     const provider = new GoogleAuthProvider();
-    await signInWithPopup(auth, provider);
+    const cred = await signInWithPopup(auth, provider);
+    try {
+       await setDoc(doc(db, 'users', cred.user.uid), {
+         email: cred.user.email,
+         name: cred.user.displayName,
+         photoURL: cred.user.photoURL,
+         lastLoginAt: new Date()
+       }, { merge: true });
+    } catch (e) {
+       console.error(e);
+    }
   };
 
   const signOut = async () => {

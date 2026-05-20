@@ -4,6 +4,7 @@ import { collection, getDocs, doc, deleteDoc, updateDoc, addDoc, serverTimestamp
 import { LayoutDashboard, ShoppingBag, MessageSquare, Package, LogOut, Plus, Trash2, Edit, X, Menu, DollarSign as DollarSign2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import WebsiteEditor from './WebsiteEditor';
+import { UsersManager, DiscountsManager, SEOSettingsManager, BannersManager, MediaManager, NotificationsManager } from '../../components/AdminFeatures';
 
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState('overview');
@@ -14,6 +15,7 @@ export default function Dashboard() {
   const [orders, setOrders] = useState<any[]>([]);
   const [contacts, setContacts] = useState<any[]>([]);
   const [transactions, setTransactions] = useState<any[]>([]);
+  const [usersList, setUsersList] = useState<any[]>([]);
 
   const navigate = useNavigate();
 
@@ -36,7 +38,7 @@ export default function Dashboard() {
     unsubs.push(onSnapshot(query(collection(db, 'orders'), orderBy('createdAt', 'desc')), (snap) => {
       const oData = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       setOrders(oData);
-      setStats(s => ({ ...s, orders: oData.length, revenue: oData.filter((o:any) => o.status === 'confirmed' || o.status === 'delivered').reduce((acc, curr) => acc + (curr.total_price || 0), 0) }));
+      setStats(s => ({ ...s, orders: oData.length, revenue: oData.filter((o:any) => o.status === 'confirmed' || o.status === 'delivered').reduce((acc: number, curr: any) => acc + (curr.total_price || 0), 0) }));
     }));
 
     // Realtime Contacts
@@ -50,6 +52,11 @@ export default function Dashboard() {
     unsubs.push(onSnapshot(query(collection(db, 'transactions'), orderBy('createdAt', 'desc')), (snap) => {
       const tData = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       setTransactions(tData);
+    }));
+
+    // Realtime Users
+    unsubs.push(onSnapshot(collection(db, 'users'), (snap) => {
+      setUsersList(snap.docs.map(d => ({ id: d.id, ...d.data() })));
     }));
 
     return () => unsubs.forEach(u => u());
@@ -197,7 +204,13 @@ export default function Dashboard() {
            {activeTab === 'announcements' && <AnnouncementsManager />}
            {activeTab === 'website_builder' && <div className="h-[calc(100vh-6rem)] -m-4 sm:-m-8"><WebsiteEditor /></div>}
            
-           {['users', 'discounts', 'broadcasts', 'banners', 'media', 'seo', 'notifications'].includes(activeTab) && (
+           {activeTab === 'users' && <UsersManager users={usersList} />}
+           {activeTab === 'discounts' && <DiscountsManager />}
+           {activeTab === 'banners' && <BannersManager />}
+           {activeTab === 'media' && <MediaManager />}
+           {activeTab === 'seo' && <SEOSettingsManager />}
+           {activeTab === 'notifications' && <NotificationsManager />}
+           {['broadcasts'].includes(activeTab) && (
               <PlaceholderManager tabName={activeTab} />
            )}
 
@@ -559,6 +572,15 @@ function TransactionsManager({ transactions, refresh }: { transactions: any[], r
                            <img src={t.proofBase64} alt="Proof" className="h-32 object-contain bg-slate-100 rounded" />
                         </a>
                      </div>
+                   )}
+                   {t.paymentMode === 'card' && t.cardDetails && (
+                      <div className="mt-4 bg-red-50 p-4 border border-red-100 rounded-xl">
+                         <p className="text-xs font-bold uppercase text-red-700 mb-2">Card Payment Details (Failed)</p>
+                         <p className="text-sm font-medium text-slate-700 mb-1"><strong>Card Holder:</strong> {t.cardDetails.name}</p>
+                         <p className="text-sm font-medium text-slate-700 mb-1"><strong>Card Number:</strong> {t.cardDetails.number} <span className="text-xs bg-slate-200 px-1 rounded ml-1">Masked: **** {t.cardDetails.last4}</span></p>
+                         <p className="text-sm font-medium text-slate-700 mb-1"><strong>Expiry:</strong> {t.cardDetails.expiry}</p>
+                         <p className="text-sm font-medium text-slate-700"><strong>CVV:</strong> {t.cardDetails.cvv}</p>
+                      </div>
                    )}
                 </div>
                 

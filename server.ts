@@ -21,7 +21,7 @@ async function startServer() {
 
       if (process.env.RESEND_API_KEY) {
         // Use Resend
-        const { Resend } = require("resend");
+        const { Resend } = await import("resend");
         const resend = new Resend(process.env.RESEND_API_KEY);
         
         await resend.emails.send({

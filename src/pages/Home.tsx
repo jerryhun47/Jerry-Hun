@@ -17,10 +17,12 @@ export default function Home() {
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [reviewForm, setReviewForm] = useState({ name: '', city: '', text: '', rating: 5, image: '' });
   const [reviewSubmitStatus, setReviewSubmitStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [banners, setBanners] = useState<any[]>([]);
 
   useEffect(() => {
     let unsubscribeProducts: any = null;
     let unsubscribeReviews: any = null;
+    let unsubscribeBanners: any = null;
 
     const fetchTopProducts = () => {
       const q = query(collection(db, 'products'));
@@ -76,10 +78,15 @@ export default function Home() {
 
     fetchTopProducts();
     fetchReviews();
+    
+    unsubscribeBanners = onSnapshot(collection(db, 'banners'), (snap) => {
+       setBanners(snap.docs.map(d => ({id: d.id, ...d.data()})));
+    });
 
     return () => {
       if (unsubscribeProducts) unsubscribeProducts();
       if (unsubscribeReviews) unsubscribeReviews();
+      if (unsubscribeBanners) unsubscribeBanners();
     };
   }, []);
 
@@ -172,6 +179,16 @@ export default function Home() {
       <FlashSaleBanner topProducts={topProducts} />
       <LivePurchasePopup topProducts={topProducts} />
       
+      {banners.length > 0 && (
+         <div className="relative w-full overflow-x-auto hide-scrollbar shrink-0 min-h-[100px] z-10 max-w-7xl mx-auto mt-4 px-4 sm:px-6 lg:px-8">
+            <div className="flex gap-4">
+               {banners.map((b, i) => (
+                  <img key={i} src={b.url} alt="Promo Banner" className="h-32 w-auto sm:h-48 md:h-64 object-cover rounded-3xl shrink-0 shadow-lg border border-slate-800" />
+               ))}
+            </div>
+         </div>
+      )}
+
       <div className="absolute top-0 left-0 w-full h-[150vh] overflow-hidden pointer-events-none z-0">
         <div className="absolute inset-0 bg-gradient-to-b from-red-900/40 via-red-950/20 to-black z-0"></div>
         <NetworkBackground />
@@ -190,7 +207,7 @@ export default function Home() {
               </div>
             </div>
             <h1 className="text-xl md:text-3xl lg:text-4xl font-extrabold tracking-tight mb-4 lg:mb-6 text-white leading-tight">
-              Learn How to Make <span className="gradient-text">6-Figure Income</span> From YouTube Without Showing Your <span className="gradient-text">Face & Voice</span>
+              Jerry Automation - Best YouTube Automation & <span className="gradient-text">AI Tools Seller</span> in Pakistan
             </h1>
             <p className="text-sm md:text-lg text-slate-300 mb-6 lg:mb-8 max-w-xl space-y-4">
               Hi, I'm <strong className="text-white">Jerry</strong> — a YouTube Automation Expert. I teach you how to build a profitable YouTube channel without showing your face or working countless hours.<br/><br/>
