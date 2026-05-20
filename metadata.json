@@ -1,6 +1,6 @@
 {
-  "name": "",
-  "description": "",
+  "name": "Jerry Automation",
+  "description": "YouTube Automation Expert and Tools Store",
   "requestFramePermissions": [],
-  "majorCapabilities": []
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

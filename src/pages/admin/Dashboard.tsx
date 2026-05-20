@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { db, auth, signOut } from '../../lib/firebase';
-import { collection, getDocs, doc, deleteDoc, updateDoc, addDoc, serverTimestamp, query, orderBy } from 'firebase/firestore';
+import { collection, getDocs, doc, deleteDoc, updateDoc, addDoc, serverTimestamp, query, orderBy, onSnapshot } from 'firebase/firestore';
 import { LayoutDashboard, ShoppingBag, MessageSquare, Package, LogOut, Plus, Trash2, Edit, X, Menu, DollarSign as DollarSign2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import WebsiteEditor from './WebsiteEditor';
@@ -23,35 +23,40 @@ export default function Dashboard() {
   }, [activeTab]);
 
   useEffect(() => {
-    fetchData();
+    let unsubs: any[] = [];
+    
+    // Realtime Products
+    unsubs.push(onSnapshot(collection(db, 'products'), (snap) => {
+      const pData = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      setProducts(pData);
+      setStats(s => ({ ...s, products: pData.length }));
+    }));
+
+    // Realtime Orders
+    unsubs.push(onSnapshot(query(collection(db, 'orders'), orderBy('createdAt', 'desc')), (snap) => {
+      const oData = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      setOrders(oData);
+      setStats(s => ({ ...s, orders: oData.length, revenue: oData.filter((o:any) => o.status === 'confirmed' || o.status === 'delivered').reduce((acc, curr) => acc + (curr.total_price || 0), 0) }));
+    }));
+
+    // Realtime Contacts
+    unsubs.push(onSnapshot(query(collection(db, 'contacts'), orderBy('createdAt', 'desc')), (snap) => {
+      const cData = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      setContacts(cData);
+      setStats(s => ({ ...s, messages: cData.filter((c:any) => !c.is_read).length }));
+    }));
+
+    // Realtime Transactions
+    unsubs.push(onSnapshot(query(collection(db, 'transactions'), orderBy('createdAt', 'desc')), (snap) => {
+      const tData = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      setTransactions(tData);
+    }));
+
+    return () => unsubs.forEach(u => u());
   }, []);
 
   const fetchData = async () => {
-    try {
-      const pSnap = await getDocs(collection(db, 'products'));
-      const oSnap = await getDocs(query(collection(db, 'orders'), orderBy('createdAt', 'desc')));
-      const cSnap = await getDocs(query(collection(db, 'contacts'), orderBy('createdAt', 'desc')));
-      const tSnap = await getDocs(query(collection(db, 'transactions'), orderBy('createdAt', 'desc')));
-      
-      const pData: any[] = pSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-      const oData: any[] = oSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-      const cData: any[] = cSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-      const tData: any[] = tSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-
-      setProducts(pData);
-      setOrders(oData);
-      setContacts(cData);
-      setTransactions(tData);
-
-      setStats({
-        products: pData.length,
-        orders: oData.length,
-        revenue: oData.filter(o => o.status === 'confirmed' || o.status === 'delivered').reduce((acc, curr) => acc + (curr.total_price || 0), 0),
-        messages: cData.filter(c => !c.is_read).length
-      });
-    } catch (e) {
-       console.error("Error fetching data:", e);
-    }
+    // Left for compatibility with child components that expect refresh callback
   };
 
   const handleLogout = async () => {
@@ -224,7 +229,6 @@ function ProductsManager({ products, type, refresh }: { products: any[], type: s
        setFormData({ name: '', price: 0, category: type, description: '', is_active: true, badge: '', imageLink: '', videoLink: '', logoBase64: '', detail: '' });
        setLessons([]);
        setEditingId(null);
-       refresh();
     } catch (err) {
        console.error("Error saving product:", err);
        alert("Error saving product.");
@@ -234,7 +238,6 @@ function ProductsManager({ products, type, refresh }: { products: any[], type: s
   const handleDelete = async (id: string) => {
     if(confirm('Are you sure you want to delete this product?')) {
        await deleteDoc(doc(db, 'products', id));
-       refresh();
     }
   }
 
@@ -401,7 +404,6 @@ function OrdersManager({ orders, refresh }: { orders: any[], refresh: () => void
   const updateStatus = async (id: string, status: string) => {
     try {
       await updateDoc(doc(db, 'orders', id), { status, updatedAt: serverTimestamp() });
-      refresh();
     } catch (e) {
       console.error(e);
       alert("Error updating order");
@@ -466,7 +468,6 @@ function TransactionsManager({ transactions, refresh }: { transactions: any[], r
   const updateStatus = async (id: string, status: string, userEmail?: string, itemType?: string) => {
     try {
       await updateDoc(doc(db, 'transactions', id), { status, updatedAt: serverTimestamp() });
-      refresh();
       
       if (status === 'approved' && userEmail) {
         try {
@@ -584,7 +585,6 @@ function MessagesManager({ contacts, refresh }: { contacts: any[], refresh: () =
   const markRead = async (id: string, current: boolean) => {
     try {
       await updateDoc(doc(db, 'contacts', id), { is_read: !current });
-      refresh();
     } catch(e) {
       console.error(e);
     }
@@ -593,7 +593,6 @@ function MessagesManager({ contacts, refresh }: { contacts: any[], refresh: () =
   const handleDelete = async (id: string) => {
      if(confirm('Delete message?')) {
         await deleteDoc(doc(db, 'contacts', id));
-        refresh();
      }
   }
 

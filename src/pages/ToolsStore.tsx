@@ -124,13 +124,13 @@ export default function ToolsStore() {
             {loading ? (
               <div className="grid md:grid-cols-2 gap-6">
                  {[1, 2, 3, 4, 5, 6].map(i => (
-                    <div key={i} className="bg-slate-900 border border-slate-800 rounded-3xl p-6 flex flex-col h-64 animate-pulse">
+                    <div key={i} className="bg-slate-900 border border-slate-700 rounded-3xl p-6 flex flex-col h-64 animate-pulse opacity-100">
                       <div className="w-16 h-16 bg-slate-800 rounded-xl mb-4"></div>
                       <div className="w-24 h-3 bg-slate-800 rounded mb-3"></div>
                       <div className="w-3/4 h-6 bg-slate-800 rounded mb-4"></div>
                       <div className="w-full h-4 bg-slate-800 rounded mb-2"></div>
                       <div className="w-2/3 h-4 bg-slate-800 rounded mb-6 flex-1"></div>
-                      <div className="flex justify-between items-end border-t border-slate-800 pt-4">
+                      <div className="flex justify-between items-end border-t border-slate-700 pt-4">
                          <div className="w-24 h-6 bg-slate-800 rounded"></div>
                          <div className="w-28 h-10 bg-slate-800 rounded-xl"></div>
                       </div>
@@ -150,15 +150,15 @@ export default function ToolsStore() {
                         variants={itemVariants}
                         layout
                         key={product.id} 
-                        className="bg-slate-900 border border-slate-800 rounded-3xl p-6 card-shadow flex flex-col relative overflow-hidden group hover:border-slate-700 transition-colors"
+                        className="bg-slate-800 border border-slate-700 rounded-3xl p-6 card-shadow flex flex-col relative overflow-hidden group hover:-translate-y-1 hover:scale-[1.03] hover:shadow-2xl hover:border-slate-600 transition-all duration-300 opacity-100"
                       >
-                        {product.badge && <div className="absolute top-4 right-4 bg-slate-800 border border-slate-700 text-red-400 text-xs font-bold px-3 py-1 rounded-full">{product.badge}</div>}
+                        {product.badge && <div className="absolute top-4 right-4 bg-slate-900 border border-slate-700 text-red-500 text-xs font-bold px-3 py-1 rounded-full">{product.badge}</div>}
                         <div className="mb-4">
-                          <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">{product.category}</span>
-                          <h3 className="text-xl font-bold mt-1 text-white group-hover:text-red-400 transition-colors">{product.name}</h3>
+                          <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">{product.category}</span>
+                          <h3 className="text-xl font-bold mt-1 text-white group-hover:text-red-400 transition-colors leading-snug">{product.name}</h3>
                         </div>
-                        <p className="text-slate-400 text-sm mb-6 flex-1 line-clamp-3">{product.description}</p>
-                        <div className="flex items-center justify-between mt-auto border-t border-slate-800 pt-4">
+                        <p className="text-slate-300 text-sm mb-6 flex-1 line-clamp-3">{product.description}</p>
+                        <div className="flex items-center justify-between mt-auto border-t border-slate-700 pt-4">
                           <div className="font-black text-2xl text-white">PKR {product.price.toLocaleString()}</div>
                           <button onClick={() => { setSelectedProduct(product); setShowCheckout(true); }} className="bg-red-600 hover:bg-red-500 cursor-pointer text-white px-6 py-2 rounded-xl transition-all shadow-lg shadow-red-500/20 active:scale-95 font-bold">
                              Buy Now

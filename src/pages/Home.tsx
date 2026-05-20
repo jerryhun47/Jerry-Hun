@@ -223,7 +223,7 @@ export default function Home() {
                    <img src="/logo.png" alt="Jerry Automation Image" className="w-full h-full object-contain drop-shadow-md relative z-20" />
                 </div>
                 <h3 className="text-xl font-bold mb-1 text-white">Jerry <span className="text-red-500 font-extrabold hidden sm:inline">Automation</span></h3>
-                <p className="text-slate-400 font-medium text-sm mb-4">Jerry – YouTube Automation Expert | Verified Seller</p>
+                <p className="text-slate-400 font-medium text-sm mb-4">Jerry Automation Expert | <span className="font-bold text-yellow-500">⭐⭐⭐⭐⭐</span> <strong className="font-bold text-white">Verified Seller</strong></p>
                 <div className="flex gap-2 flex-wrap justify-center">
                   <span className="bg-slate-950/80 border border-slate-800 text-slate-300 text-[10px] font-bold px-3 py-1 rounded-full flex items-center gap-1"><CheckCircle size={12} className="text-red-500" /> Verified</span>
                   <span className="bg-slate-950/80 border border-slate-800 text-slate-300 text-[10px] font-bold px-3 py-1 rounded-full flex items-center gap-1"><Star size={12} className="text-red-500" fill="currentColor" /> 5-Star</span>
@@ -251,30 +251,30 @@ export default function Home() {
                <div className="grid grid-cols-2 gap-4 sm:gap-6">
                {loadingProducts ? (
                  [1, 2, 3, 4].map(i => (
-                   <div key={i} className="w-full aspect-square shrink-0 bg-slate-950 border border-slate-800 rounded-3xl p-4 sm:p-6 shadow-xl flex flex-col animate-pulse">
+                   <div key={i} className="w-full aspect-square shrink-0 bg-slate-900 border border-slate-700 rounded-3xl p-4 sm:p-6 shadow-xl flex flex-col animate-pulse opacity-100">
                       <div className="w-12 h-12 md:w-16 md:h-16 bg-slate-800 rounded-xl mb-4"></div>
                       <div className="w-16 h-3 bg-slate-800 rounded mb-2"></div>
                       <div className="w-3/4 h-5 sm:h-6 bg-slate-800 rounded mb-4"></div>
                       <div className="w-full h-3 bg-slate-800 rounded mb-2"></div>
                       <div className="w-2/3 h-3 bg-slate-800 rounded mb-4 flex-1"></div>
-                      <div className="flex justify-between items-end border-t border-slate-800 pt-3">
+                      <div className="flex justify-between items-end border-t border-slate-700 pt-3">
                          <div className="w-20 h-5 sm:h-6 bg-slate-800 rounded"></div>
                          <div className="w-10 h-10 bg-slate-800 rounded-xl"></div>
                       </div>
                    </div>
                  ))
                ) : topProducts.length > 0 ? topProducts.slice(0, 4).map(product => (
-                  <motion.div variants={staggerItem} key={product.id} className="w-full aspect-square shrink-0 bg-slate-950 border border-slate-800 rounded-3xl p-4 sm:p-6 shadow-xl flex flex-col relative group hover:border-slate-700 transition-colors">
-                    {product.badge && <div className="absolute top-4 right-4 bg-slate-800 border border-slate-700 text-red-400 text-xs font-bold px-2 py-1 sm:px-3 sm:py-1 rounded-full z-10">{product.badge}</div>}
+                  <motion.div variants={staggerItem} key={product.id} className="w-full aspect-square shrink-0 bg-slate-800 border border-slate-700 rounded-3xl p-4 sm:p-6 shadow-xl flex flex-col relative group hover:-translate-y-1 hover:scale-[1.03] hover:shadow-2xl hover:border-slate-600 transition-all duration-300 opacity-100">
+                    {product.badge && <div className="absolute top-4 right-4 bg-slate-900 border border-slate-700 text-red-500 text-xs font-bold px-2 py-1 sm:px-3 sm:py-1 rounded-full z-10">{product.badge}</div>}
                     
-                    <img loading="lazy" src={product.logoBase64 || '/placeholder-image.webp'} onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/Client_Review.png' }} alt={product.name} className="w-12 h-12 md:w-16 md:h-16 object-cover bg-white rounded-xl p-0.5 mb-4 shrink-0 transition-transform group-hover:scale-105 border border-slate-200" />
+                    <img loading="lazy" src={product.logoBase64 || '/logo.png'} onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/logo.png' }} alt={product.name} className="w-12 h-12 md:w-16 md:h-16 object-cover bg-white rounded-xl p-0.5 mb-4 shrink-0 transition-transform group-hover:scale-105 border border-slate-200" />
 
                     <div className="mb-2 sm:mb-4">
-                      <span className="text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider">{product.category}</span>
-                      <h3 className="text-sm sm:text-lg font-bold mt-1 text-white group-hover:text-red-400 transition-colors line-clamp-2">{product.name}</h3>
+                      <span className="text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider">{product.category}</span>
+                      <h3 className="text-sm sm:text-lg font-bold mt-1 text-white group-hover:text-red-400 transition-colors line-clamp-2 leading-snug">{product.name}</h3>
                     </div>
-                    <p className="text-slate-400 text-xs sm:text-sm mb-4 flex-1 line-clamp-2 sm:line-clamp-3">{product.description}</p>
-                    <div className="flex items-center justify-between mt-auto border-t border-slate-800 pt-3">
+                    <p className="text-slate-300 text-xs sm:text-sm mb-4 flex-1 line-clamp-2 sm:line-clamp-3">{product.description}</p>
+                    <div className="flex items-center justify-between mt-auto border-t border-slate-700 pt-3">
                       <div className="font-black text-sm sm:text-lg text-white">PKR {product.price.toLocaleString()}</div>
                       <Link to={`/tools?product=${product.id}`} className="bg-red-600 hover:bg-red-500 text-white p-2 rounded-xl transition-all shadow-lg shadow-red-500/20 hover:scale-110">
                          <ShoppingCart size={18} />
@@ -409,7 +409,7 @@ export default function Home() {
                 <img 
                   src="/Client_Review.png" 
                   alt="Client Review"
-                  className="w-full aspect-video object-contain bg-slate-900 pointer-events-none select-none"
+                  className="w-full h-auto object-contain bg-slate-900 pointer-events-none select-none"
                   draggable={false}
                 />
              </div>
@@ -729,13 +729,13 @@ function LivePurchasePopup({ topProducts }: { topProducts: any[] }) {
         product: pName
       });
 
-      // hide after 4.5 seconds
-      setTimeout(() => setPopup(null), 4500);
+      // hide after 3 seconds
+      setTimeout(() => setPopup(null), 3000);
     };
 
     const interval = setInterval(() => {
       showRandomPopup();
-    }, 5000); // Check every 5 seconds
+    }, 10000); // Check every 10 seconds
     
     // Initial popup
     setTimeout(showRandomPopup, 1000);
@@ -747,18 +747,18 @@ function LivePurchasePopup({ topProducts }: { topProducts: any[] }) {
     <AnimatePresence>
       {popup && (
         <motion.div
-           initial={{ opacity: 0, scale: 0.9, y: 50 }}
-           animate={{ opacity: 1, scale: 1, y: 0 }}
-           exit={{ opacity: 0, scale: 0.9, y: 50 }}
-           className="fixed bottom-[90px] right-4 md:bottom-[90px] md:right-6 z-[100] bg-white border border-slate-200 shadow-2xl p-2.5 rounded-lg flex items-center gap-2 max-w-[240px] pointer-events-none"
+           initial={{ opacity: 0, scale: 0.9, x: -50 }}
+           animate={{ opacity: 1, scale: 1, x: 0 }}
+           exit={{ opacity: 0, scale: 0.9, x: -50 }}
+           className="fixed bottom-[90px] left-4 md:bottom-[90px] md:left-6 z-[100] bg-white border border-slate-200 shadow-2xl p-2.5 rounded-lg flex items-center gap-3 max-w-[240px] pointer-events-none"
         >
-          <div className="bg-green-100 text-green-600 p-1.5 rounded-full h-fit flex-shrink-0">
-            <ShoppingCart size={14} />
+          <div className="bg-green-100 text-green-600 p-2 rounded-full h-fit flex-shrink-0">
+            <ShoppingCart size={16} />
           </div>
           <div>
-            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wide">Live Purchase!</p>
+            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wide">Live Purchase</p>
             <p className="text-xs text-slate-800 font-bold tracking-tight leading-snug line-clamp-2">
-              {popup.name} from {popup.city} purchased <span className="text-red-600">{popup.product}</span>
+              {popup.name} from {popup.city} purchased <br/><span className="text-red-600">{popup.product}</span>
             </p>
           </div>
         </motion.div>

@@ -143,7 +143,7 @@ export default function PaymentModal({ item, type, onClose }: { item: any, type:
             <CheckCircle size={32} />
           </div>
           <h2 className="text-2xl font-bold text-white mb-2">Success!</h2>
-          <p className="text-slate-400 mb-6">Your order has been submitted successfully. An administrator will review and grant access to your account shortly.</p>
+          <p className="text-slate-400 mb-6">Your order has been placed successfully. An administrator will review and grant access to your account shortly.</p>
           <button onClick={onClose} className="w-full bg-slate-800 hover:bg-slate-700 text-white font-bold py-3 rounded-xl transition">
             Close
           </button>
