@@ -89,6 +89,7 @@ export default function Dashboard() {
             { id: 'orders', icon: ShoppingBag, label: 'Orders', badge: orders.filter(o=>o.status==='pending').length },
             { id: 'transactions', icon: ShoppingBag, label: 'Payments', badge: transactions.filter(t=>t.status==='pending').length },
             { id: 'paymentsettings', icon: LayoutDashboard, label: 'Payment Accounts' },
+            { id: 'settings', icon: LayoutDashboard, label: 'Global Settings' },
             { id: 'messages', icon: MessageSquare, label: 'Inbox', badge: stats.messages },
             { id: 'users', icon: LayoutDashboard, label: 'Users' },
             { id: 'announcements', icon: MessageSquare, label: 'Announcements' },
@@ -190,6 +191,7 @@ export default function Dashboard() {
            {activeTab === 'orders' && <OrdersManager orders={orders} refresh={fetchData} />}
            {activeTab === 'transactions' && <TransactionsManager transactions={transactions} refresh={fetchData} />}
            {activeTab === 'paymentsettings' && <PaymentSettingsManager />}
+           {activeTab === 'settings' && <GlobalSettingsManager />}
            {activeTab === 'messages' && <MessagesManager contacts={contacts} refresh={fetchData} />}
            {activeTab === 'reviews' && <ReviewsManager />}
            {activeTab === 'announcements' && <AnnouncementsManager />}
@@ -752,6 +754,84 @@ function AnalyticsManager() {
 
     </div>
   )
+}
+
+function GlobalSettingsManager() {
+  const [loading, setLoading] = useState(true);
+  const [settings, setSettings] = useState({ whatsappNumber: '' });
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const snap = await getDocs(collection(db, 'settings'));
+        if (!snap.empty) {
+          const data = snap.docs[0].data();
+          setSettings({ whatsappNumber: data.whatsappNumber || '' });
+        }
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchSettings();
+  }, []);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const snap = await getDocs(collection(db, 'settings'));
+      if (snap.empty) {
+        await addDoc(collection(db, 'settings'), settings);
+      } else {
+        await updateDoc(doc(db, 'settings', snap.docs[0].id), settings);
+      }
+      alert("Settings saved successfully.");
+    } catch (e) {
+      console.error(e);
+      alert("Failed to save settings.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="bg-white rounded-3xl p-8 border border-slate-200 card-shadow animate-in fade-in max-w-4xl">
+       <div className="mb-8 border-b border-slate-100 pb-4">
+         <h2 className="text-2xl font-black">Global Settings</h2>
+         <p className="text-slate-500">Manage site-wide settings such as contact numbers.</p>
+       </div>
+       
+       {loading ? (
+         <div className="animate-pulse space-y-4">
+           <div className="h-10 bg-slate-100 rounded w-full"></div>
+         </div>
+       ) : (
+         <div className="space-y-6">
+           <div>
+              <label className="block text-sm font-bold text-slate-700 mb-2">WhatsApp Contact Number</label>
+              <input 
+                type="text" 
+                placeholder="e.g. 923001234567" 
+                value={settings.whatsappNumber} 
+                onChange={(e) => setSettings({...settings, whatsappNumber: e.target.value})}
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-red-500" 
+              />
+              <p className="text-xs text-slate-500 mt-2">Include country code without '+' (e.g., 923001234567). Placed on success pages and WhatsApp buttons.</p>
+           </div>
+           
+           <button 
+             onClick={handleSave} 
+             disabled={saving}
+             className="bg-red-600 hover:bg-red-700 text-white font-bold px-6 py-3 rounded-xl transition disabled:opacity-50"
+           >
+              {saving ? 'Saving...' : 'Save Settings'}
+           </button>
+         </div>
+       )}
+    </div>
+  );
 }
 
 function PlaceholderManager({ tabName }: { tabName: string }) {

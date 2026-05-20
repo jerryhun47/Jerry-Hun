@@ -11,11 +11,28 @@ export default function Layout() {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
   const [isMobile, setIsMobile] = useState(false);
+  const [whatsappNumber, setWhatsappNumber] = useState('');
 
   useEffect(() => {
     setIsMobile(window.innerWidth < 768);
     const handleResize = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener('resize', handleResize);
+    
+    // Fetch Global Setting (WhatsApp Number)
+    const fetchSettings = async () => {
+      try {
+        const { getDocs, collection } = await import('firebase/firestore');
+        const { db } = await import('../lib/firebase');
+        const snap = await getDocs(collection(db, 'settings'));
+        if (!snap.empty) {
+            setWhatsappNumber(snap.docs[0].data().whatsappNumber || '');
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    };
+    fetchSettings();
+    
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
@@ -124,9 +141,11 @@ export default function Layout() {
       </footer>
       
       {/* Floating WhatsApp Button */}
-      <a href="https://wa.me/923271991893" target="_blank" rel="noopener noreferrer" className="fixed bottom-6 right-6 z-[100] bg-green-500 hover:bg-green-400 text-white p-4 rounded-full shadow-lg shadow-green-500/30 transition-transform hover:scale-110 flex items-center justify-center">
-        <MessageCircle size={32} />
-      </a>
+      {whatsappNumber && (
+        <a href={`https://wa.me/${whatsappNumber}`} target="_blank" rel="noopener noreferrer" className="fixed bottom-6 right-6 z-[100] bg-green-500 hover:bg-green-400 text-white p-4 rounded-full shadow-lg shadow-green-500/30 transition-transform hover:scale-110 flex items-center justify-center">
+          <MessageCircle size={32} />
+        </a>
+      )}
     </div>
   );
 }

@@ -27,7 +27,15 @@ export default function Home() {
       unsubscribeProducts = onSnapshot(q, { includeMetadataChanges: true }, (querySnapshot) => {
         const prods: any[] = [];
         querySnapshot.forEach((doc) => prods.push({ id: doc.id, ...doc.data() }));
-        const activeProds = prods.filter((p: any) => p.is_active !== false && p.category !== 'Course');
+        let activeProds = prods.filter((p: any) => p.is_active !== false && p.category !== 'Course');
+        
+        if (activeProds.length === 0) {
+           activeProds = [
+             { id: 't1', name: 'Premium Netflix Tool', description: 'Lifetime access to Premium accounts auto-generator.', price: 5000, category: 'Entertainment', is_active: true, badge: 'Hot' },
+             { id: 't2', name: 'Canva Pro Tool', description: 'Unlimited Canva Pro features unlocked.', price: 3000, category: 'Design', is_active: true }
+           ];
+        }
+
         for (let i = activeProds.length - 1; i > 0; i--) {
           const j = Math.floor(Math.random() * (i + 1));
           [activeProds[i], activeProds[j]] = [activeProds[j], activeProds[i]];
@@ -36,6 +44,10 @@ export default function Home() {
         setLoadingProducts(false);
       }, (err) => {
         console.error("Error fetching top products", err);
+        setTopProducts([
+           { id: 't1', name: 'Premium Netflix Tool', description: 'Lifetime access to Premium accounts auto-generator.', price: 5000, category: 'Entertainment', is_active: true, badge: 'Hot' },
+           { id: 't2', name: 'Canva Pro Tool', description: 'Unlimited Canva Pro features unlocked.', price: 3000, category: 'Design', is_active: true }
+        ]);
         setLoadingProducts(false);
       });
     };
@@ -223,7 +235,7 @@ export default function Home() {
                    <img src="/logo.png" alt="Jerry Automation Image" className="w-full h-full object-contain drop-shadow-md relative z-20" />
                 </div>
                 <h3 className="text-xl font-bold mb-1 text-white">Jerry <span className="text-red-500 font-extrabold hidden sm:inline">Automation</span></h3>
-                <p className="text-slate-400 font-medium text-sm mb-4">Jerry Automation Expert | <span className="font-bold text-yellow-500">⭐⭐⭐⭐⭐</span> <strong className="font-bold text-white">Verified Seller</strong></p>
+                <p className="text-slate-400 font-medium text-sm mb-4">Jerry – YouTube Automation Expert | Verified Seller</p>
                 <div className="flex gap-2 flex-wrap justify-center">
                   <span className="bg-slate-950/80 border border-slate-800 text-slate-300 text-[10px] font-bold px-3 py-1 rounded-full flex items-center gap-1"><CheckCircle size={12} className="text-red-500" /> Verified</span>
                   <span className="bg-slate-950/80 border border-slate-800 text-slate-300 text-[10px] font-bold px-3 py-1 rounded-full flex items-center gap-1"><Star size={12} className="text-red-500" fill="currentColor" /> 5-Star</span>
@@ -747,18 +759,18 @@ function LivePurchasePopup({ topProducts }: { topProducts: any[] }) {
     <AnimatePresence>
       {popup && (
         <motion.div
-           initial={{ opacity: 0, scale: 0.9, x: -50 }}
-           animate={{ opacity: 1, scale: 1, x: 0 }}
-           exit={{ opacity: 0, scale: 0.9, x: -50 }}
-           className="fixed bottom-[90px] left-4 md:bottom-[90px] md:left-6 z-[100] bg-white border border-slate-200 shadow-2xl p-2.5 rounded-lg flex items-center gap-3 max-w-[240px] pointer-events-none"
+           initial={{ opacity: 0, y: 20, x: -20 }}
+           animate={{ opacity: 1, y: 0, x: 0 }}
+           exit={{ opacity: 0, y: 20, x: -20 }}
+           className="fixed bottom-4 left-4 z-[9999] bg-white border border-slate-200 shadow-2xl p-3 md:p-4 rounded-xl flex items-center gap-3 w-auto pr-6 pointer-events-none"
         >
-          <div className="bg-green-100 text-green-600 p-2 rounded-full h-fit flex-shrink-0">
-            <ShoppingCart size={16} />
+          <div className="bg-green-100 text-green-600 p-2 md:p-3 rounded-full h-fit flex-shrink-0 flex items-center justify-center">
+            <ShoppingCart size={18} />
           </div>
           <div>
-            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wide">Live Purchase</p>
-            <p className="text-xs text-slate-800 font-bold tracking-tight leading-snug line-clamp-2">
-              {popup.name} from {popup.city} purchased <br/><span className="text-red-600">{popup.product}</span>
+            <p className="text-[10px] md:text-xs text-slate-500 font-bold uppercase tracking-wide mb-0.5">Live Order</p>
+            <p className="text-xs md:text-sm text-slate-800 font-bold tracking-tight leading-snug whitespace-nowrap">
+              {popup.name} from {popup.city} purchased <span className="text-red-600">{popup.product}</span>
             </p>
           </div>
         </motion.div>
