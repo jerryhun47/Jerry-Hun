@@ -77,21 +77,24 @@ service cloud.firestore {
     }
     // Transactions / Payments
     function isValidTransaction(data) {
-       return data.size() >= 5 && data.size() <= 15
-         && data.keys().hasAll(['userId', 'price', 'status', 'proofBase64'])
-         && data.userId is string && data.userId == request.auth.uid
-         && data.price is number && data.price >= 0
-         && data.status is string && data.status in ['pending', 'approved', 'rejected']
-         && data.proofBase64 is string;
+       return data.size() >= 3 && data.size() <= 20
+         && data.keys().hasAll(['price', 'status'])
+         && data.price is number && data.price >= 0;
     }
 
     match /transactions/{transactionId} {
-      allow create: if isSignedIn() && isValidId(transactionId) && isValidTransaction(incoming()) && incoming().createdAt == request.time;
+      allow create: if isValidId(transactionId) && isValidTransaction(incoming()) && incoming().createdAt == request.time;
       allow read: if isSignedIn() && existing().userId == request.auth.uid;
       allow list: if isAdmin();
       allow get: if isAdmin();
       allow update: if isAdmin() && isValidId(transactionId);
       allow delete: if isAdmin() && isValidId(transactionId);
+    }
+
+    // Settings
+    match /settings/{settingId} {
+      allow read: if true;
+      allow write: if isAdmin();
     }
 
     // Visitors Tracking
