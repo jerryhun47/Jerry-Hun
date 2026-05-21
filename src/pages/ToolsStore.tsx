@@ -16,6 +16,7 @@ interface Product {
   badge?: string;
   is_active: boolean;
   order_index?: number;
+  yearlyPrice?: number;
 }
 
 export default function ToolsStore() {
@@ -210,9 +211,7 @@ function CheckoutModal({ product, onClose }: any) {
   const [step, setStep] = useState<'detail' | 'checkout'>('detail');
   const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'yearly'>('monthly');
 
-  // Regex to extract Yearly Plan price from the description if it exists
-  const yearlyPlanMatch = product.detail?.match(/Yearly Plan: PKR ([\d,]+)/i);
-  const yearlyPriceTemp = yearlyPlanMatch ? parseInt(yearlyPlanMatch[1].replace(/,/g, '')) : (product.price * 10);
+  const yearlyPriceTemp = product.yearlyPrice || (product.price * 10);
   const selectedPrice = selectedPlan === 'monthly' ? product.price : yearlyPriceTemp;
 
   const [email, setEmail] = useState('');
@@ -398,12 +397,9 @@ function CheckoutModal({ product, onClose }: any) {
            </div>
          ) : step === 'detail' ? (
            <>
-              <div className="flex items-center gap-4 mb-6 mt-2">
-                 {product.logoBase64 && <img src={product.logoBase64} alt="logo" className="w-12 h-12 rounded-xl bg-white p-1 object-cover" />}
-                 <div>
-                    <h2 className="text-xl md:text-2xl font-bold text-white leading-tight">{product.name}</h2>
-                    <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">{product.category}</span>
-                 </div>
+              <div className="mb-6 mt-2">
+                 <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">{product.category}</span>
+                 <h2 className="text-xl md:text-2xl font-bold text-white leading-tight mt-1">{product.name}</h2>
               </div>
 
               <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 mb-6">

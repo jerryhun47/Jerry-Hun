@@ -227,8 +227,8 @@ function ProductsManager({ products, type, refresh }: { products: any[], type: s
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [saveError, setSaveError] = useState('');
   const [formData, setFormData] = useState({ 
-     name: '', price: '' as string | number, category: type, description: '', is_active: true, badge: '',
-     imageLink: '', videoLink: '', logoBase64: '', detail: ''
+     name: '', price: '' as string | number, yearlyPrice: '' as string | number, category: type, description: '', is_active: true, badge: '',
+     imageLink: '', videoLink: '', detail: ''
   });
   const [lessons, setLessons] = useState<any[]>([]);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -245,6 +245,7 @@ function ProductsManager({ products, type, refresh }: { products: any[], type: s
        const productData = { 
          ...formData, 
          price: Number(formData.price || 0), 
+         yearlyPrice: Number(formData.yearlyPrice || 0),
          lessons, 
          updatedAt: serverTimestamp() 
        };
@@ -257,7 +258,7 @@ function ProductsManager({ products, type, refresh }: { products: any[], type: s
        setTimeout(() => {
           setSaveSuccess(false);
           setShowModal(false);
-          setFormData({ name: '', price: '', category: type, description: '', is_active: true, badge: '', imageLink: '', videoLink: '', logoBase64: '', detail: '' });
+          setFormData({ name: '', price: '', yearlyPrice: '', category: type, description: '', is_active: true, badge: '', imageLink: '', videoLink: '', detail: '' });
           setLessons([]);
           setEditingId(null);
        }, 1000);
@@ -395,7 +396,7 @@ function ProductsManager({ products, type, refresh }: { products: any[], type: s
                        {p.is_active ? <span className="text-green-600 bg-green-50 px-2.5 py-1 rounded-lg text-xs font-bold">Active</span> : <span className="text-slate-500 bg-slate-100 px-2.5 py-1 rounded-lg text-xs font-bold">Inactive</span>}
                     </td>
                     <td className="px-6 py-4 text-right space-x-2">
-                       <button onClick={() => { setFormData({ name: '', price: '', category: type, description: '', is_active: true, badge: '', imageLink: '', videoLink: '', logoBase64: '', detail: '', ...p} as any); setLessons(p.lessons || []); setEditingId(p.id); setShowModal(true); }} className="text-blue-600 hover:bg-blue-50 p-2 rounded-xl transition-colors"><Edit size={16}/></button>
+                       <button onClick={() => { setFormData({ name: '', price: '', yearlyPrice: '', category: type, description: '', is_active: true, badge: '', imageLink: '', videoLink: '', detail: '', ...p} as any); setLessons(p.lessons || []); setEditingId(p.id); setShowModal(true); }} className="text-blue-600 hover:bg-blue-50 p-2 rounded-xl transition-colors"><Edit size={16}/></button>
                        <button onClick={() => handleDelete(p.id)} className="text-red-600 hover:bg-red-50 p-2 rounded-xl transition-colors"><Trash2 size={16}/></button>
                     </td>
                  </tr>
@@ -426,7 +427,10 @@ function ProductsManager({ products, type, refresh }: { products: any[], type: s
                <form onSubmit={handleSave} className="space-y-4">
                   <div><label className="block text-sm font-semibold mb-1">Product Name</label><input required disabled={isSaving} type="text" value={formData.name} onChange={e=>setFormData({...formData, name: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2" /></div>
                   <div className="grid grid-cols-2 gap-4">
-                    <div><label className="block text-sm font-semibold mb-1">Price (PKR)</label><input required disabled={isSaving} type="number" min="0" value={formData.price} onChange={e=>setFormData({...formData, price: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2" /></div>
+                    <div><label className="block text-sm font-semibold mb-1">Monthly Price (PKR)</label><input required disabled={isSaving} type="number" min="0" value={formData.price} onChange={e=>setFormData({...formData, price: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2" /></div>
+                    <div><label className="block text-sm font-semibold mb-1">Yearly Price (PKR)</label><input required disabled={isSaving} type="number" min="0" value={formData.yearlyPrice} onChange={e=>setFormData({...formData, yearlyPrice: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2" /></div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
                     <div><label className="block text-sm font-semibold mb-1">Category</label>
                       <select required disabled={isSaving} value={formData.category} onChange={e=>setFormData({...formData, category: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2">
                          <option value="Course">Course</option>
@@ -434,9 +438,9 @@ function ProductsManager({ products, type, refresh }: { products: any[], type: s
                          <option value="Bundle">Bundle</option>
                       </select>
                     </div>
+                    <div><label className="block text-sm font-semibold mb-1">Badge (Optional)</label><input disabled={isSaving} type="text" value={formData.badge} onChange={e=>setFormData({...formData, badge: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2" placeholder="e.g. Best Seller" /></div>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
-                    <div><label className="block text-sm font-semibold mb-1">Badge (Optional)</label><input disabled={isSaving} type="text" value={formData.badge} onChange={e=>setFormData({...formData, badge: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2" placeholder="e.g. Best Seller" /></div>
                     <div className="flex items-center mt-6">
                        <label className="flex items-center gap-2 cursor-pointer">
                          <input type="checkbox" checked={formData.is_active} onChange={e=>setFormData({...formData,is_active: e.target.checked})} className="w-5 h-5 text-red-600 rounded border-slate-300" />
@@ -447,52 +451,6 @@ function ProductsManager({ products, type, refresh }: { products: any[], type: s
                   <div className="grid grid-cols-2 gap-4">
                     <div><label className="block text-sm font-semibold mb-1">Image Link (Optional)</label><input type="text" value={formData.imageLink} onChange={e=>setFormData({...formData, imageLink: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2" placeholder="https://" /></div>
                     <div><label className="block text-sm font-semibold mb-1">Video Link (Optional)</label><input type="text" value={formData.videoLink} onChange={e=>setFormData({...formData, videoLink: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2" placeholder="YouTube URL" /></div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-semibold mb-1">Product Logo Upload / Link</label>
-                      <input 
-                        type="text"
-                        placeholder="Image URL..."
-                        value={formData.logoBase64}
-                        onChange={e => setFormData({...formData, logoBase64: e.target.value})}
-                        className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-1.5 text-sm mb-2"
-                      />
-                      <input 
-                        type="file" 
-                        accept="image/*"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) {
-                            const reader = new FileReader();
-                            reader.onload = (event) => {
-                              const dataUrl = event.target?.result as string;
-                              const img = new Image();
-                              img.onload = () => {
-                                try {
-                                  const canvas = document.createElement('canvas');
-                                  const MAX_WIDTH = 500;
-                                  let scaleSize = 1;
-                                  if (img.width > MAX_WIDTH) scaleSize = MAX_WIDTH / img.width;
-                                  canvas.width = img.width * scaleSize;
-                                  canvas.height = img.height * scaleSize;
-                                  const ctx = canvas.getContext('2d');
-                                  ctx?.drawImage(img, 0, 0, canvas.width, canvas.height);
-                                  setFormData({...formData, logoBase64: canvas.toDataURL('image/webp', 0.5)});
-                                } catch (err) {
-                                  setFormData({...formData, logoBase64: dataUrl});
-                                }
-                              };
-                              img.onerror = () => setFormData({...formData, logoBase64: dataUrl});
-                              img.src = dataUrl;
-                            };
-                            reader.readAsDataURL(file);
-                          }
-                        }} 
-                        className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-1.5 text-sm" 
-                      />
-                      {formData.logoBase64 && <img src={formData.logoBase64} alt="Preview" className="h-10 mt-2 object-contain" />}
-                    </div>
                   </div>
                   <div><label className="block text-sm font-semibold mb-1">Short Description</label><textarea required value={formData.description} onChange={e=>setFormData({...formData, description: e.target.value})} rows={2} className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2" placeholder="Write a short description..."></textarea></div>
                   <div><label className="block text-sm font-semibold mb-1">Product Detail (Rich Content/Paragraph)</label><textarea value={formData.detail} onChange={e=>setFormData({...formData, detail: e.target.value})} rows={5} className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2" placeholder="Write full product detail here... Markdown is supported."></textarea></div>
