@@ -1,29 +1,57 @@
 import { useEffect } from 'react';
 import { db } from './firebase';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { UAParser } from 'ua-parser-js';
 
 export function useVisitorTracking() {
   useEffect(() => {
-    // Basic tracking: create a session document when app loads
-    const sessionId = Math.random().toString(36).substring(2) + Date.now().toString(36);
-    const sessionRef = doc(db, 'visitors', sessionId);
+    let currentCity = 'Unknown Location';
+    
+    const initTracking = async () => {
+      try {
+        const res = await fetch('https://ipapi.co/json/');
+        const data = await res.json();
+        if (data.city) {
+          currentCity = data.city;
+        }
+      } catch (e) {
+        console.error('Failed to get location', e);
+      }
 
-    setDoc(sessionRef, {
-       userAgent: window.navigator.userAgent,
-       path: window.location.pathname,
-       timestamp: serverTimestamp(),
-       lastActive: serverTimestamp(),
-       // Firestore doesn't natively support onDisconnect in the Web SDK in the same way 
-       // Realtime DB does, but we can update `lastActive` periodically
-    }).catch(console.error);
+      const parser = new UAParser();
+      const result = parser.getResult();
+      const deviceModel = result.device.model || result.os.name || 'Desktop';
+      const browserName = result.browser.name || 'Unknown Browser';
 
-    const interval = setInterval(() => {
-       setDoc(sessionRef, {
-          lastActive: serverTimestamp(),
-          path: window.location.pathname,
-       }, { merge: true }).catch(console.error);
-    }, 10000); // 10 seconds
+      const sessionId = Math.random().toString(36).substring(2) + Date.now().toString(36);
+      const sessionRef = doc(db, 'visitors', sessionId);
 
-    return () => clearInterval(interval);
+      setDoc(sessionRef, {
+         userAgent: window.navigator.userAgent,
+         deviceModel,
+         browserName,
+         city: currentCity,
+         path: window.location.pathname,
+         timestamp: serverTimestamp(),
+         lastActive: serverTimestamp(),
+      }).catch(console.error);
+
+      const interval = setInterval(() => {
+         setDoc(sessionRef, {
+            lastActive: serverTimestamp(),
+            path: window.location.pathname,
+         }, { merge: true }).catch(console.error);
+      }, 10000); 
+
+      return () => clearInterval(interval);
+    };
+
+    const cleanupPromise = initTracking();
+    
+    return () => {
+       cleanupPromise.then(cleanup => {
+         if (typeof cleanup === 'function') cleanup();
+       });
+    };
   }, []);
 }

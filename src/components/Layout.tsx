@@ -40,6 +40,7 @@ export default function Layout() {
     { name: 'Home', path: '/' },
     { name: 'Tools Store', path: '/tools' },
     { name: 'Courses', path: '/courses' },
+    { name: 'Refund', path: '/refund' },
   ];
 
   const { scrollY } = useScroll();
@@ -124,6 +125,7 @@ export default function Layout() {
               <li><Link to="/" className="hover:text-red-400 transition-colors">Home</Link></li>
               <li><Link to="/tools" className="hover:text-red-400 transition-colors">Tools Store</Link></li>
               <li><Link to="/courses" className="hover:text-red-400 transition-colors">Courses</Link></li>
+              <li><Link to="/refund" className="hover:text-red-400 transition-colors">Refund</Link></li>
             </ul>
           </div>
           <div>
@@ -136,7 +138,7 @@ export default function Layout() {
         </div>
         <div className="max-w-7xl mx-auto px-4 pb-4 sm:px-6 lg:px-8 mt-12 pt-8 border-t border-slate-900 text-center text-sm flex flex-col md:flex-row justify-between items-center text-slate-500">
             <p>&copy; {new Date().getFullYear()} Jerry Automation. All rights reserved.</p>
-            <Link to="/admin/login" className="hover:text-red-400 mt-4 md:mt-0 transition-colors">Admin Login</Link>
+            <Link to="/admin/login" className="hover:text-red-400 mt-4 md:mt-0 transition-colors">Status Logs</Link>
         </div>
       </footer>
       

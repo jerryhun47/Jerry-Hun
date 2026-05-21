@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { db, auth, signOut } from '../../lib/firebase';
 import { collection, getDocs, doc, deleteDoc, updateDoc, addDoc, serverTimestamp, query, orderBy, onSnapshot } from 'firebase/firestore';
-import { LayoutDashboard, ShoppingBag, MessageSquare, Package, LogOut, Plus, Trash2, Edit, X, Menu, DollarSign as DollarSign2, ArrowUp, ArrowDown } from 'lucide-react';
+import { LayoutDashboard, ShoppingBag, MessageSquare, Package, LogOut, Plus, Trash2, Edit, X, Menu, DollarSign as DollarSign2, ArrowUp, ArrowDown, RefreshCcw } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import WebsiteEditor from './WebsiteEditor';
 import { UsersManager, DiscountsManager, SEOSettingsManager, BannersManager, MediaManager, NotificationsManager } from '../../components/AdminFeatures';
@@ -94,6 +94,7 @@ export default function Dashboard() {
             { id: 'products', icon: Package, label: 'Products (Tools)' },
             { id: 'courses', icon: Package, label: 'Courses' },
             { id: 'orders', icon: ShoppingBag, label: 'Orders', badge: orders.filter(o=>o.status==='pending').length },
+            { id: 'refunds', icon: RefreshCcw, label: 'Refund Requests' },
             { id: 'transactions', icon: ShoppingBag, label: 'Payments', badge: transactions.filter(t=>t.status==='pending').length },
             { id: 'paymentsettings', icon: LayoutDashboard, label: 'Payment Accounts' },
             { id: 'settings', icon: LayoutDashboard, label: 'Global Settings' },
@@ -139,22 +140,8 @@ export default function Dashboard() {
                   <p className="text-slate-500">Welcome back, Admin. Here is what is happening today.</p>
                </div>
                
-               <div className="grid md:grid-cols-4 gap-6">
-                 {[
-                   { label: 'Total Revenue', value: `PKR ${stats.revenue.toLocaleString()}`, icon: DollarSign2 },
-                   { label: 'Total Orders', value: stats.orders, icon: ShoppingBag },
-                   { label: 'Total Products', value: stats.products, icon: Package },
-                   { label: 'Unread Messages', value: stats.messages, icon: MessageSquare }
-                 ].map((stat, i) => (
-                   <div key={i} className="bg-white p-6 rounded-3xl border border-slate-200 card-shadow">
-                      <div className="flex items-center justify-between mb-4">
-                         <div className="w-12 h-12 bg-red-50 text-red-600 rounded-xl flex items-center justify-center"><stat.icon size={24} /></div>
-                      </div>
-                      <p className="text-slate-500 font-medium">{stat.label}</p>
-                      <h3 className="text-3xl font-black mt-1 text-slate-900">{stat.value}</h3>
-                   </div>
-                 ))}
-               </div>
+               <OverviewAnalytics orders={orders} />
+               <CalendarAnalytics orders={orders} />
                
                <div className="bg-white p-8 rounded-3xl border border-slate-200 card-shadow mt-8">
                   <h3 className="text-xl font-bold mb-6">Recent Orders</h3>
@@ -196,6 +183,7 @@ export default function Dashboard() {
            {activeTab === 'products' && <ProductsManager products={products} type="Tool" refresh={fetchData} />}
            {activeTab === 'courses' && <ProductsManager products={products} type="Course" refresh={fetchData} />}
            {activeTab === 'orders' && <OrdersManager orders={orders} refresh={fetchData} />}
+           {activeTab === 'refunds' && <RefundsManager />}
            {activeTab === 'transactions' && <TransactionsManager transactions={transactions} refresh={fetchData} />}
            {activeTab === 'paymentsettings' && <PaymentSettingsManager />}
            {activeTab === 'settings' && <GlobalSettingsManager />}
@@ -807,7 +795,8 @@ function AnalyticsManager() {
                <thead>
                   <tr className="bg-slate-50/50">
                      <th className="py-4 px-6 font-bold text-slate-500 text-xs tracking-wider uppercase">Path</th>
-                     <th className="py-4 px-6 font-bold text-slate-500 text-xs tracking-wider uppercase">OS / Browser</th>
+                     <th className="py-4 px-6 font-bold text-slate-500 text-xs tracking-wider uppercase">Device / Browser</th>
+                     <th className="py-4 px-6 font-bold text-slate-500 text-xs tracking-wider uppercase">Location</th>
                      <th className="py-4 px-6 font-bold text-slate-500 text-xs tracking-wider uppercase">Last Active</th>
                      <th className="py-4 px-6 font-bold text-slate-500 text-xs tracking-wider uppercase">Status</th>
                   </tr>
@@ -818,7 +807,12 @@ function AnalyticsManager() {
                      return (
                      <tr key={v.id} className="hover:bg-slate-50 transition-colors">
                         <td className="py-4 px-6 font-medium text-slate-800">{v.path || '/'}</td>
-                        <td className="py-4 px-6 text-sm text-slate-500 max-w-xs truncate" title={v.userAgent}>{v.userAgent}</td>
+                        <td className="py-4 px-6 text-sm text-slate-800 font-medium">
+                           {v.deviceModel || 'Desktop'} <span className="text-slate-400">({v.browserName || 'Unknown'})</span>
+                        </td>
+                        <td className="py-4 px-6 text-sm text-slate-800 font-medium text-red-600">
+                           {v.city || 'Unknown Location'}
+                        </td>
                         <td className="py-4 px-6 text-sm text-slate-500">
                            {v.lastActive ? new Date(v.lastActive.toMillis()).toLocaleTimeString() : 'Unknown'}
                         </td>
@@ -1388,6 +1382,251 @@ function AnnouncementsManager() {
             </div>
          </div>
        )}
+    </div>
+  );
+}
+
+function OverviewAnalytics({ orders }: { orders: any[] }) {
+  const [stats, setStats] = useState({ 
+    totalOrders: 0, totalIncome: 0, yesterdayIncome: 0, prevDayIncome: 0, weekSales: 0, monthSales: 0 
+  });
+
+  useEffect(() => {
+    if (!orders) return;
+    const now = new Date();
+    
+    let totalIncome = 0;
+    let yesterdayIncome = 0;
+    let prevDayIncome = 0;
+    let weekSales = 0;
+    let monthSales = 0;
+
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    const startOfYesterday = startOfToday - 86400000;
+    const startOfPrevDay = startOfYesterday - 86400000;
+    
+    // JS getDay() returns 0 for Sunday. Week start typically Monday.
+    const day = now.getDay() === 0 ? 6 : now.getDay() - 1; 
+    const startOfWeek = startOfToday - (day * 86400000);
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+
+    orders.forEach(o => {
+      // Only count confirmed or delivered
+      if (o.status !== 'confirmed' && o.status !== 'delivered') return;
+
+      const dateStr = o.createdAt?.toMillis ? o.createdAt.toMillis() : Date.now();
+      const amount = o.total_price || 0;
+
+      totalIncome += amount;
+
+      if (dateStr >= startOfYesterday && dateStr < startOfToday) yesterdayIncome += amount;
+      if (dateStr >= startOfPrevDay && dateStr < startOfYesterday) prevDayIncome += amount;
+      if (dateStr >= startOfWeek) weekSales += amount;
+      if (dateStr >= startOfMonth) monthSales += amount;
+    });
+
+    setStats({
+      totalOrders: orders.length,
+      totalIncome,
+      yesterdayIncome,
+      prevDayIncome,
+      weekSales,
+      monthSales
+    });
+  }, [orders]);
+
+  return (
+    <div className="bg-white p-6 md:p-8 rounded-3xl border border-slate-200 card-shadow mt-8 mb-8">
+      <h3 className="text-xl font-bold mb-6 flex items-center gap-2"><DollarSign2 /> Overview Analytics</h3>
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+        <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+          <p className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-1">Total Orders</p>
+          <p className="text-3xl font-black text-slate-900">{stats.totalOrders}</p>
+        </div>
+        <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+          <p className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-1">Total Income</p>
+          <p className="text-3xl font-black text-slate-900">PKR {stats.totalIncome.toLocaleString()}</p>
+        </div>
+        <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+          <p className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-1">Yesterday Income</p>
+          <p className="text-2xl font-black text-slate-900">PKR {stats.yesterdayIncome.toLocaleString()}</p>
+        </div>
+        <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+          <p className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-1">Prev Day Income</p>
+          <p className="text-2xl font-black text-slate-900">PKR {stats.prevDayIncome.toLocaleString()}</p>
+        </div>
+        <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+          <p className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-1">Sales This Week</p>
+          <p className="text-2xl font-black text-slate-900">PKR {stats.weekSales.toLocaleString()}</p>
+        </div>
+        <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+          <p className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-1">Sales This Month</p>
+          <p className="text-2xl font-black text-slate-900">PKR {stats.monthSales.toLocaleString()}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function RefundsManager() {
+  const [refunds, setRefunds] = React.useState<any[]>([]);
+
+  React.useEffect(() => {
+    const q = query(collection(db, 'refunds'), orderBy('timestamp', 'desc'));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      setRefunds(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    });
+    return () => unsubscribe();
+  }, []);
+
+  const updateStatus = async (id: string, newStatus: string) => {
+    try {
+      await updateDoc(doc(db, 'refunds', id), { status: newStatus });
+      alert(`Refund marked as ${newStatus}. ${newStatus === 'Approved' ? 'The user will be notified.' : ''}`);
+    } catch (err) {
+      console.error(err);
+      alert('Failed to update status.');
+    }
+  };
+
+  return (
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="flex items-center justify-between">
+         <div>
+            <h2 className="text-2xl font-black text-slate-900">Refund Requests</h2>
+            <p className="text-slate-500">Manage user refund applications</p>
+         </div>
+      </div>
+
+      <div className="bg-white rounded-3xl border border-slate-200 card-shadow overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left">
+            <thead>
+               <tr className="bg-slate-50/50">
+                  <th className="py-4 px-6 font-bold text-slate-500 text-xs tracking-wider uppercase">User / Method</th>
+                  <th className="py-4 px-6 font-bold text-slate-500 text-xs tracking-wider uppercase">Product</th>
+                  <th className="py-4 px-6 font-bold text-slate-500 text-xs tracking-wider uppercase">Reason</th>
+                  <th className="py-4 px-6 font-bold text-slate-500 text-xs tracking-wider uppercase">Status</th>
+                  <th className="py-4 px-6 font-bold text-slate-500 text-xs tracking-wider uppercase text-right">Actions</th>
+               </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+               {refunds.map(r => (
+                  <tr key={r.id} className="hover:bg-slate-50 transition-colors">
+                     <td className="py-4 px-6">
+                        <p className="font-bold text-slate-900">{r.name}</p>
+                        <p className="text-xs text-slate-500">{r.email}</p>
+                        <p className="text-[10px] font-black text-slate-400 uppercase mt-1">VIA {r.receiveMethod}</p>
+                     </td>
+                     <td className="py-4 px-6">
+                        <p className="font-bold text-slate-800">{r.productName}</p>
+                        <p className="text-sm font-black text-red-600">PKR {r.amount?.toLocaleString()}</p>
+                     </td>
+                     <td className="py-4 px-6 max-w-xs">
+                        <p className="text-sm text-slate-600 truncate">{r.refundReason}</p>
+                        <p className="text-xs text-slate-400 mt-1">{r.timestamp?.toDate ? r.timestamp.toDate().toLocaleString() : 'Unknown Date'}</p>
+                     </td>
+                     <td className="py-4 px-6">
+                        <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                           r.status === 'Pending' ? 'bg-amber-100 text-amber-700' :
+                           r.status === 'Approved' ? 'bg-green-100 text-green-700' :
+                           r.status === 'Rejected' ? 'bg-red-100 text-red-700' :
+                           'bg-blue-100 text-blue-700'
+                        }`}>
+                           {r.status}
+                        </span>
+                     </td>
+                     <td className="py-4 px-6 text-right space-x-2">
+                        {r.status === 'Pending' && (
+                           <>
+                             <button onClick={() => updateStatus(r.id, 'Processing')} className="bg-blue-50 text-blue-600 hover:bg-blue-100 px-3 py-1.5 rounded-lg text-xs font-bold mr-2 transition-colors">Process</button>
+                             <button onClick={() => updateStatus(r.id, 'Approved')} className="bg-green-50 text-green-600 hover:bg-green-100 px-3 py-1.5 rounded-lg text-xs font-bold mr-2 transition-colors">Approve</button>
+                             <button onClick={() => updateStatus(r.id, 'Rejected')} className="bg-red-50 text-red-600 hover:bg-red-100 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors">Reject</button>
+                           </>
+                        )}
+                        {r.status === 'Processing' && (
+                           <>
+                             <button onClick={() => updateStatus(r.id, 'Approved')} className="bg-green-50 text-green-600 hover:bg-green-100 px-3 py-1.5 rounded-lg text-xs font-bold mr-2 transition-colors">Approve</button>
+                             <button onClick={() => updateStatus(r.id, 'Rejected')} className="bg-red-50 text-red-600 hover:bg-red-100 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors">Reject</button>
+                           </>
+                        )}
+                     </td>
+                  </tr>
+               ))}
+               {refunds.length === 0 && (
+                  <tr>
+                     <td colSpan={5} className="py-8 text-center text-slate-500 font-medium">No refund requests found.</td>
+                  </tr>
+               )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CalendarAnalytics({ orders }: { orders: any[] }) {
+  const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]);
+
+  // Aggregate selected date
+  const selectedDateStr = new Date(selectedDate).toDateString();
+  const dateOrders = orders.filter(o => {
+     if (!o.createdAt || !o.createdAt.toMillis) return false;
+     return new Date(o.createdAt.toMillis()).toDateString() === selectedDateStr;
+  });
+
+  const dailyIncome = dateOrders
+     .filter(o => o.status === 'confirmed' || o.status === 'delivered')
+     .reduce((acc, curr) => acc + (curr.total_price || 0), 0);
+
+  return (
+    <div className="bg-white p-6 md:p-8 rounded-3xl border border-slate-200 card-shadow mt-8">
+      <h3 className="text-xl font-bold mb-6">Calendar Analytics</h3>
+      <div className="flex flex-col md:flex-row gap-8">
+         <div className="md:w-1/3">
+            <label className="block font-bold text-slate-700 mb-2">Select Date:</label>
+            <input 
+               type="date" 
+               value={selectedDate}
+               max={new Date().toISOString().split('T')[0]}
+               onChange={e => setSelectedDate(e.target.value)}
+               className="w-full border-2 border-slate-200 rounded-xl px-4 py-3 bg-slate-50 text-lg font-bold outline-none focus:border-red-500"
+            />
+            <div className="mt-8 bg-red-50 p-6 rounded-2xl border border-red-100">
+               <p className="font-bold text-red-600 mb-2 uppercase text-xs tracking-wider">Date Summary</p>
+               <div className="flex justify-between items-center mb-2">
+                  <span className="text-slate-600">Orders:</span>
+                  <span className="font-bold text-lg">{dateOrders.length}</span>
+               </div>
+               <div className="flex justify-between items-center">
+                  <span className="text-slate-600">Income:</span>
+                  <span className="font-bold text-lg text-green-700">PKR {dailyIncome.toLocaleString()}</span>
+               </div>
+            </div>
+         </div>
+         <div className="md:w-2/3">
+            <h4 className="font-bold text-slate-800 mb-4 border-b pb-2">Products Sold ({selectedDateStr})</h4>
+            <div className="max-h-[300px] overflow-y-auto space-y-3 pr-2 minimal-scrollbar">
+               {dateOrders.length === 0 ? (
+                  <p className="text-slate-500 py-4 text-center">No orders found on this day.</p>
+               ) : (
+                  dateOrders.map(o => (
+                     <div key={o.id} className="bg-slate-50 border border-slate-100 p-4 rounded-xl flex justify-between items-center">
+                        <div>
+                           <p className="font-bold text-slate-800">{o.customer_name}</p>
+                           <p className="text-xs text-slate-500">{(o.products || []).map((p: any) => p.name).join(', ')}</p>
+                        </div>
+                        <div className="text-right">
+                           <p className="font-bold">PKR {o.total_price?.toLocaleString()}</p>
+                           <p className="text-[10px] uppercase font-bold text-slate-400">{o.status}</p>
+                        </div>
+                     </div>
+                  ))
+               )}
+            </div>
+         </div>
+      </div>
     </div>
   );
 }

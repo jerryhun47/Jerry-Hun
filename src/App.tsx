@@ -12,6 +12,7 @@ import ToolsStore from './pages/ToolsStore';
 import Courses from './pages/Courses';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsConditions from './pages/TermsConditions';
+import Refund from './pages/Refund';
 import Login from './pages/admin/Login';
 import Dashboard from './pages/admin/Dashboard';
 import { useVisitorTracking } from './lib/useVisitorTracking';
@@ -38,6 +39,7 @@ export default function App() {
             <Route index element={<Home />} />
             <Route path="tools" element={<ToolsStore />} />
             <Route path="courses" element={<Courses />} />
+            <Route path="refund" element={<Refund />} />
             <Route path="privacy-policy" element={<PrivacyPolicy />} />
             <Route path="terms-conditions" element={<TermsConditions />} />
           </Route>

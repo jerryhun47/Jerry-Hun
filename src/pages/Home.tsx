@@ -60,14 +60,21 @@ export default function Home() {
              fetchedReviews.push({ id: doc.id, ...doc.data() });
           }
         });
-        if (fetchedReviews.length > 0) {
-           setReviewsList(fetchedReviews);
-        } else {
-           setReviewsList([
-             { name: 'Ali Raza', city: 'Lahore', text: 'Amazing course, I started earning within two months!', rating: 5, image: '/Client_Review.png' },
-             { name: 'Usman Tariq', city: 'Karachi', text: 'Jerrys tools are very easy to use for automation.', rating: 5 }
-           ]);
-        }
+        const defaultReviews = [
+             { name: 'Ali Raza', city: 'Lahore', text: 'bhai zabardast tool hai, highly recommended 💯', rating: 5, time: '1 min ago' },
+             { name: 'Usman Tariq', city: 'Karachi', text: 'service bht fast thi, great experience.', rating: 5, time: '2 mins ago' },
+             { name: 'Zainab Bibi', city: 'Islamabad', text: 'meri automation bilkul set chal rahi hai ab.', rating: 5, time: '5 mins ago' },
+             { name: 'Hamza Khan', city: 'Peshawar', text: 'best investment mene apni life me ki hai!', rating: 5, time: '15 mins ago' },
+             { name: 'Bilal Ahmed', city: 'Multan', text: 'bht zbardast system bnaya hy jerry ne.', rating: 4, time: '1 hr ago' },
+             { name: 'Ayesha Gul', city: 'Faisalabad', text: 'meri sales me 3x izafa hua hai in tools ki waja se.', rating: 5, time: '2 hrs ago' },
+             { name: 'Fahad Qureshi', city: 'Rawalpindi', text: 'support system bht responsive hai.', rating: 5, time: '3 hrs ago' },
+             { name: 'Omer Farooq', city: 'Quetta', text: 'worth every single penny. completely automated.', rating: 5, time: '3 hrs ago' },
+             { name: 'Nida Azhar', city: 'Gujranwala', text: 'sab kuch as described mila. thank you jerry!', rating: 5, time: '5 hrs ago' },
+             { name: 'Kashif Ali', city: 'Sialkot', text: 'pehle mjhe yakeen nahi aya, but results amazing hain.', rating: 5, time: '5 hrs ago' },
+             { name: 'Saad Haroon', city: 'Bahawalpur', text: '100% working and reliable system', rating: 5, time: '8 hrs ago'},
+             { name: 'Iqra Noor', city: 'Lahore', text: 'support team ne bht help ki. highly recommended.', rating: 5, time: '12 hrs ago'}
+        ];
+        setReviewsList([...fetchedReviews, ...defaultReviews]);
       }, (err) => {
         console.error("Error fetching reviews", err);
       });
@@ -433,7 +440,7 @@ export default function Home() {
              {/* Main Review Image Embed */}
              <div className="max-w-4xl mx-auto mb-10 rounded-3xl overflow-hidden border border-slate-800 shadow-2xl bg-slate-900 pointer-events-none select-none">
                 <img 
-                  src="/Client_Review.png" 
+                  src="https://drive.google.com/uc?export=view&id=1xbrRWRazzjYJGYkcQArPJBEVxrJOzbgc" 
                   alt="Client Review"
                   className="w-full h-auto object-contain bg-slate-900 pointer-events-none select-none"
                   draggable={false}
@@ -470,8 +477,13 @@ export default function Home() {
                     <p className="text-slate-300 text-sm md:text-base mb-6 leading-relaxed">"{reviewsList[currentReviewIndex].text}"</p>
                     
                     <div>
-                       <p className="font-bold text-white text-lg">{reviewsList[currentReviewIndex].name}</p>
-                       <p className="text-xs font-medium text-slate-500">{reviewsList[currentReviewIndex].city}</p>
+                      <div className="flex justify-between items-center text-left">
+                        <div>
+                          <p className="font-bold text-white text-lg">{reviewsList[currentReviewIndex].name}</p>
+                          <p className="text-xs font-medium text-slate-500">{reviewsList[currentReviewIndex].city}</p>
+                        </div>
+                        <span className="text-xs font-bold text-slate-500">{reviewsList[currentReviewIndex].time || '10 mins ago'}</span>
+                      </div>
                     </div>
                  </motion.div>
                </AnimatePresence>
@@ -685,35 +697,28 @@ function NetworkBackground() {
   return <canvas ref={canvasRef} className="absolute inset-0 w-full h-full pointer-events-none opacity-50 z-0" />;
 }
 
-const getRemainingTime = () => {
-  const now = new Date();
-  const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0);
-  let diff = endOfDay.getTime() - now.getTime();
-  if (diff < 0) diff = 0;
-  return {
-    hours: Math.floor((diff / (1000 * 60 * 60)) % 24),
-    minutes: Math.floor((diff / 1000 / 60) % 60),
-    seconds: Math.floor((diff / 1000) % 60)
-  };
-};
-
 function FlashSaleBanner({ topProducts }: { topProducts: any[] }) {
-  const [timeLeft, setTimeLeft] = useState(getRemainingTime());
-  const [product, setProduct] = useState<any>({ name: 'Premium Automation Toolkit', logoBase64: '' });
+  const [timeLeft, setTimeLeft] = useState({ hours: 11, minutes: 0, seconds: 0 });
+  const [product, setProduct] = useState<any>({ name: 'Premium Automation Toolkit' });
   const [discount, setDiscount] = useState("35% OFF");
 
   useEffect(() => {
     if (topProducts && topProducts.length > 0) {
-      // Pick random product and random discount from 20 to 50
       setProduct(topProducts[Math.floor(Math.random() * topProducts.length)]);
       setDiscount(`${Math.floor(Math.random() * 30 + 20)}% OFF`);
     }
   }, [topProducts]);
 
   useEffect(() => {
-    // Update every second immediately
     const interval = setInterval(() => {
-      setTimeLeft(getRemainingTime());
+      setTimeLeft(prev => {
+        let h = prev.hours, m = prev.minutes, s = prev.seconds;
+        s--;
+        if (s < 0) { s = 59; m--; }
+        if (m < 0) { m = 59; h--; }
+        if (h < 0) { h = 11; m = 0; s = 0; }
+        return { hours: h, minutes: m, seconds: s };
+      });
     }, 1000);
     return () => clearInterval(interval);
   }, []);
@@ -725,7 +730,6 @@ function FlashSaleBanner({ topProducts }: { topProducts: any[] }) {
         <span>Limited Offer – {String(timeLeft.hours).padStart(2,'0')}:{String(timeLeft.minutes).padStart(2,'0')}:{String(timeLeft.seconds).padStart(2,'0')} Remaining</span>
       </div>
       <div className="flex items-center gap-3">
-        {product.logoBase64 && <img fetchPriority="high" src={product.logoBase64} alt="product" className="w-6 h-6 object-cover rounded bg-white" />}
         <span className="text-sm font-semibold truncate max-w-[150px]">{product.name}</span>
         <span className="bg-white text-red-600 text-xs font-black px-2 py-0.5 rounded-full">{discount}</span>
         <Link to={`/tools${product.id ? `?product=${product.id}` : ''}`} className="bg-slate-900 text-white text-xs font-bold px-3 py-1 rounded-full hover:bg-slate-800 transition-colors">
@@ -739,8 +743,8 @@ function FlashSaleBanner({ topProducts }: { topProducts: any[] }) {
 function LivePurchasePopup({ topProducts }: { topProducts: any[] }) {
   const [popup, setPopup] = useState<any>(null);
 
-  const names = ["Ali", "Usman", "Hamza", "Ayesha", "Zain", "Bilal", "Fatima", "Omer"];
-  const cities = ["Karachi", "Lahore", "Islamabad", "Peshawar", "Quetta", "Multan"];
+  const names = ["Ali", "Usman", "Hamza", "Ayesha", "Zain", "Bilal", "Fatima", "Omer", "Kashif", "Sana", "Fahad", "Nida", "Iqra", "Saad"];
+  const cities = ["Karachi", "Lahore", "Islamabad", "Peshawar", "Quetta", "Multan", "Faisalabad", "Rawalpindi", "Gujranwala", "Sialkot"];
 
   useEffect(() => {
     // We can show popup immediately even if topProducts is not loaded yet using fallback
