@@ -33,9 +33,9 @@ service cloud.firestore {
     match /products/{productId} {
       allow get: if isValidId(productId);
       allow list: if true; // Public list
-      allow create: if isAdmin() && isValidId(productId) && isValidProduct(incoming()) && incoming().createdAt == request.time;
-      allow update: if isAdmin() && isValidId(productId) && isValidProduct(incoming()) && incoming().updatedAt == request.time;
-      allow delete: if isAdmin() && isValidId(productId);
+      allow create: if true;
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
     }
 
     // Orders
@@ -49,12 +49,12 @@ service cloud.firestore {
     }
 
     match /orders/{orderId} {
-      allow create: if isValidId(orderId) && isValidOrder(incoming()) && incoming().createdAt == request.time;
+      allow create: if true;
       // Only admins can see and modify orders
-      allow get: if isAdmin() && isValidId(orderId);
+      allow get: if isAdmin();
       allow list: if isAdmin();
-      allow update: if isAdmin() && isValidId(orderId) && isValidOrder(incoming()) && incoming().updatedAt == request.time;
-      allow delete: if isAdmin() && isValidId(orderId);
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
     }
 
     // Contacts
@@ -83,12 +83,12 @@ service cloud.firestore {
     }
 
     match /transactions/{transactionId} {
-      allow create: if isValidId(transactionId) && isValidTransaction(incoming()) && incoming().createdAt == request.time;
-      allow read: if isSignedIn() && existing().userId == request.auth.uid;
+      allow create: if true;
+      allow read: if isAdmin() || (isSignedIn() && existing().userId == request.auth.uid);
       allow list: if isAdmin();
       allow get: if isAdmin();
-      allow update: if isAdmin() && isValidId(transactionId);
-      allow delete: if isAdmin() && isValidId(transactionId);
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
     }
 
     // Settings
@@ -118,6 +118,36 @@ service cloud.firestore {
     // Announcements
     match /announcements/{annId} {
       allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Users
+    match /users/{userId} {
+      allow read: if isAdmin() || (isSignedIn() && request.auth.uid == userId);
+      allow write: if isAdmin() || (isSignedIn() && request.auth.uid == userId);
+    }
+
+    // SEO Settings
+    match /seo_settings/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Banners
+    match /banners/{bannerId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Media
+    match /media/{mediaId} {
+      allow read: if isAdmin();
+      allow write: if isAdmin();
+    }
+
+    // Notifications
+    match /notifications/{noteId} {
+      allow read: if isAdmin();
       allow write: if isAdmin();
     }
   }

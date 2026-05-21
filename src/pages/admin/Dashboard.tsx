@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { db, auth, signOut } from '../../lib/firebase';
 import { collection, getDocs, doc, deleteDoc, updateDoc, addDoc, serverTimestamp, query, orderBy, onSnapshot } from 'firebase/firestore';
-import { LayoutDashboard, ShoppingBag, MessageSquare, Package, LogOut, Plus, Trash2, Edit, X, Menu, DollarSign as DollarSign2 } from 'lucide-react';
+import { LayoutDashboard, ShoppingBag, MessageSquare, Package, LogOut, Plus, Trash2, Edit, X, Menu, DollarSign as DollarSign2, ArrowUp, ArrowDown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import WebsiteEditor from './WebsiteEditor';
 import { UsersManager, DiscountsManager, SEOSettingsManager, BannersManager, MediaManager, NotificationsManager } from '../../components/AdminFeatures';
@@ -223,55 +223,142 @@ export default function Dashboard() {
 function ProductsManager({ products, type, refresh }: { products: any[], type: string, refresh: () => void }) {
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState<string|null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+  const [saveError, setSaveError] = useState('');
   const [formData, setFormData] = useState({ 
-     name: '', price: 0, category: type, description: '', is_active: true, badge: '',
+     name: '', price: '' as string | number, category: type, description: '', is_active: true, badge: '',
      imageLink: '', videoLink: '', logoBase64: '', detail: ''
   });
   const [lessons, setLessons] = useState<any[]>([]);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
-  const filteredProducts = products.filter(p => type === 'Course' ? p.category === 'Course' : p.category !== 'Course');
+  const filteredProducts = products.filter(p => type === 'Course' ? p.category === 'Course' : p.category !== 'Course')
+    .sort((a,b) => (a.order_index ?? 999) - (b.order_index ?? 999));
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSaving(true);
+    setSaveError('');
+    setSaveSuccess(false);
     try {
-       const productData = { ...formData, lessons, updatedAt: serverTimestamp() };
+       const productData = { 
+         ...formData, 
+         price: Number(formData.price || 0), 
+         lessons, 
+         updatedAt: serverTimestamp() 
+       };
        if (editingId) {
           await updateDoc(doc(db, 'products', editingId), productData);
        } else {
-          await addDoc(collection(db, 'products'), { ...productData, createdAt: serverTimestamp(), features: [] });
+          await addDoc(collection(db, 'products'), { ...productData, createdAt: serverTimestamp(), features: [], order_index: products.length });
        }
-       setShowModal(false);
-       setFormData({ name: '', price: 0, category: type, description: '', is_active: true, badge: '', imageLink: '', videoLink: '', logoBase64: '', detail: '' });
-       setLessons([]);
-       setEditingId(null);
-    } catch (err) {
+       setSaveSuccess(true);
+       setTimeout(() => {
+          setSaveSuccess(false);
+          setShowModal(false);
+          setFormData({ name: '', price: '', category: type, description: '', is_active: true, badge: '', imageLink: '', videoLink: '', logoBase64: '', detail: '' });
+          setLessons([]);
+          setEditingId(null);
+       }, 1000);
+    } catch (err: any) {
        console.error("Error saving product:", err);
-       alert("Error saving product.");
+       setSaveError(err.message || "Error saving product.");
+    } finally {
+       setIsSaving(false);
     }
   };
 
   const handleDelete = async (id: string) => {
     if(confirm('Are you sure you want to delete this product?')) {
        await deleteDoc(doc(db, 'products', id));
+       setSelectedIds(prev => { const n = new Set(prev); n.delete(id); return n; });
     }
+  }
+
+  const handleSelectProduct = (id: string) => {
+    const newSet = new Set(selectedIds);
+    if(newSet.has(id)) newSet.delete(id); else newSet.add(id);
+    setSelectedIds(newSet);
+  }
+
+  const handleBulkDelete = async () => {
+    if(selectedIds.size === 0) return;
+    if(confirm(`Are you sure you want to delete ${selectedIds.size} selected products?`)) {
+       for(const id of selectedIds) {
+         await deleteDoc(doc(db, 'products', id));
+       }
+       setSelectedIds(new Set());
+    }
+  }
+
+  const handleMove = async (index: number, direction: 'up' | 'down') => {
+     const newIndex = direction === 'up' ? index - 1 : index + 1;
+     if (newIndex < 0 || newIndex >= filteredProducts.length) return;
+     
+     const newOrder = [...filteredProducts];
+     const temp = newOrder[index];
+     newOrder[index] = newOrder[newIndex];
+     newOrder[newIndex] = temp;
+     
+     try {
+       await Promise.all(newOrder.map((p, i) => {
+           // Also if moving to index 0, mark badge "Top Product" if desired, though we'll just update order_index
+           const updates: any = { order_index: i };
+           if (i === 0) updates.badge = 'Top Product';
+           return updateDoc(doc(db, 'products', p.id), updates)
+       }));
+     } catch (e) {
+       console.error("Error updating order", e);
+     }
+  }
+
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const handleDragStart = (index: number) => setDraggedIndex(index);
+  const handleDragOver = (e: React.DragEvent) => e.preventDefault();
+  const handleDrop = async (index: number) => {
+      if (draggedIndex === null || draggedIndex === index) return;
+      const newOrder = [...filteredProducts];
+      const item = newOrder.splice(draggedIndex, 1)[0];
+      newOrder.splice(index, 0, item);
+      try {
+        await Promise.all(newOrder.map((p, i) => {
+            const updates: any = { order_index: i };
+            if (i === 0) updates.badge = 'Top Product';
+            return updateDoc(doc(db, 'products', p.id), updates)
+        }));
+      } catch (e) { console.error("Error updating order", e); }
+      setDraggedIndex(null);
   }
 
   return (
     <div className="space-y-6 animate-in fade-in">
-       <div className="flex justify-between items-center">
+       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             <h2 className="text-2xl font-black">Products Management</h2>
             <p className="text-slate-500">Add, edit or disable your tools and courses.</p>
           </div>
-          <button onClick={() => { setEditingId(null); setShowModal(true); }} className="bg-red-600 hover:bg-red-700 text-white px-5 py-2.5 rounded-xl font-bold flex items-center gap-2">
-             <Plus size={18} /> Add Product
-          </button>
+          <div className="flex gap-2">
+            {selectedIds.size > 0 && (
+              <button onClick={handleBulkDelete} className="bg-red-100 hover:bg-red-200 text-red-600 px-5 py-2.5 rounded-xl font-bold transition-colors">
+                Delete Selected ({selectedIds.size})
+              </button>
+            )}
+            <button onClick={() => { setEditingId(null); setShowModal(true); }} className="bg-red-600 hover:bg-red-700 text-white px-5 py-2.5 rounded-xl font-bold flex items-center gap-2">
+               <Plus size={18} /> Add Product
+            </button>
+          </div>
        </div>
 
        <div className="bg-white rounded-3xl border border-slate-200 card-shadow overflow-hidden">
-          <table className="w-full text-left">
+          <div className="overflow-x-auto min-h-[300px]">
+          <table className="w-full text-left min-w-[800px]">
              <thead className="bg-slate-50 border-b border-slate-200">
                <tr>
+                 <th className="px-6 py-4 w-12 text-center text-slate-500">
+                   <input type="checkbox" onChange={(e) => setSelectedIds(e.target.checked ? new Set(filteredProducts.map(p=>p.id)) : new Set())} checked={filteredProducts.length > 0 && selectedIds.size === filteredProducts.length} className="rounded" />
+                 </th>
+                 <th className="px-3 py-4 font-semibold text-slate-500 uppercase text-xs w-20">Order</th>
                  <th className="px-6 py-4 font-semibold text-slate-500 uppercase text-xs">Product</th>
                  <th className="px-6 py-4 font-semibold text-slate-500 uppercase text-xs">Category</th>
                  <th className="px-6 py-4 font-semibold text-slate-500 uppercase text-xs">Price</th>
@@ -280,38 +367,68 @@ function ProductsManager({ products, type, refresh }: { products: any[], type: s
                </tr>
              </thead>
              <tbody className="divide-y divide-slate-100">
-               {filteredProducts.map(p => (
-                 <tr key={p.id} className="hover:bg-slate-50/50">
+               {filteredProducts.map((p, index) => (
+                 <tr 
+                   key={p.id} 
+                   className="hover:bg-slate-50/50"
+                   draggable
+                   onDragStart={() => handleDragStart(index)}
+                   onDragOver={handleDragOver}
+                   onDrop={() => handleDrop(index)}
+                 >
+                    <td className="px-6 py-4 text-center cursor-grab active:cursor-grabbing">
+                       <input type="checkbox" checked={selectedIds.has(p.id)} onChange={() => handleSelectProduct(p.id)} className="rounded" />
+                    </td>
+                    <td className="px-3 py-4">
+                      <div className="flex flex-col gap-1 items-center">
+                         <button onClick={() => handleMove(index, 'up')} disabled={index === 0} className="text-slate-400 hover:text-red-600 disabled:opacity-30 disabled:hover:text-slate-400"><ArrowUp size={16}/></button>
+                         <button onClick={() => handleMove(index, 'down')} disabled={index === filteredProducts.length - 1} className="text-slate-400 hover:text-red-600 disabled:opacity-30 disabled:hover:text-slate-400"><ArrowDown size={16}/></button>
+                      </div>
+                    </td>
                     <td className="px-6 py-4">
                        <div className="font-bold">{p.name}</div>
                        <div className="text-xs text-slate-500">{p.badge}</div>
                     </td>
                     <td className="px-6 py-4 text-sm"><span className="bg-slate-100 text-slate-600 px-2.5 py-1 rounded-lg">{p.category}</span></td>
-                    <td className="px-6 py-4 font-bold">PKR {p.price.toLocaleString()}</td>
+                    <td className="px-6 py-4 font-bold">PKR {Number(p.price).toLocaleString()}</td>
                     <td className="px-6 py-4">
                        {p.is_active ? <span className="text-green-600 bg-green-50 px-2.5 py-1 rounded-lg text-xs font-bold">Active</span> : <span className="text-slate-500 bg-slate-100 px-2.5 py-1 rounded-lg text-xs font-bold">Inactive</span>}
                     </td>
                     <td className="px-6 py-4 text-right space-x-2">
-                       <button onClick={() => { setFormData({ name: '', price: 0, category: type, description: '', is_active: true, badge: '', imageLink: '', videoLink: '', logoBase64: '', detail: '', ...p} as any); setLessons(p.lessons || []); setEditingId(p.id); setShowModal(true); }} className="text-blue-600 hover:bg-blue-50 p-2 rounded-xl transition-colors"><Edit size={16}/></button>
+                       <button onClick={() => { setFormData({ name: '', price: '', category: type, description: '', is_active: true, badge: '', imageLink: '', videoLink: '', logoBase64: '', detail: '', ...p} as any); setLessons(p.lessons || []); setEditingId(p.id); setShowModal(true); }} className="text-blue-600 hover:bg-blue-50 p-2 rounded-xl transition-colors"><Edit size={16}/></button>
                        <button onClick={() => handleDelete(p.id)} className="text-red-600 hover:bg-red-50 p-2 rounded-xl transition-colors"><Trash2 size={16}/></button>
                     </td>
                  </tr>
                ))}
-               {filteredProducts.length === 0 && <tr><td colSpan={5} className="text-center py-12 text-slate-500">No {type === 'Course' ? 'courses' : 'products'} found. Add some to get started.</td></tr>}
+               {filteredProducts.length === 0 && <tr><td colSpan={7} className="text-center py-12 text-slate-500">No {type === 'Course' ? 'courses' : 'products'} found. Add some to get started.</td></tr>}
              </tbody>
           </table>
+          </div>
        </div>
 
        {showModal && (
           <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex flex-col items-center justify-center p-4">
-             <div className="bg-white rounded-3xl w-full max-w-xl p-8 max-h-[90vh] overflow-y-auto">
+             <div className="bg-white rounded-3xl w-full max-w-xl p-8 max-h-[90vh] overflow-y-auto relative">
+               <button onClick={() => setShowModal(false)} className="absolute top-6 right-6 text-slate-400 hover:text-slate-600"><X size={24}/></button>
                <h3 className="text-2xl font-black mb-6">{editingId ? 'Edit Product' : 'Add New Product'}</h3>
+               
+               {saveSuccess && (
+                 <div className="bg-green-100 text-green-700 p-4 rounded-xl font-bold mb-4 border border-green-200">
+                    Changes saved successfully!
+                 </div>
+               )}
+               {saveError && (
+                 <div className="bg-red-100 text-red-700 p-4 rounded-xl font-bold mb-4 border border-red-200">
+                    {saveError}
+                 </div>
+               )}
+
                <form onSubmit={handleSave} className="space-y-4">
-                  <div><label className="block text-sm font-semibold mb-1">Product Name</label><input required type="text" value={formData.name} onChange={e=>setFormData({...formData, name: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2" /></div>
+                  <div><label className="block text-sm font-semibold mb-1">Product Name</label><input required disabled={isSaving} type="text" value={formData.name} onChange={e=>setFormData({...formData, name: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2" /></div>
                   <div className="grid grid-cols-2 gap-4">
-                    <div><label className="block text-sm font-semibold mb-1">Price (PKR)</label><input required type="number" min="0" value={formData.price} onChange={e=>setFormData({...formData, price: Number(e.target.value)})} className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2" /></div>
+                    <div><label className="block text-sm font-semibold mb-1">Price (PKR)</label><input required disabled={isSaving} type="number" min="0" value={formData.price} onChange={e=>setFormData({...formData, price: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2" /></div>
                     <div><label className="block text-sm font-semibold mb-1">Category</label>
-                      <select required value={formData.category} onChange={e=>setFormData({...formData, category: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2">
+                      <select required disabled={isSaving} value={formData.category} onChange={e=>setFormData({...formData, category: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2">
                          <option value="Course">Course</option>
                          <option value="Tool">Tool</option>
                          <option value="Bundle">Bundle</option>
@@ -319,7 +436,7 @@ function ProductsManager({ products, type, refresh }: { products: any[], type: s
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
-                    <div><label className="block text-sm font-semibold mb-1">Badge (Optional)</label><input type="text" value={formData.badge} onChange={e=>setFormData({...formData, badge: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2" placeholder="e.g. Best Seller" /></div>
+                    <div><label className="block text-sm font-semibold mb-1">Badge (Optional)</label><input disabled={isSaving} type="text" value={formData.badge} onChange={e=>setFormData({...formData, badge: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2" placeholder="e.g. Best Seller" /></div>
                     <div className="flex items-center mt-6">
                        <label className="flex items-center gap-2 cursor-pointer">
                          <input type="checkbox" checked={formData.is_active} onChange={e=>setFormData({...formData,is_active: e.target.checked})} className="w-5 h-5 text-red-600 rounded border-slate-300" />
@@ -404,8 +521,10 @@ function ProductsManager({ products, type, refresh }: { products: any[], type: s
                   )}
 
                   <div className="flex justify-end gap-2 pt-4">
-                    <button type="button" onClick={() => setShowModal(false)} className="px-6 py-3 rounded-xl font-bold bg-slate-100 hover:bg-slate-200">Cancel</button>
-                    <button type="submit" className="px-6 py-3 rounded-xl font-bold bg-red-600 hover:bg-red-700 text-white">Save Product</button>
+                    <button type="button" onClick={() => setShowModal(false)} disabled={isSaving} className="px-6 py-3 rounded-xl font-bold bg-slate-100 hover:bg-slate-200 disabled:opacity-50 hover:cursor-pointer disabled:cursor-not-allowed">Cancel</button>
+                    <button type="submit" disabled={isSaving} className="px-6 py-3 rounded-xl font-bold bg-red-600 hover:bg-red-700 text-white disabled:opacity-50 hover:cursor-pointer disabled:cursor-not-allowed">
+                       {isSaving ? 'Saving...' : 'Save Product'}
+                    </button>
                   </div>
                </form>
              </div>

@@ -33,15 +33,12 @@ export default function Home() {
         
         if (activeProds.length === 0) {
            activeProds = [
-             { id: 't1', name: 'Premium Netflix Tool', description: 'Lifetime access to Premium accounts auto-generator.', price: 5000, category: 'Entertainment', is_active: true, badge: 'Hot' },
-             { id: 't2', name: 'Canva Pro Tool', description: 'Unlimited Canva Pro features unlocked.', price: 3000, category: 'Design', is_active: true }
+             { id: 't1', name: 'Premium Netflix Tool', description: 'Lifetime access to Premium accounts auto-generator.', price: 5000, category: 'Entertainment', is_active: true, badge: 'Hot', order_index: 0 },
+             { id: 't2', name: 'Canva Pro Tool', description: 'Unlimited Canva Pro features unlocked.', price: 3000, category: 'Design', is_active: true, order_index: 1 }
            ];
         }
 
-        for (let i = activeProds.length - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1));
-          [activeProds[i], activeProds[j]] = [activeProds[j], activeProds[i]];
-        }
+        activeProds.sort((a, b) => (a.order_index ?? 999) - (b.order_index ?? 999));
         setTopProducts(activeProds.slice(0, 4));
         setLoadingProducts(false);
       }, (err) => {

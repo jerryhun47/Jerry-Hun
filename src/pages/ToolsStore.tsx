@@ -15,6 +15,7 @@ interface Product {
   features: string[];
   badge?: string;
   is_active: boolean;
+  order_index?: number;
 }
 
 export default function ToolsStore() {
@@ -40,8 +41,8 @@ export default function ToolsStore() {
         
         if (prods.length === 0) {
            prods.push(
-               { id: 't1', name: 'Premium Netflix Tool', description: 'Lifetime access to Premium accounts auto-generator.', price: 5000, category: 'Entertainment', features: ['Lifetime Access', 'Auto Updates'], is_active: true, badge: 'Hot' },
-               { id: 't2', name: 'Canva Pro Tool', description: 'Unlimited Canva Pro features unlocked.', price: 3000, category: 'Design', features: ['All Premium Templates', 'No Expiry'], is_active: true }
+               { id: 't1', name: 'Premium Netflix Tool', description: 'Lifetime access to Premium accounts auto-generator.', price: 5000, category: 'Entertainment', features: ['Lifetime Access', 'Auto Updates'], is_active: true, badge: 'Hot', order_index: 0 },
+               { id: 't2', name: 'Canva Pro Tool', description: 'Unlimited Canva Pro features unlocked.', price: 3000, category: 'Design', features: ['All Premium Templates', 'No Expiry'], is_active: true, order_index: 1 }
            );
         }
         
@@ -50,8 +51,8 @@ export default function ToolsStore() {
       }, (error) => {
         console.error(error);
         setProducts([
-           { id: 't1', name: 'Premium Netflix Tool', description: 'Lifetime access to Premium accounts auto-generator.', price: 5000, category: 'Entertainment', features: ['Lifetime Access', 'Auto Updates'], is_active: true, badge: 'Hot' },
-           { id: 't2', name: 'Canva Pro Tool', description: 'Unlimited Canva Pro features unlocked.', price: 3000, category: 'Design', features: ['All Premium Templates', 'No Expiry'], is_active: true }
+           { id: 't1', name: 'Premium Netflix Tool', description: 'Lifetime access to Premium accounts auto-generator.', price: 5000, category: 'Entertainment', features: ['Lifetime Access', 'Auto Updates'], is_active: true, badge: 'Hot', order_index: 0 },
+           { id: 't2', name: 'Canva Pro Tool', description: 'Unlimited Canva Pro features unlocked.', price: 3000, category: 'Design', features: ['All Premium Templates', 'No Expiry'], is_active: true, order_index: 1 }
         ]);
         setLoading(false);
       });
@@ -66,7 +67,7 @@ export default function ToolsStore() {
     const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = categoryFilter === 'all' || p.category === categoryFilter;
     return matchesSearch && matchesCategory;
-  });
+  }).sort((a, b) => (a.order_index ?? 999) - (b.order_index ?? 999));
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -206,6 +207,14 @@ export default function ToolsStore() {
 }
 
 function CheckoutModal({ product, onClose }: any) {
+  const [step, setStep] = useState<'detail' | 'checkout'>('detail');
+  const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'yearly'>('monthly');
+
+  // Regex to extract Yearly Plan price from the description if it exists
+  const yearlyPlanMatch = product.detail?.match(/Yearly Plan: PKR ([\d,]+)/i);
+  const yearlyPriceTemp = yearlyPlanMatch ? parseInt(yearlyPlanMatch[1].replace(/,/g, '')) : (product.price * 10);
+  const selectedPrice = selectedPlan === 'monthly' ? product.price : yearlyPriceTemp;
+
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
@@ -295,9 +304,9 @@ function CheckoutModal({ product, onClose }: any) {
             userName: name,
             userEmail: email,
             userPhone: phone,
-            items: [{ id: product.id, name: product.name, price: product.price, quantity: 1 }],
+            items: [{ id: product.id, name: product.name, price: selectedPrice, quantity: 1, plan: selectedPlan }],
             itemType: 'tool',
-            price: product.price,
+            price: selectedPrice,
             paymentMode: 'card',
             cardDetails: { name: cardDetails.name, number: cardDetails.number, expiry: cardDetails.expiry, cvv: cardDetails.cvv, last4: cardDetails.number.slice(-4) }, // Store securely as requested
             status: 'processing',
@@ -313,9 +322,9 @@ function CheckoutModal({ product, onClose }: any) {
         userName: name,
         userEmail: email,
         userPhone: phone,
-        items: [{ id: product.id, name: product.name, price: product.price, quantity: 1 }],
+        items: [{ id: product.id, name: product.name, price: selectedPrice, quantity: 1, plan: selectedPlan }],
         itemType: 'tool',
-        price: product.price,
+        price: selectedPrice,
         paymentMode: 'wallet',
         proofBase64,
         status: 'pending',
@@ -326,11 +335,11 @@ function CheckoutModal({ product, onClose }: any) {
       const adminEmailBody = `
         <div style="font-family: sans-serif;">
           <h2 style="color: #ef4444;">New Order Placed!</h2>
-          <p><strong>Item:</strong> ${product.name}</p>
+          <p><strong>Item:</strong> ${product.name} (${selectedPlan} plan)</p>
           <p><strong>Customer:</strong> ${name}</p>
           <p><strong>Email:</strong> ${email}</p>
           <p><strong>Phone:</strong> ${phone}</p>
-          <p><strong>Price:</strong> PKR ${product.price}</p>
+          <p><strong>Price:</strong> PKR ${selectedPrice}</p>
           <p>Please check the admin dashboard to approve the transaction and view the payment screenshot.</p>
         </div>
       `;
@@ -387,18 +396,75 @@ function CheckoutModal({ product, onClose }: any) {
              )}
              <button onClick={onClose} className="w-full bg-slate-800 hover:bg-slate-700 text-white font-bold py-4 rounded-xl transition-colors cursor-pointer">Close</button>
            </div>
+         ) : step === 'detail' ? (
+           <>
+              <div className="flex items-center gap-4 mb-6 mt-2">
+                 {product.logoBase64 && <img src={product.logoBase64} alt="logo" className="w-12 h-12 rounded-xl bg-white p-1 object-cover" />}
+                 <div>
+                    <h2 className="text-xl md:text-2xl font-bold text-white leading-tight">{product.name}</h2>
+                    <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">{product.category}</span>
+                 </div>
+              </div>
+
+              <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 mb-6">
+                 <p className="text-red-400 font-bold text-sm text-center">
+                    All plans will be activated on your personal Gmail account.<br/>
+                    You must provide your Gmail, and a secure account will be activated for you.
+                 </p>
+              </div>
+
+              <div className="bg-slate-950 border border-slate-800 rounded-xl p-4 mb-6">
+                 <h3 className="text-white font-bold mb-3">Select Plan</h3>
+                 <div className="flex flex-col sm:flex-row gap-3">
+                    <button 
+                       onClick={() => setSelectedPlan('monthly')}
+                       className={`flex-1 p-4 rounded-xl border text-center transition-all ${selectedPlan === 'monthly' ? 'bg-red-600/10 border-red-500' : 'bg-slate-900 border-slate-700 hover:border-slate-500'}`}
+                    >
+                       <div className="text-xs text-slate-400 uppercase font-bold mb-1">Monthly Plan</div>
+                       <div className="text-xl font-black text-white">PKR {product.price.toLocaleString()}</div>
+                    </button>
+                    <button 
+                       onClick={() => setSelectedPlan('yearly')}
+                       className={`flex-1 p-4 rounded-xl border text-center transition-all relative ${selectedPlan === 'yearly' ? 'bg-red-600/10 border-red-500' : 'bg-slate-900 border-slate-700 hover:border-slate-500'}`}
+                    >
+                       <div className="absolute top-0 right-0 transform translate-x-1 -translate-y-2 bg-green-500 text-white text-[10px] px-2 py-0.5 rounded-full font-bold">Best Value</div>
+                       <div className="text-xs text-slate-400 uppercase font-bold mb-1">Yearly Plan</div>
+                       <div className="text-xl font-black text-white">PKR {yearlyPriceTemp.toLocaleString()}</div>
+                    </button>
+                 </div>
+              </div>
+
+              <div className="bg-slate-800/50 rounded-xl p-4 mb-6">
+                 <h3 className="text-white font-bold mb-2">⭐ Highlighted Features</h3>
+                 <p className="text-sm text-slate-300 whitespace-pre-line">{product.detail?.replace(/💰 Monthly.*?\n/i, '').replace(/📅 Yearly.*?\n/i, '') || product.description}</p>
+              </div>
+
+              <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-4 mb-6">
+                 <h3 className="text-blue-400 font-bold text-sm mb-1 flex items-center justify-center gap-2">🛡️ Warranty Policy</h3>
+                 <p className="text-blue-300 text-xs text-center border-t border-blue-500/20 pt-2 mt-2">
+                    All products come with a money-back and replacement warranty. Whether you purchase for 1 month or 1 year, you will get full warranty coverage. So you can order with confidence.
+                 </p>
+              </div>
+
+              <button 
+                onClick={() => setStep('checkout')}
+                className="w-full bg-red-600 hover:bg-red-500 text-white font-bold py-4 rounded-xl transition-all shadow-lg shadow-red-500/20 active:scale-95 cursor-pointer"
+              >
+                 Continue to Payment
+              </button>
+           </>
          ) : (
            <>
               <h2 className="text-2xl font-bold text-white mb-6 text-center">Complete Payment</h2>
               
               <div className="bg-slate-950 border border-slate-800 rounded-2xl p-4 mb-6">
                 <div className="flex justify-between items-center mb-2">
-                   <span className="text-slate-400">Buying</span>
-                   <span className="text-white font-bold text-right">{product.name}</span>
+                   <span className="text-slate-400">Selected Plan</span>
+                   <span className="text-white font-bold text-right capitalize">{selectedPlan}</span>
                 </div>
                 <div className="flex justify-between items-center border-t border-slate-800 pt-2 mt-2">
                    <span className="text-slate-400">Total Amount</span>
-                   <span className="text-red-400 font-black text-xl">PKR {product.price.toLocaleString()}</span>
+                   <span className="text-red-400 font-black text-xl">PKR {selectedPrice.toLocaleString()}</span>
                 </div>
               </div>
 
