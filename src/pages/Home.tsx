@@ -297,18 +297,32 @@ export default function Home() {
                    </div>
                  ))
                ) : topProducts.length > 0 ? topProducts.slice(0, 4).map(product => (
-                  <motion.div variants={staggerItem} key={product.id} className="w-full aspect-square shrink-0 bg-slate-800 border border-slate-700 rounded-3xl p-4 sm:p-6 shadow-xl flex flex-col relative group hover:-translate-y-1 hover:scale-[1.03] hover:shadow-2xl hover:border-slate-600 transition-all duration-300 opacity-100">
-                    {product.badge && <div className="absolute top-4 right-4 bg-slate-900 border border-slate-700 text-red-500 text-xs font-bold px-2 py-1 sm:px-3 sm:py-1 rounded-full z-10">{product.badge}</div>}
-                    
-                    <img loading="lazy" src={product.logoBase64 || '/logo.png'} onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/logo.png' }} alt={product.name} className="w-12 h-12 md:w-16 md:h-16 object-cover bg-white rounded-xl p-0.5 mb-4 shrink-0 transition-transform group-hover:scale-105 border border-slate-200" />
-
-                    <div className="mb-2 sm:mb-4">
-                      <span className="text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider">{product.category}</span>
-                      <h3 className="text-sm sm:text-lg font-bold mt-1 text-white group-hover:text-red-400 transition-colors line-clamp-2 leading-snug">{product.name}</h3>
+                  <motion.div variants={staggerItem} key={product.id} className="w-full shrink-0 bg-slate-800 border border-slate-700 rounded-3xl p-6 shadow-xl flex flex-col relative group hover:-translate-y-1 hover:scale-[1.03] hover:shadow-2xl hover:border-slate-600 transition-all duration-300 opacity-100 aspect-square md:aspect-auto md:min-h-[400px]">
+                    <div className="mb-4">
+                      <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">{product.category}</span>
+                      <h3 className="text-lg font-bold mt-1 text-white group-hover:text-red-400 transition-colors line-clamp-2 leading-snug">{product.name}</h3>
                     </div>
-                    <p className="text-slate-300 text-xs sm:text-sm mb-4 flex-1 line-clamp-2 sm:line-clamp-3">{product.description}</p>
+                    <p className="text-slate-300 text-sm mb-4 md:mb-2 md:flex-none flex-1 line-clamp-3 md:line-clamp-none">{product.description}</p>
+                    
+                    {product.detail && (
+                      <div className="hidden md:block mb-4 mt-2 flex-1">
+                         <ul className="space-y-1.5 text-sm text-slate-300">
+                            {product.detail.split('\n').filter((l:string)=>l.trim().length>0).map((line:string, i:number) => {
+                               const hasEmoji = line.trim().match(/^\p{Emoji}/u);
+                               return (
+                                <li key={i} className="flex items-start gap-2">
+                                   <span className="shrink-0 mt-0.5">{hasEmoji ? '' : '⭐'}</span> 
+                                   <span className="leading-snug">{hasEmoji || line.trim().startsWith('⭐') ? line.trim() : line.replace(/^[-*]\s*/, '').trim()}</span>
+                                </li>
+                              );
+                            })}
+                         </ul>
+                      </div>
+                    )}
+                    
+                    {!product.detail && <div className="hidden md:block flex-1"></div>}
                     <div className="flex items-center justify-between mt-auto border-t border-slate-700 pt-3">
-                      <div className="font-black text-sm sm:text-lg text-white">PKR {product.price.toLocaleString()}</div>
+                      <div className="font-black text-lg text-white">PKR {product.price.toLocaleString()}</div>
                       <Link to={`/tools?product=${product.id}`} className="bg-red-600 hover:bg-red-500 text-white p-2 rounded-xl transition-all shadow-lg shadow-red-500/20 hover:scale-110">
                          <ShoppingCart size={18} />
                       </Link>

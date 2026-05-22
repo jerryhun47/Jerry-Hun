@@ -1,7 +1,162 @@
 import React, { useState, useEffect } from 'react';
 import { collection, onSnapshot, addDoc, updateDoc, doc, deleteDoc, query, orderBy } from 'firebase/firestore';
 import { db } from '../lib/firebase';
-import { Trash2, Plus, RefreshCw, X, Image as ImageIcon } from 'lucide-react';
+import { Trash2, Plus, RefreshCw, X, Image as ImageIcon, MessageSquare } from 'lucide-react';
+import { limit } from 'firebase/firestore';
+
+import { PieChart, Activity, Users, Monitor, Search, Smartphone, Globe, MousePointerClick } from 'lucide-react';
+
+export function LiveTrackingManager() {
+  const [logs, setLogs] = useState<any[]>([]);
+  const [stats, setStats] = useState({ activeSessions: 0, totalPageviews: 0, mobileUsers: 0, desktopUsers: 0 });
+
+  useEffect(() => {
+    const q = query(collection(db, 'tracking_logs'), orderBy('timestamp', 'desc'), limit(100));
+    const unsubscribe = onSnapshot(q, (snap) => {
+      const data = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      setLogs(data);
+      
+      const uniqueSessions = new Set(data.map(d => d.sessionId)).size;
+      const mobile = data.filter(d => d.device === 'Mobile').length;
+      const desktop = data.filter(d => d.device === 'Desktop').length;
+      setStats({
+        activeSessions: uniqueSessions,
+        totalPageviews: data.length,
+        mobileUsers: mobile,
+        desktopUsers: desktop
+      });
+    });
+    return () => unsubscribe();
+  }, []);
+
+  return (
+    <div className="bg-white p-6 md:p-8 rounded-3xl border border-slate-200 card-shadow">
+      <div className="mb-6 flex justify-between items-center">
+        <div>
+          <h2 className="text-2xl font-black text-slate-900 mb-1">Live Tracking</h2>
+          <p className="text-slate-500 font-medium text-sm">Real-time visitor activity and sessions</p>
+        </div>
+        <div className="bg-red-50 text-red-600 px-4 py-2 rounded-xl flex items-center gap-2 font-bold animate-pulse">
+           <Activity size={18} /> Live
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+         <div className="bg-indigo-50 border border-indigo-100 p-4 rounded-2xl">
+            <Users size={20} className="text-indigo-500 mb-2" />
+            <div className="text-2xl font-black text-slate-900">{stats.activeSessions}</div>
+            <div className="text-xs font-bold text-slate-500 uppercase">Active Sessions</div>
+         </div>
+         <div className="bg-blue-50 border border-blue-100 p-4 rounded-2xl">
+            <MousePointerClick size={20} className="text-blue-500 mb-2" />
+            <div className="text-2xl font-black text-slate-900">{stats.totalPageviews}</div>
+            <div className="text-xs font-bold text-slate-500 uppercase">Pageviews</div>
+         </div>
+         <div className="bg-emerald-50 border border-emerald-100 p-4 rounded-2xl">
+            <Smartphone size={20} className="text-emerald-500 mb-2" />
+            <div className="text-2xl font-black text-slate-900">{stats.mobileUsers}</div>
+            <div className="text-xs font-bold text-slate-500 uppercase">Mobile Hits</div>
+         </div>
+         <div className="bg-orange-50 border border-orange-100 p-4 rounded-2xl">
+            <Monitor size={20} className="text-orange-500 mb-2" />
+            <div className="text-2xl font-black text-slate-900">{stats.desktopUsers}</div>
+            <div className="text-xs font-bold text-slate-500 uppercase">Desktop Hits</div>
+         </div>
+      </div>
+
+      <div className="bg-slate-50 border border-slate-200 rounded-2xl overflow-hidden">
+        <ul className="divide-y divide-slate-100 max-h-[400px] overflow-y-auto">
+           {logs.map((log, i) => (
+              <li key={i} className="p-4 flex items-center justify-between hover:bg-slate-100 transition-colors">
+                 <div className="flex items-center gap-4">
+                    <div className="bg-white p-2 rounded-lg shadow-sm border border-slate-200">
+                       {log.device === 'Mobile' ? <Smartphone size={18} className="text-slate-500" /> : <Monitor size={18} className="text-slate-500" />}
+                    </div>
+                    <div>
+                       <p className="font-bold text-slate-900 text-sm flex items-center gap-2">
+                          {log.path === '/' ? 'Home Page' : log.path}
+                       </p>
+                       <p className="text-xs text-slate-500 font-medium flex items-center gap-2 mt-1">
+                          <Globe size={12} /> {log.city || 'Unknown City'} • IP: {log.ip || 'Hidden'}
+                       </p>
+                    </div>
+                 </div>
+                 <div className="text-right">
+                    <span className="text-xs font-bold text-slate-400 bg-white px-2 py-1 border border-slate-200 rounded-lg shadow-sm block mb-1">Session {log.sessionId?.slice(0,4)}</span>
+                    <span className="text-[10px] text-slate-400 font-medium">
+                       {log.timestamp?.toMillis ? new Date(log.timestamp.toMillis()).toLocaleTimeString() : 'Just now'}
+                    </span>
+                 </div>
+              </li>
+           ))}
+           {logs.length === 0 && (
+             <li className="p-8 text-center text-slate-500 font-bold">No activity yet.</li>
+           )}
+        </ul>
+      </div>
+    </div>
+  );
+}
+
+export function AIChatLogsManager() {
+  const [logs, setLogs] = useState<any[]>([]);
+
+  useEffect(() => {
+    const q = query(collection(db, 'chat_logs'), orderBy('createdAt', 'desc'), limit(50));
+    const unsubscribe = onSnapshot(q, (snap) => {
+      setLogs(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    });
+    return () => unsubscribe();
+  }, []);
+
+  return (
+    <div className="bg-white p-6 md:p-8 rounded-3xl border border-slate-200 card-shadow h-[600px] flex flex-col">
+      <div className="mb-6 flex justify-between items-center">
+        <div>
+          <h2 className="text-2xl font-black text-slate-900 mb-1">AI Chat Logs</h2>
+          <p className="text-slate-500 font-medium text-sm">Monitor recent AI assistant conversations</p>
+        </div>
+        <div className="bg-slate-100 p-3 rounded-2xl flex items-center gap-2">
+           <MessageSquare size={18} className="text-slate-500" />
+           <span className="font-bold text-slate-700">{logs.length} Recent Chats</span>
+        </div>
+      </div>
+      
+      <div className="flex-1 overflow-y-auto pr-2 space-y-4">
+        {logs.map(log => (
+          <div key={log.id} className="bg-slate-50 border border-slate-200 rounded-2xl p-4 flex flex-col gap-3">
+             <div className="flex justify-between items-center border-b border-slate-100 pb-2">
+                <div className="flex items-center gap-2">
+                   <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-slate-500 font-bold text-xs">{log.city?.slice(0,2).toUpperCase() || 'UN'}</div>
+                   <div>
+                     <span className="block text-xs font-bold text-slate-800">Guest Visitor</span>
+                     <span className="block text-[10px] uppercase font-bold text-slate-400">{log.city || 'Unknown Location'}</span>
+                   </div>
+                </div>
+                <span className="text-xs text-slate-400 font-mono font-medium">{log.createdAt?.toMillis ? new Date(log.createdAt.toMillis()).toLocaleString() : new Date().toLocaleString()}</span>
+             </div>
+             <div>
+                <p className="text-sm">
+                   <strong className="text-indigo-600 block mb-1 text-xs uppercase tracking-wider">User Asked:</strong>
+                   <span className="bg-indigo-50 border border-indigo-100 p-2 rounded-xl block font-medium text-slate-800">{log.userMsg}</span>
+                </p>
+                <p className="text-sm mt-3">
+                   <strong className="text-red-600 block mb-1 text-xs uppercase tracking-wider">AI Responded:</strong>
+                   <span className="bg-white border border-red-100 p-2 rounded-xl block text-slate-700">{log.aiMsg}</span>
+                </p>
+             </div>
+          </div>
+        ))}
+        {logs.length === 0 && (
+           <div className="flex flex-col items-center justify-center h-full text-center">
+             <MessageSquare size={48} className="text-slate-300 mb-4" />
+             <p className="text-slate-500 font-bold">No chat logs yet.</p>
+           </div>
+        )}
+      </div>
+    </div>
+  );
+}
 
 export function UsersManager({ users }: { users: any[] }) {
   const handleDelete = async (id: string) => {
@@ -200,6 +355,98 @@ export function NotificationsManager() {
             </div>
          ))}
          {notifications.length === 0 && <p>No internal notifications yet.</p>}
+      </div>
+    </div>
+  );
+}
+
+export function AISettingsManager() {
+  const [keyPreview, setKeyPreview] = useState('');
+  const [apiKey, setApiKey] = useState('');
+  const [aiEnabled, setAiEnabled] = useState(true);
+  const [status, setStatus] = useState('');
+
+  useEffect(() => {
+    fetch('/api/ai-config').then(res => res.json()).then(data => {
+       if (data.keyPreview) setKeyPreview(data.keyPreview);
+       if (data.enabled !== undefined) setAiEnabled(data.enabled);
+    }).catch(console.error);
+  }, []);
+
+  const saveConfig = async () => {
+    setStatus('Saving...');
+    try {
+      const res = await fetch('/api/ai-config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key: apiKey, enabled: aiEnabled })
+      });
+      if (res.ok) {
+        setStatus('Saved successfully!');
+        if (apiKey) {
+           setKeyPreview('********');
+           setApiKey('');
+        }
+        setTimeout(() => setStatus(''), 3000);
+      }
+    } catch(e) {
+      setStatus('Error saving configuration.');
+    }
+  };
+
+  return (
+    <div className="bg-white p-6 md:p-8 rounded-3xl border border-slate-200 card-shadow">
+      <h2 className="text-2xl font-black mb-2 text-slate-900">AI Chatbot Settings</h2>
+      <p className="text-slate-500 mb-6 font-medium text-sm">Control the AI assistant shown on the frontend.</p>
+      
+      <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100 space-y-6">
+        <div className="flex items-center justify-between">
+           <div>
+             <label className="block text-sm font-bold text-slate-900 mb-1">Enable AI Support Bot</label>
+             <p className="text-xs text-slate-500 font-medium">Toggle the AI popup functionality globally.</p>
+           </div>
+           <label className="relative inline-flex items-center cursor-pointer">
+             <input type="checkbox" className="sr-only peer" checked={aiEnabled} onChange={e => setAiEnabled(e.target.checked)} />
+             <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-600"></div>
+           </label>
+        </div>
+
+        <div className="border-t border-slate-200 pt-6">
+          <label className="block text-sm font-bold text-slate-900 mb-2">Google Gemini API Key</label>
+          {keyPreview && (
+             <div className="mb-2 text-xs font-bold text-green-600 bg-green-50 p-2 rounded inline-block border border-green-200">
+               Current Key Configured: {keyPreview}
+             </div>
+          )}
+          <input 
+             type="password" 
+             value={apiKey} 
+             onChange={e => setApiKey(e.target.value)} 
+             placeholder={keyPreview ? "Enter new API key to replace the current one" : "Enter Gemini API Key"} 
+             className="w-full text-slate-900 bg-white border-2 border-slate-200 rounded-xl px-4 py-3 placeholder:text-slate-400 font-bold focus:border-red-500 outline-none" 
+          />
+        </div>
+        
+        <div className="flex flex-wrap items-center gap-4">
+           <button onClick={saveConfig} className="bg-slate-900 text-white px-6 py-3 rounded-xl font-bold transition-transform active:scale-95 shadow-lg hover:bg-slate-800">
+             Save AI Configuration
+           </button>
+           <button onClick={async () => {
+             if (!apiKey) return alert('Please enter an API key to test.');
+             setStatus('Testing...');
+             try {
+               const res = await fetch('/api/test-ai-key', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ key: apiKey }) });
+               const data = await res.json();
+               if (data.valid) setStatus('✅ Working');
+               else setStatus('❌ Invalid: ' + (data.error || 'Check key'));
+             } catch(e) {
+               setStatus('❌ Error testing key');
+             }
+           }} className="bg-slate-200 text-slate-800 px-6 py-3 rounded-xl font-bold transition-transform active:scale-95 hover:bg-slate-300">
+             Test API Key
+           </button>
+           {status && <span className={`font-bold text-sm ${status.includes('❌') ? 'text-red-600' : 'text-green-600'}`}>{status}</span>}
+        </div>
       </div>
     </div>
   );

@@ -45,7 +45,7 @@ service cloud.firestore {
          && data.customer_name is string && data.customer_name.size() <= 100
          && data.customer_email is string && data.customer_email.size() <= 100
          && data.total_price is number && data.total_price >= 0
-         && data.status is string && data.status in ['pending', 'confirmed', 'delivered', 'cancelled'];
+         && data.status is string && data.status in ['pending', 'confirmed', 'delivered', 'cancelled', 'failed'];
     }
 
     match /orders/{orderId} {
@@ -147,6 +147,13 @@ service cloud.firestore {
 
     // Notifications
     match /notifications/{noteId} {
+      allow read: if isAdmin();
+      allow write: if isAdmin();
+    }
+
+    // Refunds
+    match /refunds/{refundId} {
+      allow create: if true;
       allow read: if isAdmin();
       allow write: if isAdmin();
     }

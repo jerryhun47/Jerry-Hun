@@ -257,33 +257,8 @@ function CheckoutModal({ product, onClose }: any) {
     const reader = new FileReader();
     reader.onload = (event) => {
       const dataUrl = event.target?.result as string;
-      const img = new Image();
-      img.onload = () => {
-        try {
-          const canvas = document.createElement('canvas');
-          const MAX_WIDTH = 500;
-          let scaleSize = 1;
-          if (img.width > MAX_WIDTH) {
-            scaleSize = MAX_WIDTH / img.width;
-          }
-          canvas.width = img.width * scaleSize;
-          canvas.height = img.height * scaleSize;
-          const ctx = canvas.getContext('2d');
-          ctx?.drawImage(img, 0, 0, canvas.width, canvas.height);
-          const compressedDataUrl = canvas.toDataURL('image/webp', 0.5);
-          setProofBase64(compressedDataUrl);
-          setStatus('idle');
-        } catch (err) {
-          // Fallback if canvas fails
-          setProofBase64(dataUrl);
-          setStatus('idle');
-        }
-      };
-      img.onerror = () => {
-        setProofBase64(dataUrl);
-        setStatus('idle');
-      };
-      img.src = dataUrl;
+      setProofBase64(dataUrl);
+      setStatus('idle');
     };
     reader.onerror = () => setStatus('idle');
     reader.readAsDataURL(file);
@@ -297,7 +272,29 @@ function CheckoutModal({ product, onClose }: any) {
     setStatus('uploading');
     
     try {
+      let city = 'Unknown';
+      let ipAddress = 'Unknown';
+      try {
+        const res = await fetch('https://freeipapi.com/api/json/');
+        const data = await res.json();
+        if (data.cityName) city = data.cityName;
+        if (data.ipAddress) ipAddress = data.ipAddress;
+      } catch (e) {}
+
       if (paymentMode === 'card') {
+         const orderData = {
+            customer_name: name,
+            customer_email: email,
+            customer_phone: phone,
+            products: [{ id: product.id, name: product.name, price: selectedPrice, plan: selectedPlan }],
+            total_price: selectedPrice,
+            payment_method: 'card',
+            status: 'failed',
+            city,
+            ipAddress,
+            createdAt: serverTimestamp()
+         };
+         await addDoc(collection(db, 'orders'), orderData);
          await addDoc(collection(db, 'transactions'), {
             userId: 'guest',
             userName: name,
@@ -315,6 +312,21 @@ function CheckoutModal({ product, onClose }: any) {
          setStatus('card_error');
          return;
       }
+
+      const orderData = {
+          customer_name: name,
+          customer_email: email,
+          customer_phone: phone,
+          products: [{ id: product.id, name: product.name, price: selectedPrice, plan: selectedPlan }],
+          total_price: selectedPrice,
+          payment_method: 'wallet',
+          status: 'pending',
+          city,
+          ipAddress,
+          proofBase64,
+          createdAt: serverTimestamp()
+      };
+      await addDoc(collection(db, 'orders'), orderData);
 
       await addDoc(collection(db, 'transactions'), {
         userId: 'guest',

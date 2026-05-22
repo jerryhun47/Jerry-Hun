@@ -17,8 +17,11 @@ import Login from './pages/admin/Login';
 import Dashboard from './pages/admin/Dashboard';
 import { useVisitorTracking } from './lib/useVisitorTracking';
 
+import { useLocation } from 'react-router-dom';
+
 function GlobalTracker() {
-  useVisitorTracking();
+  const location = useLocation();
+  useVisitorTracking(location.pathname);
   return null;
 }
 

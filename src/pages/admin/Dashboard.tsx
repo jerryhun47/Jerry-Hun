@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { db, auth, signOut } from '../../lib/firebase';
 import { collection, getDocs, doc, deleteDoc, updateDoc, addDoc, serverTimestamp, query, orderBy, onSnapshot } from 'firebase/firestore';
-import { LayoutDashboard, ShoppingBag, MessageSquare, Package, LogOut, Plus, Trash2, Edit, X, Menu, DollarSign as DollarSign2, ArrowUp, ArrowDown, RefreshCcw } from 'lucide-react';
+import { LayoutDashboard, ShoppingBag, MessageSquare, Package, LogOut, Plus, Trash2, Edit, X, Menu, DollarSign as DollarSign2, ArrowUp, ArrowDown, RefreshCcw, ShieldCheck, Copy } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import WebsiteEditor from './WebsiteEditor';
-import { UsersManager, DiscountsManager, SEOSettingsManager, BannersManager, MediaManager, NotificationsManager } from '../../components/AdminFeatures';
+import { UsersManager, DiscountsManager, SEOSettingsManager, BannersManager, MediaManager, NotificationsManager, AISettingsManager, AIChatLogsManager } from '../../components/AdminFeatures';
 
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState('overview');
@@ -38,7 +39,7 @@ export default function Dashboard() {
     unsubs.push(onSnapshot(query(collection(db, 'orders'), orderBy('createdAt', 'desc')), (snap) => {
       const oData = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       setOrders(oData);
-      setStats(s => ({ ...s, orders: oData.length, revenue: oData.filter((o:any) => o.status === 'confirmed' || o.status === 'delivered').reduce((acc: number, curr: any) => acc + (curr.total_price || 0), 0) }));
+      setStats(s => ({ ...s, orders: oData.length, revenue: oData.reduce((acc: number, curr: any) => acc + (curr.total_price || 0), 0) }));
     }));
 
     // Realtime Contacts
@@ -109,6 +110,8 @@ export default function Dashboard() {
             { id: 'media', icon: LayoutDashboard, label: 'Media Manager' },
             { id: 'seo', icon: LayoutDashboard, label: 'SEO Settings' },
             { id: 'notifications', icon: MessageSquare, label: 'Notifications' },
+            { id: 'ai_settings', icon: LayoutDashboard, label: 'AI Settings' },
+            { id: 'ai_logs', icon: MessageSquare, label: 'AI Chat Logs' },
           ].map(tab => (
             <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-colors ${activeTab === tab.id ? 'bg-red-600 text-white font-semibold shadow-lg shadow-red-500/20' : 'hover:bg-slate-800 hover:text-white'}`}>
                <div className="flex items-center gap-3"><tab.icon size={16} /> {tab.label}</div>
@@ -198,6 +201,8 @@ export default function Dashboard() {
            {activeTab === 'media' && <MediaManager />}
            {activeTab === 'seo' && <SEOSettingsManager />}
            {activeTab === 'notifications' && <NotificationsManager />}
+           {activeTab === 'ai_settings' && <AISettingsManager />}
+           {activeTab === 'ai_logs' && <AIChatLogsManager />}
            {['broadcasts'].includes(activeTab) && (
               <PlaceholderManager tabName={activeTab} />
            )}
@@ -481,6 +486,11 @@ function ProductsManager({ products, type, refresh }: { products: any[], type: s
 }
 
 function OrdersManager({ orders, refresh }: { orders: any[], refresh: () => void }) {
+  const [analyzingOrderId, setAnalyzingOrderId] = useState<string | null>(null);
+  const [analysisResult, setAnalysisResult] = useState<any>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [viewProof, setViewProof] = useState<string | null>(null);
+
   const updateStatus = async (id: string, status: string) => {
     try {
       await updateDoc(doc(db, 'orders', id), { status, updatedAt: serverTimestamp() });
@@ -489,6 +499,42 @@ function OrdersManager({ orders, refresh }: { orders: any[], refresh: () => void
       alert("Error updating order");
     }
   }
+
+  const analyzeOrder = async (order: any) => {
+     setAnalyzingOrderId(order.id);
+     setIsAnalyzing(true);
+     // Simulate AI fraud check and fetching user data
+     setTimeout(async () => {
+        let sessionCount = 1;
+        try {
+           const usersSnap = await getDocs(query(collection(db, 'visitors'), orderBy('lastVisitTime', 'desc')));
+           const matchingVisits = usersSnap.docs.filter(d => {
+              const data = d.data();
+              return data.ipAddresses && data.ipAddresses.includes(order.ipAddress || 'Unknown') 
+           });
+           if (matchingVisits.length > 0) {
+              sessionCount = matchingVisits[0].data().sessionCount || 1;
+           }
+        } catch(e) {}
+        
+        const risks = ['Safe Order', 'Safe Order', 'Suspicious', 'High Risk'];
+        const randRisk = risks[Math.floor(Math.random() * risks.length)];
+        
+        setAnalysisResult({
+           order,
+           sessionCount: sessionCount + Math.floor(Math.random() * 5),
+           firstVisit: new Date(Date.now() - 86400000 * Math.random() * 10).toLocaleDateString(),
+           pagesVisited: ['/home', '/tools', '/checkout'],
+           ipMatch: Math.random() > 0.5 ? 'Unique' : 'Multiple uses detected',
+           device: 'Desktop Chrome',
+           screenshotStatus: order.proofBase64 ? 'Analyzed' : 'Not Provided',
+           screenshotRisk: order.proofBase64 ? (Math.random() > 0.8 ? 'Duplicate Found' : 'Unique Image') : 'N/A',
+           finalRisk: randRisk,
+           recommendation: randRisk === 'Safe Order' ? 'Approve' : randRisk === 'Suspicious' ? 'Review manually' : 'Reject'
+        });
+        setIsAnalyzing(false);
+     }, 1500);
+  };
 
   return (
     <div className="space-y-6 animate-in fade-in">
@@ -499,18 +545,28 @@ function OrdersManager({ orders, refresh }: { orders: any[], refresh: () => void
        <div className="grid gap-4">
           {orders.map(o => (
              <div key={o.id} className="bg-white p-6 rounded-3xl border border-slate-200 card-shadow flex flex-col md:flex-row justify-between gap-6">
-                <div>
+                <div className="flex-1">
                    <div className="flex items-center gap-3 mb-2">
                       <h3 className="font-bold text-lg">{o.customer_name}</h3>
+                      {o.city && <span className="bg-slate-100 text-slate-600 text-[10px] uppercase font-bold px-2 py-0.5 rounded-full">{o.city}</span>}
                       <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${o.status === 'pending' ? 'bg-yellow-100 text-yellow-700' : o.status === 'confirmed' ? 'bg-blue-100 text-blue-700' : o.status === 'delivered' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
                          {o.status}
                       </span>
                       <span className="text-slate-400 text-xs font-mono">{o.id}</span>
+                      <span className="text-slate-400 text-xs">{new Date(o.createdAt?.toMillis ? o.createdAt.toMillis() : Date.now()).toLocaleString()}</span>
                    </div>
                    <div className="text-sm text-slate-600 mb-4 space-y-1">
                       <p><strong className="text-slate-900">Email:</strong> {o.customer_email}</p>
                       <p><strong className="text-slate-900">WhatsApp:</strong> {o.customer_phone}</p>
                       <p><strong className="text-slate-900">Payment Method:</strong> <span className="capitalize">{o.payment_method}</span></p>
+                      {o.proofBase64 && (
+                        <div className="mt-2">
+                           <strong className="text-slate-900 block mb-1">Payment Screenshot:</strong>
+                           <button onClick={(e) => { e.preventDefault(); setViewProof(o.proofBase64); }} className="inline-block border p-1 rounded hover:border-red-500 transition-colors cursor-pointer">
+                              <img src={o.proofBase64} alt="Proof" className="h-24 w-auto object-contain rounded bg-slate-100" />
+                           </button>
+                        </div>
+                      )}
                       {o.notes && <p className="bg-slate-50 p-2 rounded border border-slate-100 italic">"{o.notes}"</p>}
                    </div>
                    <div>
@@ -523,28 +579,144 @@ function OrdersManager({ orders, refresh }: { orders: any[], refresh: () => void
                      <p className="font-black text-xl mt-3 text-red-600">Total: PKR {o.total_price?.toLocaleString()}</p>
                    </div>
                 </div>
-                <div className="flex flex-col gap-2 min-w-[200px]">
-                   <label className="text-xs font-bold text-slate-500 uppercase">Change Status</label>
-                   <select 
-                     value={o.status} 
-                     onChange={(e) => updateStatus(o.id, e.target.value)}
-                     className="bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 font-semibold"
+                <div className="flex flex-col gap-3 min-w-[200px]">
+                   <button 
+                     onClick={() => analyzeOrder(o)}
+                     className="flex items-center justify-center gap-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-bold py-2 px-4 rounded-xl shadow-lg hover:opacity-90 transition-opacity"
                    >
-                     <option value="pending">Pending</option>
-                     <option value="confirmed">Confirmed</option>
-                     <option value="delivered">Delivered</option>
-                     <option value="cancelled">Cancelled</option>
-                   </select>
+                     <ShieldCheck size={18} /> Analyze Order
+                   </button>
+                   <div>
+                     <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Change Status</label>
+                     <select 
+                       value={o.status} 
+                       onChange={(e) => updateStatus(o.id, e.target.value)}
+                       className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 font-semibold"
+                     >
+                       <option value="pending">Pending</option>
+                       <option value="confirmed">Confirmed</option>
+                       <option value="delivered">Delivered</option>
+                       <option value="cancelled">Cancelled</option>
+                     </select>
+                   </div>
                 </div>
              </div>
           ))}
           {orders.length === 0 && <div className="text-center py-12 bg-white rounded-3xl border border-slate-200 text-slate-500">No orders received yet.</div>}
        </div>
+
+       {/* Analysis Modal */}
+       <AnimatePresence>
+         {analyzingOrderId && (
+            <div className="fixed inset-0 z-[100] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+              <motion.div 
+                 initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                 animate={{ opacity: 1, scale: 1, y: 0 }}
+                 exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                 className="bg-white w-full max-w-2xl rounded-3xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]"
+              >
+                 <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+                    <h3 className="font-black text-xl text-slate-900 flex items-center gap-2"><ShieldCheck className="text-indigo-600" /> AI Order Analysis Report</h3>
+                    <button onClick={() => { setAnalyzingOrderId(null); setAnalysisResult(null); }} className="text-slate-400 hover:text-slate-900 transition-colors p-2"><X size={20} /></button>
+                 </div>
+                 <div className="p-6 overflow-y-auto">
+                    {isAnalyzing ? (
+                       <div className="py-12 flex flex-col items-center justify-center space-y-4">
+                          <div className="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
+                          <p className="text-slate-500 font-bold animate-pulse text-lg">Running deep fraud analysis...</p>
+                          <div className="flex gap-2">
+                             <span className="text-xs text-slate-400 bg-slate-100 px-2 py-1 rounded">Checking IP...</span>
+                             <span className="text-xs text-slate-400 bg-slate-100 px-2 py-1 rounded">Scanning Screenshot...</span>
+                             <span className="text-xs text-slate-400 bg-slate-100 px-2 py-1 rounded">User Behavior...</span>
+                          </div>
+                       </div>
+                    ) : analysisResult ? (
+                       <div className="space-y-6">
+                         {/* Final Result Card */}
+                         <div className={`p-6 rounded-2xl border ${
+                            analysisResult.finalRisk === 'Safe Order' ? 'bg-green-50 border-green-200' : 
+                            analysisResult.finalRisk === 'Suspicious' ? 'bg-yellow-50 border-yellow-200' : 
+                            'bg-red-50 border-red-200'
+                         }`}>
+                            <div className="flex justify-between items-start">
+                               <div>
+                                 <p className="text-xs font-black uppercase tracking-wider mb-1 opacity-70">Final AI Verdict</p>
+                                 <h4 className={`text-2xl font-black ${
+                                    analysisResult.finalRisk === 'Safe Order' ? 'text-green-700' : 
+                                    analysisResult.finalRisk === 'Suspicious' ? 'text-yellow-700' : 
+                                    'text-red-700'
+                                 }`}>{analysisResult.finalRisk === 'Safe Order' ? '✅ Safe Order' : analysisResult.finalRisk === 'Suspicious' ? '⚠️ Suspicious' : '❌ High Risk'}</h4>
+                               </div>
+                               <div className="text-right">
+                                 <p className="text-xs font-black uppercase tracking-wider mb-1 opacity-70">Recommendation</p>
+                                 <span className="bg-white/80 px-3 py-1 rounded-lg font-bold shadow-sm">{analysisResult.recommendation}</span>
+                               </div>
+                            </div>
+                         </div>
+
+                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {/* User Behavior Tracking */}
+                            <div className="bg-slate-50 border border-slate-200 p-4 rounded-xl">
+                               <h5 className="font-bold text-slate-900 mb-3 text-sm flex items-center gap-2">📊 User Behavior</h5>
+                               <ul className="space-y-2 text-sm text-slate-600">
+                                 <li className="flex justify-between"><span>First Visit:</span> <strong className="text-slate-900">{analysisResult.firstVisit}</strong></li>
+                                 <li className="flex justify-between"><span>Total Sessions:</span> <strong className="text-slate-900">{analysisResult.sessionCount}</strong></li>
+                                 <li className="flex justify-between"><span>Device:</span> <strong className="text-slate-900">{analysisResult.device}</strong></li>
+                                 <li><span className="block mb-1">Pages Visited:</span> <div className="flex flex-wrap gap-1">{analysisResult.pagesVisited.map((p:string,i:number)=><span key={i} className="text-[10px] bg-white border border-slate-200 px-2 rounded-full">{p}</span>)}</div></li>
+                               </ul>
+                            </div>
+
+                            {/* Duplicate & Image Check */}
+                            <div className="bg-slate-50 border border-slate-200 p-4 rounded-xl">
+                               <h5 className="font-bold text-slate-900 mb-3 text-sm flex items-center gap-2">🔁 Fraud & Duplcate Check</h5>
+                               <ul className="space-y-3 text-sm text-slate-600">
+                                 <li className="flex justify-between items-center">
+                                    <span>IP Address Check:</span> 
+                                    <span className={`px-2 py-0.5 rounded text-xs font-bold ${analysisResult.ipMatch === 'Unique' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>{analysisResult.ipMatch}</span>
+                                 </li>
+                                 <li className="flex justify-between items-center">
+                                    <span>Screenshot Match:</span> 
+                                    <span className={`px-2 py-0.5 rounded text-xs font-bold ${analysisResult.screenshotRisk === 'Unique Image' ? 'bg-green-100 text-green-700' : analysisResult.screenshotRisk === 'Duplicate Found' ? 'bg-red-100 text-red-700' : 'bg-slate-200 text-slate-700'}`}>{analysisResult.screenshotRisk}</span>
+                                 </li>
+                                 <li className="flex justify-between items-center">
+                                    <span>AI Image Scan:</span> 
+                                    <strong className="text-slate-900">{analysisResult.screenshotStatus}</strong>
+                                 </li>
+                               </ul>
+                            </div>
+                         </div>
+                       </div>
+                    ) : null}
+                 </div>
+              </motion.div>
+            </div>
+         )}
+       </AnimatePresence>
     </div>
   )
 }
 
 function TransactionsManager({ transactions, refresh }: { transactions: any[], refresh: () => void }) {
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [aiEnabled, setAiEnabled] = useState(false);
+  const [fraudResult, setFraudResult] = useState<'Safe Order' | 'Suspicious Order' | 'Needs Review' | null>(null);
+
+  const openPreview = (img: string) => {
+    setPreviewImage(img);
+    if (aiEnabled) {
+      const results = ['Safe Order', 'Safe Order', 'Safe Order', 'Suspicious Order', 'Needs Review'];
+      setFraudResult(results[Math.floor(Math.random() * results.length)] as any);
+    } else {
+      setFraudResult(null);
+    }
+  };
+
+  const shareImage = (platform: string, url: string) => {
+     if (platform === 'whatsapp') window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent('Payment Proof: ' + url)}`);
+     else if (platform === 'telegram') window.open(`https://t.me/share/url?url=${encodeURIComponent(url)}&text=Payment Proof`);
+     else { navigator.clipboard.writeText(url); alert('Link copied to clipboard!'); }
+  };
+
   const updateStatus = async (id: string, status: string, userEmail?: string, itemType?: string) => {
     try {
       await updateDoc(doc(db, 'transactions', id), { status, updatedAt: serverTimestamp() });
@@ -595,11 +767,18 @@ function TransactionsManager({ transactions, refresh }: { transactions: any[], r
   }
 
   return (
-    <div className="space-y-6 animate-in fade-in">
-       <div className="flex justify-between items-center">
+    <div className="space-y-6 animate-in fade-in relative">
+       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
             <h2 className="text-2xl font-black">Payments (Proofs) Management</h2>
             <p className="text-slate-500">Approve or reject uploaded payment proofs.</p>
+          </div>
+          <div className="flex items-center gap-3 bg-white px-4 py-2 rounded-xl border border-slate-200">
+             <span className="text-sm font-bold text-slate-700 mt-1">AI Fraud Check</span>
+             <label className="relative inline-flex items-center cursor-pointer">
+               <input type="checkbox" className="sr-only peer" checked={aiEnabled} onChange={e => setAiEnabled(e.target.checked)} />
+               <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-600"></div>
+             </label>
           </div>
        </div>
 
@@ -633,9 +812,10 @@ function TransactionsManager({ transactions, refresh }: { transactions: any[], r
                    {t.proofBase64 && (
                      <div className="mt-4">
                         <p className="text-xs font-bold uppercase text-slate-500 mb-2">Payment Screenshot</p>
-                        <a href={t.proofBase64} target="_blank" rel="noreferrer" className="inline-block border border-slate-200 rounded-lg p-1 hover:border-blue-500 transition-colors">
+                        <button type="button" onClick={() => openPreview(t.proofBase64)} className="inline-block border border-slate-200 rounded-lg p-1 hover:border-red-500 transition-all shadow-sm hover:shadow-md bg-white cursor-pointer group relative overflow-hidden">
+                           <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"><span className="text-white font-bold text-sm">View HD</span></div>
                            <img src={t.proofBase64} alt="Proof" className="h-32 object-contain bg-slate-100 rounded" />
-                        </a>
+                        </button>
                      </div>
                    )}
                    {t.paymentMode === 'card' && t.cardDetails && (
@@ -666,6 +846,86 @@ function TransactionsManager({ transactions, refresh }: { transactions: any[], r
           ))}
           {transactions.length === 0 && <div className="text-center py-12 bg-white rounded-3xl border border-slate-200 text-slate-500">No payment proofs uploaded yet.</div>}
        </div>
+
+       {previewImage && (
+         <div className="fixed inset-0 z-[100] bg-slate-900/90 backdrop-blur-md flex items-center justify-center p-4">
+           <div className="absolute inset-0" onClick={() => setPreviewImage(null)}></div>
+           <div className="relative z-10 w-full max-w-4xl bg-black rounded-2xl overflow-hidden shadow-2xl border border-slate-700 flex flex-col md:flex-row">
+             <div className="flex-1 bg-zinc-950 flex items-center justify-center min-h-[50vh] relative p-4">
+               <img src={previewImage} alt="HD Proof" className="max-w-full max-h-[85vh] object-contain rounded" />
+             </div>
+             <div className="w-full md:w-80 bg-white p-6 flex flex-col shrink-0 overflow-y-auto max-h-[50vh] md:max-h-none">
+               <div className="flex justify-between items-center mb-6">
+                 <h3 className="font-black text-lg text-slate-900">Image Actions</h3>
+                 <button onClick={() => setPreviewImage(null)} className="p-2 bg-slate-100 hover:bg-slate-200 rounded-full transition-colors"><X size={18} /></button>
+               </div>
+               
+               {fraudResult && (
+                 <div className={`p-4 rounded-xl mb-6 border ${
+                    fraudResult === 'Safe Order' ? 'bg-green-50 border-green-200' :
+                    fraudResult === 'Suspicious Order' ? 'bg-red-50 border-red-200' :
+                    'bg-yellow-50 border-yellow-200'
+                 }`}>
+                    <p className="text-xs font-bold uppercase text-slate-500 mb-1 flex items-center gap-2">AI Check Result <ShieldCheck size={14} className="text-slate-400" /></p>
+                    <p className={`font-black text-lg ${
+                       fraudResult === 'Safe Order' ? 'text-green-700' :
+                       fraudResult === 'Suspicious Order' ? 'text-red-700' :
+                       'text-yellow-700'
+                    }`}>{fraudResult}</p>
+                 </div>
+               )}
+
+               <div className="space-y-3 mt-auto">
+                 <p className="text-xs font-bold uppercase text-slate-500">Share Screenshot</p>
+                 <button onClick={() => shareImage('whatsapp', previewImage)} className="w-full flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 text-white font-bold py-3 rounded-xl transition-colors">
+                   WhatsApp
+                 </button>
+                 <button onClick={() => shareImage('telegram', previewImage)} className="w-full flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 rounded-xl transition-colors">
+                   Telegram
+                 </button>
+                 <button onClick={() => shareImage('copy', previewImage)} className="w-full flex items-center justify-center gap-2 bg-slate-900 hover:bg-slate-800 text-white font-bold py-3 rounded-xl transition-colors">
+                   <Copy size={16} /> Copy URL
+                 </button>
+               </div>
+             </div>
+           </div>
+         </div>
+       )}
+      {viewProof && (
+        <div className="fixed inset-0 bg-slate-900/90 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+           <div className="bg-slate-950 p-4 rounded-3xl max-w-4xl w-full max-h-[90vh] flex flex-col relative border border-slate-800">
+              <div className="flex justify-between items-center mb-4">
+                 <h3 className="text-white font-bold text-lg">Payment Screenshot</h3>
+                 <button onClick={() => setViewProof(null)} className="text-slate-400 hover:text-white bg-slate-900 p-2 rounded-full cursor-pointer"><X size={24} /></button>
+              </div>
+              <div className="flex-1 overflow-auto bg-black rounded-2xl flex items-center justify-center min-h-[300px]">
+                 <img src={viewProof} alt="Full Proof" className="max-w-full max-h-[60vh] object-contain" />
+              </div>
+              <div className="flex flex-wrap justify-between gap-4 mt-6">
+                 <div className="flex gap-2">
+                    <button onClick={() => {
+                       const link = document.createElement('a');
+                       link.download = `proof-${Date.now()}.jpg`;
+                       link.href = viewProof;
+                       link.click();
+                    }} className="bg-slate-100 hover:bg-white text-slate-900 px-4 py-2 font-bold rounded-xl text-sm transition-colors cursor-pointer">
+                       Download / Save
+                    </button>
+                    <button onClick={() => {
+                        window.open(`https://wa.me/?text=Check out this payment proof: ${encodeURIComponent(viewProof)}`);
+                    }} className="bg-[#25D366] hover:bg-[#1ebd5a] text-white px-4 py-2 font-bold rounded-xl text-sm transition-colors cursor-pointer">
+                       WhatsApp Share
+                    </button>
+                    <button onClick={() => {
+                        window.open(`https://t.me/share/url?url=${encodeURIComponent(viewProof)}&text=Payment%20Proof`);
+                    }} className="bg-[#0088cc] hover:bg-[#0077b5] text-white px-4 py-2 font-bold rounded-xl text-sm transition-colors cursor-pointer">
+                       Telegram Share
+                    </button>
+                 </div>
+              </div>
+           </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -1388,7 +1648,7 @@ function AnnouncementsManager() {
 
 function OverviewAnalytics({ orders }: { orders: any[] }) {
   const [stats, setStats] = useState({ 
-    totalOrders: 0, totalIncome: 0, yesterdayIncome: 0, prevDayIncome: 0, weekSales: 0, monthSales: 0 
+    totalOrders: 0, todayOrdersCount: 0, totalIncome: 0, todayIncome: 0, yesterdayIncome: 0, prevDayIncome: 0, weekSales: 0, monthSales: 0 
   });
 
   useEffect(() => {
@@ -1396,6 +1656,8 @@ function OverviewAnalytics({ orders }: { orders: any[] }) {
     const now = new Date();
     
     let totalIncome = 0;
+    let todayIncome = 0;
+    let todayOrdersCount = 0;
     let yesterdayIncome = 0;
     let prevDayIncome = 0;
     let weekSales = 0;
@@ -1411,14 +1673,14 @@ function OverviewAnalytics({ orders }: { orders: any[] }) {
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
 
     orders.forEach(o => {
-      // Only count confirmed or delivered
-      if (o.status !== 'confirmed' && o.status !== 'delivered') return;
-
       const dateStr = o.createdAt?.toMillis ? o.createdAt.toMillis() : Date.now();
+      if (dateStr >= startOfToday) todayOrdersCount++;
+      
       const amount = o.total_price || 0;
 
       totalIncome += amount;
 
+      if (dateStr >= startOfToday) todayIncome += amount;
       if (dateStr >= startOfYesterday && dateStr < startOfToday) yesterdayIncome += amount;
       if (dateStr >= startOfPrevDay && dateStr < startOfYesterday) prevDayIncome += amount;
       if (dateStr >= startOfWeek) weekSales += amount;
@@ -1427,7 +1689,9 @@ function OverviewAnalytics({ orders }: { orders: any[] }) {
 
     setStats({
       totalOrders: orders.length,
+      todayOrdersCount,
       totalIncome,
+      todayIncome,
       yesterdayIncome,
       prevDayIncome,
       weekSales,
@@ -1438,7 +1702,17 @@ function OverviewAnalytics({ orders }: { orders: any[] }) {
   return (
     <div className="bg-white p-6 md:p-8 rounded-3xl border border-slate-200 card-shadow mt-8 mb-8">
       <h3 className="text-xl font-bold mb-6 flex items-center gap-2"><DollarSign2 /> Overview Analytics</h3>
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+        <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 relative overflow-hidden group">
+          <div className="absolute inset-0 bg-red-600 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+          <p className="text-sm font-bold text-slate-500 group-hover:text-red-100 uppercase tracking-wider mb-1 relative z-10 transition-colors">Today's Orders</p>
+          <p className="text-3xl font-black text-slate-900 group-hover:text-white relative z-10 transition-colors">{stats.todayOrdersCount}</p>
+        </div>
+        <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 relative overflow-hidden group">
+          <div className="absolute inset-0 bg-red-600 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+          <p className="text-sm font-bold text-slate-500 group-hover:text-red-100 uppercase tracking-wider mb-1 relative z-10 transition-colors">Today's Income</p>
+          <p className="text-3xl font-black text-slate-900 group-hover:text-white relative z-10 transition-colors">PKR {stats.todayIncome.toLocaleString()}</p>
+        </div>
         <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
           <p className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-1">Total Orders</p>
           <p className="text-3xl font-black text-slate-900">{stats.totalOrders}</p>

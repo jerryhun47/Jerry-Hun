@@ -6,9 +6,14 @@ import BackgroundEffects from './BackgroundEffects';
 import ParticleSystem from './ParticleSystem';
 import NetworkBackground from './NetworkBackground';
 import FrontendAnnouncements from './FrontendAnnouncements';
+import AIChatbot from './AIChatbot';
+
+import LiveOrderFeed from './LiveOrderFeed';
+import LiveTracking from './LiveTracking';
 
 export default function Layout() {
   const [isOpen, setIsOpen] = useState(false);
+  const [isChatOpen, setIsChatOpen] = useState(false);
   const location = useLocation();
   const [isMobile, setIsMobile] = useState(false);
   const [whatsappNumber, setWhatsappNumber] = useState('');
@@ -95,6 +100,13 @@ export default function Layout() {
                 {link.name}
               </Link>
             ))}
+            <button
+              onClick={() => { setIsOpen(false); setIsChatOpen(true); }}
+              className="w-full flex items-center justify-start font-medium px-4 py-3 rounded-lg transition-colors text-slate-300 hover:bg-slate-800 hover:text-white"
+            >
+              <MessageCircle size={18} className="mr-2 text-indigo-400" />
+               Chat with AI
+            </button>
           </div>
         )}
       </nav>
@@ -103,6 +115,10 @@ export default function Layout() {
       <div className="fixed top-16 w-full z-40">
          <FrontendAnnouncements />
       </div>
+
+      <LiveTracking />
+      <LiveOrderFeed />
+      <AIChatbot isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
 
       <main className="flex-1 relative z-10 pt-24">
         <Outlet />
