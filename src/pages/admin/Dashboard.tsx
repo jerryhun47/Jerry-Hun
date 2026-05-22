@@ -17,6 +17,7 @@ export default function Dashboard() {
   const [contacts, setContacts] = useState<any[]>([]);
   const [transactions, setTransactions] = useState<any[]>([]);
   const [usersList, setUsersList] = useState<any[]>([]);
+  const [viewProof, setViewProof] = useState<string | null>(null);
 
   const navigate = useNavigate();
 
@@ -185,9 +186,9 @@ export default function Dashboard() {
            {activeTab === 'analytics' && <AnalyticsManager />}
            {activeTab === 'products' && <ProductsManager products={products} type="Tool" refresh={fetchData} />}
            {activeTab === 'courses' && <ProductsManager products={products} type="Course" refresh={fetchData} />}
-           {activeTab === 'orders' && <OrdersManager orders={orders} refresh={fetchData} />}
+           {activeTab === 'orders' && <OrdersManager orders={orders} refresh={fetchData} viewProof={viewProof} setViewProof={setViewProof} />}
            {activeTab === 'refunds' && <RefundsManager />}
-           {activeTab === 'transactions' && <TransactionsManager transactions={transactions} refresh={fetchData} />}
+           {activeTab === 'transactions' && <TransactionsManager transactions={transactions} refresh={fetchData} viewProof={viewProof} setViewProof={setViewProof} />}
            {activeTab === 'paymentsettings' && <PaymentSettingsManager />}
            {activeTab === 'settings' && <GlobalSettingsManager />}
            {activeTab === 'messages' && <MessagesManager contacts={contacts} refresh={fetchData} />}
@@ -485,11 +486,10 @@ function ProductsManager({ products, type, refresh }: { products: any[], type: s
   )
 }
 
-function OrdersManager({ orders, refresh }: { orders: any[], refresh: () => void }) {
+function OrdersManager({ orders, refresh, viewProof, setViewProof }: { orders: any[], refresh: () => void, viewProof: string | null, setViewProof: (s: string | null) => void }) {
   const [analyzingOrderId, setAnalyzingOrderId] = useState<string | null>(null);
   const [analysisResult, setAnalysisResult] = useState<any>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [viewProof, setViewProof] = useState<string | null>(null);
 
   const updateStatus = async (id: string, status: string) => {
     try {
@@ -692,11 +692,24 @@ function OrdersManager({ orders, refresh }: { orders: any[], refresh: () => void
             </div>
          )}
        </AnimatePresence>
+       {viewProof && (
+         <div className="fixed inset-0 bg-slate-900/90 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+            <div className="bg-slate-950 p-4 rounded-3xl max-w-4xl w-full max-h-[90vh] flex flex-col relative border border-slate-800">
+               <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-white font-bold text-lg">Payment Screenshot</h3>
+                  <button onClick={() => setViewProof(null)} className="text-slate-400 hover:text-white bg-slate-900 p-2 rounded-full cursor-pointer"><X size={24} /></button>
+               </div>
+               <div className="flex-1 overflow-auto bg-black rounded-2xl flex items-center justify-center min-h-[300px]">
+                  <img src={viewProof} alt="Full Proof" className="max-w-full max-h-[60vh] object-contain" />
+               </div>
+            </div>
+         </div>
+       )}
     </div>
   )
 }
 
-function TransactionsManager({ transactions, refresh }: { transactions: any[], refresh: () => void }) {
+function TransactionsManager({ transactions, refresh, viewProof, setViewProof }: { transactions: any[], refresh: () => void, viewProof: string | null, setViewProof: (s: string | null) => void }) {
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [aiEnabled, setAiEnabled] = useState(false);
   const [fraudResult, setFraudResult] = useState<'Safe Order' | 'Suspicious Order' | 'Needs Review' | null>(null);

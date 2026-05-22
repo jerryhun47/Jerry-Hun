@@ -13,12 +13,12 @@ export function LiveTrackingManager() {
   useEffect(() => {
     const q = query(collection(db, 'tracking_logs'), orderBy('timestamp', 'desc'), limit(100));
     const unsubscribe = onSnapshot(q, (snap) => {
-      const data = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      const data = snap.docs.map(d => ({ id: d.id, ...(d.data() as any) })) as any[];
       setLogs(data);
       
-      const uniqueSessions = new Set(data.map(d => d.sessionId)).size;
-      const mobile = data.filter(d => d.device === 'Mobile').length;
-      const desktop = data.filter(d => d.device === 'Desktop').length;
+      const uniqueSessions = new Set(data.map(d => (d as any).sessionId)).size;
+      const mobile = data.filter(d => (d as any).device === 'Mobile').length;
+      const desktop = data.filter(d => (d as any).device === 'Desktop').length;
       setStats({
         activeSessions: uniqueSessions,
         totalPageviews: data.length,

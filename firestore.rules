@@ -103,6 +103,11 @@ service cloud.firestore {
       allow read, delete: if isAdmin();
     }
 
+    match /tracking_logs/{logId} {
+      allow create: if true;
+      allow read: if isAdmin();
+    }
+
     // Payment Methods
     match /payment_methods/{methodId} {
       allow read: if true;
