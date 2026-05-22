@@ -47,19 +47,20 @@ export default function LiveOrderFeed() {
            initial={{ opacity: 0, y: 50, x: -20, scale: 0.9 }}
            animate={{ opacity: 1, y: 0, x: 0, scale: 1 }}
            exit={{ opacity: 0, y: 20, scale: 0.95 }}
-           className="fixed bottom-4 sm:bottom-6 left-4 sm:left-6 bg-slate-900 border border-slate-700 shadow-2xl rounded-2xl p-3 sm:p-4 z-40 flex items-center gap-3 md:gap-4 max-w-[280px] sm:max-w-xs cursor-default"
+           className="fixed bottom-[80px] left-[10px] z-[9999]"
         >
-           <div className="bg-green-500/10 p-2 sm:p-3 rounded-xl border border-green-500/20 shrink-0">
-             <ShoppingBag size={20} className="text-green-500" />
-           </div>
-           <div className="flex-1">
-             <p className="text-xs sm:text-sm text-slate-300 font-medium leading-snug">
-               <strong className="text-white">{orders[currentIndex].customer_name || 'Someone'}</strong> from <strong className="text-white">{orders[currentIndex].city || 'Pakistan'}</strong> purchased
-             </p>
-             <p className="text-xs sm:text-sm text-red-400 font-bold mt-0.5 line-clamp-1">
-               {orders[currentIndex].product_names?.[0] || 'a Premium Tool'}
-             </p>
-             <p className="text-[10px] text-slate-500 mt-1 uppercase tracking-wider font-bold">Just now</p>
+           <div className="bg-white p-3 sm:p-4 rounded-3xl shadow-xl border border-slate-100 flex items-center gap-3 md:gap-4 max-w-[280px] sm:max-w-xs cursor-default">
+             <div className="bg-slate-100 p-2 sm:p-3 rounded-xl border border-slate-200 shrink-0">
+               <ShoppingBag size={20} className="text-slate-600" />
+             </div>
+             <div className="flex-1">
+               <p className="text-xs sm:text-sm text-slate-900 font-medium leading-snug">
+                 Someone from <strong className="text-slate-900">{orders[currentIndex].city || 'your area'}</strong> purchased
+               </p>
+               <p className="text-xs sm:text-sm text-slate-900 font-bold mt-0.5 line-clamp-1">
+                 {orders[currentIndex].product_names?.[0] || 'a Product'}
+               </p>
+             </div>
            </div>
         </motion.div>
       )}

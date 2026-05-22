@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { db } from '../lib/firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { getCityFromIP, getDeviceDetails } from '../lib/tracking';
 
 export default function LiveTracking() {
   const location = useLocation();
@@ -18,23 +19,15 @@ export default function LiveTracking() {
 
     const trackVisit = async () => {
       try {
-        let city = 'Unknown';
-        let ip = 'Unknown';
-        try {
-          const res = await fetch('https://freeipapi.com/api/json/');
-          const data = await res.json();
-          city = data.cityName || 'Unknown';
-          ip = data.ipAddress || 'Unknown';
-        } catch (e) {}
-
-        const isMobile = /Mobi|Android/i.test(navigator.userAgent);
+        const city = await getCityFromIP();
+        const { type, model } = getDeviceDetails();
         
         await addDoc(collection(db, 'tracking_logs'), {
           path: location.pathname,
           sessionId,
           city,
-          ip,
-          device: isMobile ? 'Mobile' : 'Desktop',
+          device: type,
+          model: model,
           userAgent: navigator.userAgent,
           timestamp: serverTimestamp()
         });

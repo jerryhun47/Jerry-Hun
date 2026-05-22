@@ -16,6 +16,7 @@ export default function Dashboard() {
   const [orders, setOrders] = useState<any[]>([]);
   const [contacts, setContacts] = useState<any[]>([]);
   const [transactions, setTransactions] = useState<any[]>([]);
+  const [refunds, setRefunds] = useState<any[]>([]);
   const [usersList, setUsersList] = useState<any[]>([]);
   const [viewProof, setViewProof] = useState<string | null>(null);
 
@@ -54,6 +55,11 @@ export default function Dashboard() {
     unsubs.push(onSnapshot(query(collection(db, 'transactions'), orderBy('createdAt', 'desc')), (snap) => {
       const tData = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       setTransactions(tData);
+    }));
+
+    // Realtime Refunds
+    unsubs.push(onSnapshot(collection(db, 'refunds'), (snap) => {
+      setRefunds(snap.docs.map(d => ({ id: d.id, ...d.data() })));
     }));
 
     // Realtime Users
@@ -96,7 +102,7 @@ export default function Dashboard() {
             { id: 'products', icon: Package, label: 'Products (Tools)' },
             { id: 'courses', icon: Package, label: 'Courses' },
             { id: 'orders', icon: ShoppingBag, label: 'Orders', badge: orders.filter(o=>o.status==='pending').length },
-            { id: 'refunds', icon: RefreshCcw, label: 'Refund Requests' },
+            { id: 'refunds', icon: RefreshCcw, label: 'Refund Requests', badge: refunds.filter(r=>r.status==='Pending').length },
             { id: 'transactions', icon: ShoppingBag, label: 'Payments', badge: transactions.filter(t=>t.status==='pending').length },
             { id: 'paymentsettings', icon: LayoutDashboard, label: 'Payment Accounts' },
             { id: 'settings', icon: LayoutDashboard, label: 'Global Settings' },
@@ -144,7 +150,7 @@ export default function Dashboard() {
                   <p className="text-slate-500">Welcome back, Admin. Here is what is happening today.</p>
                </div>
                
-               <OverviewAnalytics orders={orders} />
+               <OverviewAnalytics orders={orders} transactions={transactions} />
                <CalendarAnalytics orders={orders} />
                
                <div className="bg-white p-8 rounded-3xl border border-slate-200 card-shadow mt-8">
@@ -504,7 +510,7 @@ function OrdersManager({ orders, refresh, viewProof, setViewProof }: { orders: a
      setAnalyzingOrderId(order.id);
      setIsAnalyzing(true);
      // Simulate AI fraud check and fetching user data
-     setTimeout(async () => {
+     
         let sessionCount = 1;
         try {
            const usersSnap = await getDocs(query(collection(db, 'visitors'), orderBy('lastVisitTime', 'desc')));
@@ -517,7 +523,7 @@ function OrdersManager({ orders, refresh, viewProof, setViewProof }: { orders: a
            }
         } catch(e) {}
         
-        const risks = ['Safe Order', 'Safe Order', 'Suspicious', 'High Risk'];
+        const risks = ['Safe Order', 'Safe Order', 'Suspicious Order', 'Needs Review'];
         const randRisk = risks[Math.floor(Math.random() * risks.length)];
         
         setAnalysisResult({
@@ -530,10 +536,9 @@ function OrdersManager({ orders, refresh, viewProof, setViewProof }: { orders: a
            screenshotStatus: order.proofBase64 ? 'Analyzed' : 'Not Provided',
            screenshotRisk: order.proofBase64 ? (Math.random() > 0.8 ? 'Duplicate Found' : 'Unique Image') : 'N/A',
            finalRisk: randRisk,
-           recommendation: randRisk === 'Safe Order' ? 'Approve' : randRisk === 'Suspicious' ? 'Review manually' : 'Reject'
+           recommendation: randRisk === 'Safe Order' ? 'Approve' : randRisk === 'Suspicious Order' ? 'Review manually' : 'Reject'
         });
         setIsAnalyzing(false);
-     }, 1500);
   };
 
   return (
@@ -906,36 +911,58 @@ function TransactionsManager({ transactions, refresh, viewProof, setViewProof }:
        )}
       {viewProof && (
         <div className="fixed inset-0 bg-slate-900/90 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-           <div className="bg-slate-950 p-4 rounded-3xl max-w-4xl w-full max-h-[90vh] flex flex-col relative border border-slate-800">
+           <div className="bg-slate-950 p-6 rounded-3xl max-w-lg w-full max-h-[90vh] flex flex-col relative border border-slate-800">
               <div className="flex justify-between items-center mb-4">
-                 <h3 className="text-white font-bold text-lg">Payment Screenshot</h3>
+                 <h3 className="text-white font-bold text-lg">Payment Proof</h3>
                  <button onClick={() => setViewProof(null)} className="text-slate-400 hover:text-white bg-slate-900 p-2 rounded-full cursor-pointer"><X size={24} /></button>
               </div>
-              <div className="flex-1 overflow-auto bg-black rounded-2xl flex items-center justify-center min-h-[300px]">
-                 <img src={viewProof} alt="Full Proof" className="max-w-full max-h-[60vh] object-contain" />
-              </div>
-              <div className="flex flex-wrap justify-between gap-4 mt-6">
-                 <div className="flex gap-2">
-                    <button onClick={() => {
-                       const link = document.createElement('a');
-                       link.download = `proof-${Date.now()}.jpg`;
-                       link.href = viewProof;
-                       link.click();
-                    }} className="bg-slate-100 hover:bg-white text-slate-900 px-4 py-2 font-bold rounded-xl text-sm transition-colors cursor-pointer">
-                       Download / Save
-                    </button>
-                    <button onClick={() => {
+              
+              {/* Scrollable image container */}
+              <div className="flex-1 overflow-y-auto bg-black rounded-2xl flex items-center justify-center mb-4" style={{ maxHeight: '60vh' }}>
+                 <img src={viewProof} alt="Full Proof" className="max-w-full object-contain" />
+                      {/* Button Row */}
+              <div className="flex flex-row flex-nowrap justify-between items-center gap-[8px] w-full mt-4">
+                 <button onClick={async () => {
+                    try {
+                      const response = await fetch(viewProof);
+                      const blob = await response.blob();
+                      const file = new File([blob], 'payment-proof.jpg', { type: 'image/jpeg' });
+                      if (navigator.share && navigator.canShare({ files: [file] })) {
+                        await navigator.share({ files: [file], title: 'Payment Proof', text: 'Payment Screenshot' });
+                      } else {
+                        throw new Error('Not supported');
+                      }
+                    } catch (e) {
+                      window.open(`https://t.me/share/url?url=${encodeURIComponent(viewProof)}&text=Payment%20Proof`);
+                    }
+                 }} className="flex-1 h-[45px] flex items-center justify-center bg-[#0088cc] text-white rounded-[8px] hover:opacity-90 cursor-pointer">
+                        <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"></path></svg>
+                 </button>
+                 <button onClick={async () => {
+                    try {
+                      const response = await fetch(viewProof);
+                      const blob = await response.blob();
+                      const file = new File([blob], 'payment-proof.jpg', { type: 'image/jpeg' });
+                      if (navigator.share && navigator.canShare({ files: [file] })) {
+                        await navigator.share({ files: [file], title: 'Payment Proof', text: 'Payment Screenshot' });
+                      } else {
+                        throw new Error('Not supported');
+                      }
+                    } catch (e) {
                         window.open(`https://wa.me/?text=Check out this payment proof: ${encodeURIComponent(viewProof)}`);
-                    }} className="bg-[#25D366] hover:bg-[#1ebd5a] text-white px-4 py-2 font-bold rounded-xl text-sm transition-colors cursor-pointer">
-                       WhatsApp Share
-                    </button>
-                    <button onClick={() => {
-                        window.open(`https://t.me/share/url?url=${encodeURIComponent(viewProof)}&text=Payment%20Proof`);
-                    }} className="bg-[#0088cc] hover:bg-[#0077b5] text-white px-4 py-2 font-bold rounded-xl text-sm transition-colors cursor-pointer">
-                       Telegram Share
-                    </button>
-                 </div>
-              </div>
+                    }
+                 }} className="flex-1 h-[45px] flex items-center justify-center bg-[#25D366] text-white rounded-[8px] hover:opacity-90 cursor-pointer">
+                        <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+                 </button>
+                 <button onClick={() => {
+                    const link = document.createElement('a');
+                    link.download = `proof-${Date.now()}.jpg`;
+                    link.href = viewProof;
+                    link.click();
+                 }} className="flex-1 h-[45px] flex items-center justify-center bg-slate-100 text-slate-900 rounded-[8px] hover:bg-slate-200 cursor-pointer">
+                    <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"></path></svg>
+                 </button>
+              </div>        </div>
            </div>
         </div>
       )}
@@ -1659,45 +1686,36 @@ function AnnouncementsManager() {
   );
 }
 
-function OverviewAnalytics({ orders }: { orders: any[] }) {
+function OverviewAnalytics({ orders, transactions }: { orders: any[], transactions: any[] }) {
   const [stats, setStats] = useState({ 
-    totalOrders: 0, todayOrdersCount: 0, totalIncome: 0, todayIncome: 0, yesterdayIncome: 0, prevDayIncome: 0, weekSales: 0, monthSales: 0 
+    totalOrders: 0, todayOrdersCount: 0, totalIncome: 0, todayIncome: 0, yesterdayIncome: 0, yesterdayOrders: 0, yesterdayOrdersCount: 0
   });
 
   useEffect(() => {
-    if (!orders) return;
+    if (!orders || !transactions) return;
     const now = new Date();
     
     let totalIncome = 0;
     let todayIncome = 0;
     let todayOrdersCount = 0;
     let yesterdayIncome = 0;
-    let prevDayIncome = 0;
-    let weekSales = 0;
-    let monthSales = 0;
+    let yesterdayOrdersCount = 0;
 
     const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
     const startOfYesterday = startOfToday - 86400000;
-    const startOfPrevDay = startOfYesterday - 86400000;
-    
-    // JS getDay() returns 0 for Sunday. Week start typically Monday.
-    const day = now.getDay() === 0 ? 6 : now.getDay() - 1; 
-    const startOfWeek = startOfToday - (day * 86400000);
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
 
+    transactions.forEach(t => {
+       const dateStr = t.createdAt?.toMillis ? t.createdAt.toMillis() : Date.now();
+       const amount = Number(t.amount || 0);
+       totalIncome += amount;
+       if (dateStr >= startOfToday) todayIncome += amount;
+       if (dateStr >= startOfYesterday && dateStr < startOfToday) yesterdayIncome += amount;
+    });
+    
     orders.forEach(o => {
       const dateStr = o.createdAt?.toMillis ? o.createdAt.toMillis() : Date.now();
       if (dateStr >= startOfToday) todayOrdersCount++;
-      
-      const amount = o.total_price || 0;
-
-      totalIncome += amount;
-
-      if (dateStr >= startOfToday) todayIncome += amount;
-      if (dateStr >= startOfYesterday && dateStr < startOfToday) yesterdayIncome += amount;
-      if (dateStr >= startOfPrevDay && dateStr < startOfYesterday) prevDayIncome += amount;
-      if (dateStr >= startOfWeek) weekSales += amount;
-      if (dateStr >= startOfMonth) monthSales += amount;
+      if (dateStr >= startOfYesterday && dateStr < startOfToday) yesterdayOrdersCount++;
     });
 
     setStats({
@@ -1706,26 +1724,15 @@ function OverviewAnalytics({ orders }: { orders: any[] }) {
       totalIncome,
       todayIncome,
       yesterdayIncome,
-      prevDayIncome,
-      weekSales,
-      monthSales
+      yesterdayOrders: yesterdayIncome,
+      yesterdayOrdersCount
     });
-  }, [orders]);
+  }, [orders, transactions]);
 
   return (
     <div className="bg-white p-6 md:p-8 rounded-3xl border border-slate-200 card-shadow mt-8 mb-8">
-      <h3 className="text-xl font-bold mb-6 flex items-center gap-2"><DollarSign2 /> Overview Analytics</h3>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-        <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 relative overflow-hidden group">
-          <div className="absolute inset-0 bg-red-600 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
-          <p className="text-sm font-bold text-slate-500 group-hover:text-red-100 uppercase tracking-wider mb-1 relative z-10 transition-colors">Today's Orders</p>
-          <p className="text-3xl font-black text-slate-900 group-hover:text-white relative z-10 transition-colors">{stats.todayOrdersCount}</p>
-        </div>
-        <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 relative overflow-hidden group">
-          <div className="absolute inset-0 bg-red-600 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
-          <p className="text-sm font-bold text-slate-500 group-hover:text-red-100 uppercase tracking-wider mb-1 relative z-10 transition-colors">Today's Income</p>
-          <p className="text-3xl font-black text-slate-900 group-hover:text-white relative z-10 transition-colors">PKR {stats.todayIncome.toLocaleString()}</p>
-        </div>
+      <h3 className="text-xl font-bold mb-6 flex items-center gap-2">Overview Analytics</h3>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
           <p className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-1">Total Orders</p>
           <p className="text-3xl font-black text-slate-900">{stats.totalOrders}</p>
@@ -1735,20 +1742,12 @@ function OverviewAnalytics({ orders }: { orders: any[] }) {
           <p className="text-3xl font-black text-slate-900">PKR {stats.totalIncome.toLocaleString()}</p>
         </div>
         <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+          <p className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-1">Yesterday Orders</p>
+          <p className="text-3xl font-black text-slate-900">{stats.yesterdayOrdersCount}</p>
+        </div>
+        <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
           <p className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-1">Yesterday Income</p>
-          <p className="text-2xl font-black text-slate-900">PKR {stats.yesterdayIncome.toLocaleString()}</p>
-        </div>
-        <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
-          <p className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-1">Prev Day Income</p>
-          <p className="text-2xl font-black text-slate-900">PKR {stats.prevDayIncome.toLocaleString()}</p>
-        </div>
-        <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
-          <p className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-1">Sales This Week</p>
-          <p className="text-2xl font-black text-slate-900">PKR {stats.weekSales.toLocaleString()}</p>
-        </div>
-        <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
-          <p className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-1">Sales This Month</p>
-          <p className="text-2xl font-black text-slate-900">PKR {stats.monthSales.toLocaleString()}</p>
+          <p className="text-3xl font-black text-slate-900">PKR {stats.yesterdayIncome.toLocaleString()}</p>
         </div>
       </div>
     </div>
@@ -1790,9 +1789,9 @@ function RefundsManager() {
           <table className="w-full text-left">
             <thead>
                <tr className="bg-slate-50/50">
-                  <th className="py-4 px-6 font-bold text-slate-500 text-xs tracking-wider uppercase">User / Method</th>
-                  <th className="py-4 px-6 font-bold text-slate-500 text-xs tracking-wider uppercase">Product</th>
-                  <th className="py-4 px-6 font-bold text-slate-500 text-xs tracking-wider uppercase">Reason</th>
+                  <th className="py-4 px-6 font-bold text-slate-500 text-xs tracking-wider uppercase">Customer Info</th>
+                  <th className="py-4 px-6 font-bold text-slate-500 text-xs tracking-wider uppercase">Product Details</th>
+                  <th className="py-4 px-6 font-bold text-slate-500 text-xs tracking-wider uppercase">Reason & Account</th>
                   <th className="py-4 px-6 font-bold text-slate-500 text-xs tracking-wider uppercase">Status</th>
                   <th className="py-4 px-6 font-bold text-slate-500 text-xs tracking-wider uppercase text-right">Actions</th>
                </tr>
@@ -1802,16 +1801,17 @@ function RefundsManager() {
                   <tr key={r.id} className="hover:bg-slate-50 transition-colors">
                      <td className="py-4 px-6">
                         <p className="font-bold text-slate-900">{r.name}</p>
+                        <p className="text-sm text-slate-600">{r.phone || 'No phone'}</p>
                         <p className="text-xs text-slate-500">{r.email}</p>
-                        <p className="text-[10px] font-black text-slate-400 uppercase mt-1">VIA {r.receiveMethod}</p>
                      </td>
                      <td className="py-4 px-6">
                         <p className="font-bold text-slate-800">{r.productName}</p>
                         <p className="text-sm font-black text-red-600">PKR {r.amount?.toLocaleString()}</p>
                      </td>
-                     <td className="py-4 px-6 max-w-xs">
-                        <p className="text-sm text-slate-600 truncate">{r.refundReason}</p>
-                        <p className="text-xs text-slate-400 mt-1">{r.timestamp?.toDate ? r.timestamp.toDate().toLocaleString() : 'Unknown Date'}</p>
+                     <td className="py-4 px-6 max-w-sm">
+                        <p className="text-sm text-slate-600 font-semibold">{r.refundReason}</p>
+                        <p className="text-xs text-slate-500 mt-1">Account: {r.accountNumber || 'N/A'}</p>
+                        <p className="text-xs text-slate-500 font-bold uppercase">{r.receiveMethod}</p>
                      </td>
                      <td className="py-4 px-6">
                         <span className={`px-3 py-1 rounded-full text-xs font-bold ${
@@ -1827,12 +1827,6 @@ function RefundsManager() {
                         {r.status === 'Pending' && (
                            <>
                              <button onClick={() => updateStatus(r.id, 'Processing')} className="bg-blue-50 text-blue-600 hover:bg-blue-100 px-3 py-1.5 rounded-lg text-xs font-bold mr-2 transition-colors">Process</button>
-                             <button onClick={() => updateStatus(r.id, 'Approved')} className="bg-green-50 text-green-600 hover:bg-green-100 px-3 py-1.5 rounded-lg text-xs font-bold mr-2 transition-colors">Approve</button>
-                             <button onClick={() => updateStatus(r.id, 'Rejected')} className="bg-red-50 text-red-600 hover:bg-red-100 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors">Reject</button>
-                           </>
-                        )}
-                        {r.status === 'Processing' && (
-                           <>
                              <button onClick={() => updateStatus(r.id, 'Approved')} className="bg-green-50 text-green-600 hover:bg-green-100 px-3 py-1.5 rounded-lg text-xs font-bold mr-2 transition-colors">Approve</button>
                              <button onClick={() => updateStatus(r.id, 'Rejected')} className="bg-red-50 text-red-600 hover:bg-red-100 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors">Reject</button>
                            </>
