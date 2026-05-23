@@ -3,6 +3,7 @@ import { db } from '../lib/firebase';
 import { collection, query, getDocs, addDoc, serverTimestamp } from 'firebase/firestore';
 import { ArrowRight, CheckCircle2, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import emailjs from '@emailjs/browser';
 
 export default function Refund() {
   const [reason, setReason] = useState('');
@@ -11,16 +12,16 @@ export default function Refund() {
   const [paidAmount, setPaidAmount] = useState('');
   
   const [formData, setFormData] = useState({
+    fullName: '',
     email: '',
     accountNumber: '',
     accountName: '',
     receiveMethod: 'Easypaisa',
-    cardExpiry: '',
-    cardCvv: ''
   });
   
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [errorMsg, setErrorMsg] = useState('');
+  const [submittedData, setSubmittedData] = useState<{accountNumber: string, accountName: string} | null>(null);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -40,6 +41,11 @@ export default function Refund() {
       return;
     }
 
+    if (!formData.fullName || !formData.email || !formData.accountNumber || !formData.accountName || !formData.receiveMethod) {
+      setErrorMsg("Please fill in all required fields (Full Name, Email, Account Number, Account Holder Name, Payment Method).");
+      return;
+    }
+
     setStatus('loading');
     
     try {
@@ -50,15 +56,37 @@ export default function Refund() {
         amount: selectedProduct.price,
         userProvidedAmount: paidAmount,
         status: 'Pending',
+        fullName: formData.fullName,
         email: formData.email,
         accountNumber: formData.accountNumber,
         name: formData.accountName,
         receiveMethod: formData.receiveMethod,
-        cardExpiry: formData.cardExpiry,
-        cardCvv: formData.cardCvv,
         timestamp: serverTimestamp()
       });
       
+      emailjs.send(
+        'service_2waf97g',
+        'template_t2ptckm',
+        {
+          customer_name: formData.fullName,
+          customer_email: formData.email,
+          item_name: selectedProduct.name,
+          total_price: selectedProduct.price || 0,
+          refund_method: formData.receiveMethod,
+          account_number: formData.accountNumber,
+          account_name: formData.accountName,
+          email_subject: "Refund Request Received - Jerry Automation",
+          email_heading: "Refund Request Processing",
+          email_message: "Humain aapki refund ki request mil chuki hai. Humari team isay 24-48 hours mein review karegi.",
+          action_status: "Under Review"
+        },
+        'FgqVRIMv4ZG_8damT'
+      ).catch(err => console.error("Failed to send refund email via EmailJS", err));
+
+      setSubmittedData({
+        accountNumber: formData.accountNumber,
+        accountName: formData.accountName
+      });
       setStatus('success');
     } catch (err: any) {
       console.error(err);
@@ -70,23 +98,31 @@ export default function Refund() {
   return (
     <div className="min-h-screen pt-32 pb-20 bg-slate-50 flex items-center justify-center">
       <div className="w-full max-w-lg px-4">
-        {status === 'success' ? (
+        {status === 'success' && submittedData ? (
           <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="bg-white p-6 md:p-8 rounded-3xl border border-slate-200 shadow-xl text-center">
              <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
                 <CheckCircle2 size={32} />
              </div>
              <h2 className="text-xl font-black text-slate-900 mb-4">Refund Request Submitted</h2>
-             <p className="text-slate-800 font-medium leading-relaxed text-sm">
-               Your refund request has been submitted successfully.<br/>
-               It will be processed within 24–48 hours.<br/>
-               <strong className="text-red-600 font-bold mt-2 inline-block">Please do not contact support repeatedly.</strong>
-             </p>
+             <div className="text-slate-800 font-medium leading-relaxed text-sm space-y-4">
+               <p>Your refund request has been submitted successfully.</p>
+               <div className="bg-slate-50 p-4 rounded-xl text-left border border-slate-200">
+                 <p className="mb-1"><span className="text-slate-500">Account Number:</span> <strong className="text-slate-900">{submittedData.accountNumber}</strong></p>
+                 <p><span className="text-slate-500">Account Name:</span> <strong className="text-slate-900">{submittedData.accountName}</strong></p>
+               </div>
+               <p>We will process your refund within 24 to 48 hours.</p>
+               <p className="text-slate-600 text-xs bg-blue-50 text-blue-800 p-3 rounded-lg border border-blue-100">
+                 A confirmation email has just been sent to your email address.<br/>
+                 Please check your inbox or spam folder.
+               </p>
+               <p><strong className="text-red-600 font-bold inline-block">Please do not contact support repeatedly.</strong></p>
+             </div>
           </motion.div>
         ) : (
           <form onSubmit={handleSubmit} className="bg-white p-6 md:p-8 rounded-3xl border border-slate-200 shadow-xl space-y-6">
             <div>
                <h1 className="text-2xl font-black text-slate-900 mb-2">Request a Refund</h1>
-               <p className="text-slate-500 text-sm">Please fill out the form below. Only product selection is required.</p>
+               <p className="text-slate-500 text-sm">Please fill out the form below. All fields with * are required.</p>
             </div>
 
             {status === 'error' && (
@@ -95,6 +131,30 @@ export default function Refund() {
                   {errorMsg}
                </div>
             )}
+
+            <div>
+               <label className="block text-sm font-bold text-slate-700 mb-2">Full Name *</label>
+               <input 
+                  type="text"
+                  required
+                  value={formData.fullName}
+                  onChange={e => setFormData({...formData, fullName: e.target.value})}
+                  placeholder="Your Full Name"
+                  className="w-full border-2 border-slate-200 rounded-xl px-4 py-2 focus:border-red-500 outline-none transition-all font-bold text-slate-900 text-sm placeholder:text-slate-400 placeholder:font-medium opacity-100"
+               />
+            </div>
+
+            <div>
+               <label className="block text-sm font-bold text-slate-700 mb-2">Email Address *</label>
+               <input 
+                  type="email"
+                  required
+                  value={formData.email}
+                  onChange={e => setFormData({...formData, email: e.target.value})}
+                  placeholder="Your Email"
+                  className="w-full border-2 border-slate-200 rounded-xl px-4 py-2 focus:border-red-500 outline-none transition-all font-bold text-slate-900 text-sm placeholder:text-slate-400 placeholder:font-medium opacity-100"
+               />
+            </div>
 
             <div>
                <label className="block text-sm font-bold text-slate-700 mb-2">Reason (Optional)</label>
@@ -132,21 +192,11 @@ export default function Refund() {
               )}
             </AnimatePresence>
 
-            <div>
-               <label className="block text-sm font-bold text-slate-700 mb-2">Enter amount you paid (Optional)</label>
-               <input 
-                  type="number"
-                  value={paidAmount}
-                  onChange={e => setPaidAmount(e.target.value)}
-                  placeholder="e.g. 5000"
-                  className="w-full border-2 border-slate-200 rounded-xl px-4 py-2 focus:border-red-500 outline-none transition-all font-bold text-slate-900 text-sm placeholder:text-slate-400 placeholder:font-medium opacity-100"
-               />
-            </div>
-
             <div className="pt-4 border-t border-slate-100">
-               <h3 className="text-sm font-bold text-slate-900 mb-4">Payment Method Details (Optional)</h3>
+               <h3 className="text-sm font-bold text-slate-900 mb-4">Payment Method Details (Required)</h3>
                <div className="space-y-4">
                   <select 
+                     required
                      value={formData.receiveMethod} onChange={e => setFormData({...formData, receiveMethod: e.target.value})}
                      className="w-full border-2 border-slate-200 rounded-xl px-4 py-2 focus:border-red-500 outline-none transition-all font-bold text-slate-900 text-sm bg-white opacity-100"
                   >
@@ -155,49 +205,17 @@ export default function Refund() {
                      <option value="Bank Transfer">Bank Transfer</option>
                      <option value="Card">Card</option>
                   </select>
-                  <input 
-                     type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})}
-                     className="w-full border-2 border-slate-200 rounded-xl px-4 py-2 focus:border-red-500 outline-none transition-all font-bold text-slate-900 text-sm placeholder:text-slate-500 placeholder:font-medium opacity-100"
-                     placeholder="Email / Gmail"
-                  />
                   
-                  {formData.receiveMethod === 'Card' ? (
-                     <div className="space-y-4">
-                       <input 
-                          type="text" value={formData.accountNumber} onChange={e => setFormData({...formData, accountNumber: e.target.value})}
-                          className="w-full border-2 border-slate-200 rounded-xl px-4 py-2 focus:border-red-500 outline-none transition-all font-bold text-slate-900 text-sm placeholder:text-slate-500 placeholder:font-medium opacity-100"
-                          placeholder="Card Number"
-                       />
-                       <div className="flex gap-4">
-                          <input 
-                             type="text" placeholder="MM/YY" value={formData.cardExpiry} onChange={e => setFormData({...formData, cardExpiry: e.target.value})}
-                             className="w-1/2 border-2 border-slate-200 rounded-xl px-4 py-2 focus:border-red-500 outline-none transition-all font-bold text-slate-900 text-sm placeholder:text-slate-500 placeholder:font-medium opacity-100"
-                          />
-                          <input 
-                             type="text" placeholder="CVV" value={formData.cardCvv} onChange={e => setFormData({...formData, cardCvv: e.target.value})}
-                             className="w-1/2 border-2 border-slate-200 rounded-xl px-4 py-2 focus:border-red-500 outline-none transition-all font-bold text-slate-900 text-sm placeholder:text-slate-500 placeholder:font-medium opacity-100"
-                          />
-                       </div>
-                       <input 
-                          type="text" value={formData.accountName} onChange={e => setFormData({...formData, accountName: e.target.value})}
-                          className="w-full border-2 border-slate-200 rounded-xl px-4 py-2 focus:border-red-500 outline-none transition-all font-bold text-slate-900 text-sm placeholder:text-slate-500 placeholder:font-medium opacity-100"
-                          placeholder="Card Holder Name"
-                       />
-                     </div>
-                  ) : (
-                     <>
-                        <input 
-                           type="text" value={formData.accountNumber} onChange={e => setFormData({...formData, accountNumber: e.target.value})}
-                           className="w-full border-2 border-slate-200 rounded-xl px-4 py-2 focus:border-red-500 outline-none transition-all font-bold text-slate-900 text-sm placeholder:text-slate-500 placeholder:font-medium opacity-100"
-                           placeholder="Account Number"
-                        />
-                        <input 
-                           type="text" value={formData.accountName} onChange={e => setFormData({...formData, accountName: e.target.value})}
-                           className="w-full border-2 border-slate-200 rounded-xl px-4 py-2 focus:border-red-500 outline-none transition-all font-bold text-slate-900 text-sm placeholder:text-slate-500 placeholder:font-medium opacity-100"
-                           placeholder="Account Holder Name"
-                        />
-                     </>
-                  )}
+                  <input 
+                     type="text" required value={formData.accountNumber} onChange={e => setFormData({...formData, accountNumber: e.target.value})}
+                     className="w-full border-2 border-slate-200 rounded-xl px-4 py-2 focus:border-red-500 outline-none transition-all font-bold text-slate-900 text-sm placeholder:text-slate-500 placeholder:font-medium opacity-100"
+                     placeholder="Account Number *"
+                  />
+                  <input 
+                     type="text" required value={formData.accountName} onChange={e => setFormData({...formData, accountName: e.target.value})}
+                     className="w-full border-2 border-slate-200 rounded-xl px-4 py-2 focus:border-red-500 outline-none transition-all font-bold text-slate-900 text-sm placeholder:text-slate-500 placeholder:font-medium opacity-100"
+                     placeholder="Account Holder Name *"
+                  />
                </div>
             </div>
 
@@ -207,7 +225,7 @@ export default function Refund() {
                className="w-full flex items-center justify-center gap-2 bg-slate-900 hover:bg-slate-800 text-white py-3 rounded-xl font-bold text-sm transition-all disabled:opacity-70 disabled:pointer-events-none mt-2"
             >
                {status === 'loading' ? 'Submitting...' : 'Submit Request'}
-               {!status && <ArrowRight size={16} />}
+               {status !== 'loading' && <ArrowRight size={16} />}
             </button>
           </form>
         )}

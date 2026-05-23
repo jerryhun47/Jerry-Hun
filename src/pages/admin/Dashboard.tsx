@@ -1704,6 +1704,8 @@ function OverviewAnalytics({ orders, transactions }: { orders: any[], transactio
   );
 }
 
+import emailjs from '@emailjs/browser';
+
 function RefundsManager() {
   const [refunds, setRefunds] = React.useState<any[]>([]);
 
@@ -1715,10 +1717,50 @@ function RefundsManager() {
     return () => unsubscribe();
   }, []);
 
-  const updateStatus = async (id: string, newStatus: string) => {
+  const updateStatus = async (refund: any, newStatus: string) => {
     try {
-      await updateDoc(doc(db, 'refunds', id), { status: newStatus });
-      alert(`Refund marked as ${newStatus}. ${newStatus === 'Approved' ? 'The user will be notified.' : ''}`);
+      await updateDoc(doc(db, 'refunds', refund.id), { status: newStatus });
+      
+      let emailConfig = null;
+
+      if (newStatus === 'refunded') {
+        emailConfig = {
+          email_subject: "Refund Approved Successfully - Jerry Automation",
+          email_heading: "Refund Successful!",
+          email_message: "Good news! Aapka refund confirm ho chuka hai aur paise aapke account mein transfer kar diye gaye hain.",
+          action_status: "REFUNDED"
+        };
+      } else if (newStatus === 'refund_rejected') {
+        emailConfig = {
+          email_subject: "Refund Request Update - Jerry Automation",
+          email_heading: "Refund Request Rejected",
+          email_message: "Afsoos, aapki refund request humari policy par poori nahi utri, isliye isay reject kar diya gaya hai.",
+          action_status: "REJECTED"
+        };
+      }
+
+      if (emailConfig && refund.email) {
+        emailjs.send(
+          'service_2waf97g',
+          'template_t2ptckm',
+          {
+            customer_name: refund.fullName || refund.name,
+            customer_email: refund.email,
+            item_name: refund.productName,
+            total_price: refund.amount || 0,
+            refund_method: refund.receiveMethod,
+            account_number: refund.accountNumber,
+            account_name: refund.name,
+            email_subject: emailConfig.email_subject,
+            email_heading: emailConfig.email_heading,
+            email_message: emailConfig.email_message,
+            action_status: emailConfig.action_status
+          },
+          'FgqVRIMv4ZG_8damT'
+        ).catch(err => console.error("Failed to send refund update email via EmailJS", err));
+      }
+
+      alert(`Refund marked as ${newStatus} and email notification triggered.`);
     } catch (err) {
       console.error(err);
       alert('Failed to update status.');
@@ -1750,7 +1792,7 @@ function RefundsManager() {
                {refunds.map(r => (
                   <tr key={r.id} className="hover:bg-slate-50 transition-colors">
                      <td className="py-4 px-6">
-                        <p className="font-bold text-slate-900">{r.name}</p>
+                        <p className="font-bold text-slate-900">{r.fullName || r.name}</p>
                         <p className="text-sm text-slate-600">{r.phone || 'No phone'}</p>
                         <p className="text-xs text-slate-500">{r.email}</p>
                      </td>
@@ -1759,26 +1801,25 @@ function RefundsManager() {
                         <p className="text-sm font-black text-red-600">PKR {r.amount?.toLocaleString()}</p>
                      </td>
                      <td className="py-4 px-6 max-w-sm">
-                        <p className="text-sm text-slate-600 font-semibold">{r.refundReason}</p>
+                        <p className="text-sm text-slate-600 font-semibold">{r.refundReason || 'No reason provided'}</p>
                         <p className="text-xs text-slate-500 mt-1">Account: {r.accountNumber || 'N/A'}</p>
                         <p className="text-xs text-slate-500 font-bold uppercase">{r.receiveMethod}</p>
                      </td>
                      <td className="py-4 px-6">
                         <span className={`px-3 py-1 rounded-full text-xs font-bold ${
                            r.status === 'Pending' ? 'bg-amber-100 text-amber-700' :
-                           r.status === 'Approved' ? 'bg-green-100 text-green-700' :
-                           r.status === 'Rejected' ? 'bg-red-100 text-red-700' :
+                           r.status === 'refunded' ? 'bg-green-100 text-green-700' :
+                           r.status === 'refund_rejected' ? 'bg-red-100 text-red-700' :
                            'bg-blue-100 text-blue-700'
                         }`}>
-                           {r.status}
+                           {r.status === 'refunded' ? 'Refunded' : r.status === 'refund_rejected' ? 'Rejected' : r.status}
                         </span>
                      </td>
                      <td className="py-4 px-6 text-right space-x-2">
                         {r.status === 'Pending' && (
                            <>
-                             <button onClick={() => updateStatus(r.id, 'Processing')} className="bg-blue-50 text-blue-600 hover:bg-blue-100 px-3 py-1.5 rounded-lg text-xs font-bold mr-2 transition-colors">Process</button>
-                             <button onClick={() => updateStatus(r.id, 'Approved')} className="bg-green-50 text-green-600 hover:bg-green-100 px-3 py-1.5 rounded-lg text-xs font-bold mr-2 transition-colors">Approve</button>
-                             <button onClick={() => updateStatus(r.id, 'Rejected')} className="bg-red-50 text-red-600 hover:bg-red-100 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors">Reject</button>
+                             <button onClick={() => updateStatus(r, 'refunded')} className="bg-green-50 text-green-600 hover:bg-green-100 px-3 py-1.5 rounded-lg text-xs font-bold mr-2 transition-colors">Accept Refund</button>
+                             <button onClick={() => updateStatus(r, 'refund_rejected')} className="bg-red-50 text-red-600 hover:bg-red-100 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors">Reject Refund</button>
                            </>
                         )}
                      </td>
