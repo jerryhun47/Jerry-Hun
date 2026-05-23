@@ -5,6 +5,7 @@ import { useAuth } from './AuthProvider';
 import { db, auth } from '../lib/firebase';
 import { collection, addDoc, serverTimestamp, getDocs } from 'firebase/firestore';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
+import emailjs from '@emailjs/browser';
 
 export default function PaymentModal({ item, type, onClose }: { item: any, type: 'course' | 'tool', onClose: () => void }) {
   const { user, signInWithGoogle } = useAuth();
@@ -186,6 +187,24 @@ export default function PaymentModal({ item, type, onClose }: { item: any, type:
         });
       } catch (e) {
         console.error("Failed to notify admin via email", e);
+      }
+      
+      // Send Order Confirmation via EmailJS
+      try {
+        await emailjs.send(
+          'service_2waf97g',
+          'template_qy4fn7n',
+          {
+            customer_name: user?.displayName || 'User',
+            email: user.email,
+            phone: whatsappNumber || 'N/A',
+            items: item.title || item.name,
+            total_price: item.price || 3000
+          },
+          'FgqVRIMv4ZG_8damT'
+        );
+      } catch (err) {
+        console.error("Failed to send order confirmation via EmailJS", err);
       }
       
       setStatus('success');

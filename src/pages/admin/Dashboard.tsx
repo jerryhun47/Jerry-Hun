@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { db, auth, signOut } from '../../lib/firebase';
 import { collection, getDocs, doc, deleteDoc, updateDoc, addDoc, serverTimestamp, query, orderBy, onSnapshot } from 'firebase/firestore';
-import { LayoutDashboard, ShoppingBag, MessageSquare, Package, LogOut, Plus, Trash2, Edit, X, Menu, DollarSign as DollarSign2, ArrowUp, ArrowDown, RefreshCcw, ShieldCheck, Copy } from 'lucide-react';
+import { LayoutDashboard, ShoppingBag, MessageSquare, Package, LogOut, Plus, Trash2, Edit, X, Menu, DollarSign as DollarSign2, ArrowUp, ArrowDown, RefreshCcw, ShieldCheck, Copy, Download } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import WebsiteEditor from './WebsiteEditor';
+import MessagesManager from '../../components/MessagesManager';
 import { UsersManager, DiscountsManager, SEOSettingsManager, BannersManager, MediaManager, NotificationsManager, AISettingsManager, AIChatLogsManager } from '../../components/AdminFeatures';
 
 export default function Dashboard() {
@@ -920,7 +921,9 @@ function TransactionsManager({ transactions, refresh, viewProof, setViewProof }:
               {/* Scrollable image container */}
               <div className="flex-1 overflow-y-auto bg-black rounded-2xl flex items-center justify-center mb-4" style={{ maxHeight: '60vh' }}>
                  <img src={viewProof} alt="Full Proof" className="max-w-full object-contain" />
-                      {/* Button Row */}
+              </div>
+
+              {/* Button Row */}
               <div className="flex flex-row flex-nowrap justify-between items-center gap-[8px] w-full mt-4">
                  <button onClick={async () => {
                     try {
@@ -952,72 +955,19 @@ function TransactionsManager({ transactions, refresh, viewProof, setViewProof }:
                         window.open(`https://wa.me/?text=Check out this payment proof: ${encodeURIComponent(viewProof)}`);
                     }
                  }} className="flex-1 h-[45px] flex items-center justify-center bg-[#25D366] text-white rounded-[8px] hover:opacity-90 cursor-pointer">
-                        <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+                        <MessageSquare size={24} />
                  </button>
-                 <button onClick={() => {
+                                  <button onClick={() => {
                     const link = document.createElement('a');
-                    link.download = `proof-${Date.now()}.jpg`;
+                    link.download = 'proof-' + Date.now() + '.jpg';
                     link.href = viewProof;
                     link.click();
                  }} className="flex-1 h-[45px] flex items-center justify-center bg-slate-100 text-slate-900 rounded-[8px] hover:bg-slate-200 cursor-pointer">
-                    <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"></path></svg>
+                    <Download size={24} />
                  </button>
-              </div>        </div>
-           </div>
-        </div>
-      )}
-    </div>
-  )
-}
-
-function MessagesManager({ contacts, refresh }: { contacts: any[], refresh: () => void }) {
-  const markRead = async (id: string, current: boolean) => {
-    try {
-      await updateDoc(doc(db, 'contacts', id), { is_read: !current });
-    } catch(e) {
-      console.error(e);
-    }
-  }
-
-  const handleDelete = async (id: string) => {
-     if(confirm('Delete message?')) {
-        await deleteDoc(doc(db, 'contacts', id));
-     }
-  }
-
-  return (
-    <div className="space-y-6 animate-in fade-in">
-       <div>
-          <h2 className="text-2xl font-black">Messages Management</h2>
-          <p className="text-slate-500">View and respond to contact form submissions.</p>
-       </div>
-       <div className="grid gap-4">
-          {contacts.map(c => (
-             <div key={c.id} className={`p-6 rounded-3xl border card-shadow flex flex-col md:flex-row justify-between gap-6 transition-colors ${c.is_read ? 'bg-white border-slate-200' : 'bg-red-50/50 border-red-100'}`}>
-                <div className="flex-1">
-                   <div className="flex items-center gap-3 mb-2">
-                      <h3 className="font-bold text-lg">{c.name}</h3>
-                      {!c.is_read && <span className="bg-red-600 text-white px-2 py-0.5 rounded-full text-[10px] font-black uppercase">New</span>}
-                   </div>
-                   <div className="text-sm text-slate-600 mb-4 bg-white/50 p-3 rounded-lg flex items-center gap-4 border border-slate-100">
-                      <span><strong>Email:</strong> <a href={`mailto:${c.email}`} className="text-blue-600 hover:underline">{c.email}</a></span>
-                      <span><strong>Phone:</strong> {c.phone || 'N/A'}</span>
-                      <span className="capitalize"><strong>Subject:</strong> {c.subject}</span>
-                   </div>
-                   <p className="text-slate-800 whitespace-pre-wrap">{c.message}</p>
-                </div>
-                <div className="flex flex-col gap-2 min-w-[150px]">
-                   <button onClick={() => markRead(c.id, c.is_read)} className={`px-4 py-2 rounded-xl font-bold border transition-colors ${c.is_read ? 'bg-white border-slate-200 hover:bg-slate-50 text-slate-600' : 'bg-red-100 border-red-200 text-red-700 hover:bg-red-200'}`}>
-                      {c.is_read ? 'Mark Unread' : 'Mark Read'}
-                   </button>
-                   <button onClick={() => handleDelete(c.id)} className="px-4 py-2 rounded-xl font-bold text-red-600 hover:bg-red-50 transition-colors">
-                      Delete
-                   </button>
-                </div>
-             </div>
-          ))}
-          {contacts.length === 0 && <div className="text-center py-12 bg-white rounded-3xl border border-slate-200 text-slate-500">No messages.</div>}
-       </div>
+              </div></div>
+            </div>
+       )}
     </div>
   )
 }

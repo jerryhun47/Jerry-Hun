@@ -8,7 +8,6 @@ import NetworkBackground from './NetworkBackground';
 import FrontendAnnouncements from './FrontendAnnouncements';
 import AIChatbot from './AIChatbot';
 
-import LiveOrderFeed from './LiveOrderFeed';
 import LiveTracking from './LiveTracking';
 
 export default function Layout() {
@@ -117,7 +116,6 @@ export default function Layout() {
       </div>
 
       <LiveTracking />
-      <LiveOrderFeed />
       <AIChatbot isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
 
       <main className="flex-1 relative z-10 pt-24">

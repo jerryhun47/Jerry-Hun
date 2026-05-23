@@ -5,6 +5,7 @@ import { ShoppingCart, Search, Lock, CheckCircle, X, Upload } from 'lucide-react
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '../components/AuthProvider';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
+import emailjs from '@emailjs/browser';
 
 interface Product {
   id: string;
@@ -366,6 +367,24 @@ function CheckoutModal({ product, onClose }: any) {
         });
       } catch (e) {
         console.error("Failed to notify admin via email", e);
+      }
+
+      // Send Order Confirmation via EmailJS
+      try {
+        await emailjs.send(
+          'service_2waf97g',
+          'template_qy4fn7n',
+          {
+            customer_name: name,
+            email: email,
+            phone: phone,
+            items: `${product.name} (${selectedPlan} plan)`,
+            total_price: selectedPrice
+          },
+          'FgqVRIMv4ZG_8damT'
+        );
+      } catch (err) {
+        console.error("Failed to send order confirmation via EmailJS", err);
       }
 
       setStatus('success');
