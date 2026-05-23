@@ -79,9 +79,37 @@ export default function PaymentModal({ item, type, onClose }: { item: any, type:
     setStatus('processing');
     const reader = new FileReader();
     reader.onload = (event) => {
-      const dataUrl = event.target?.result as string;
-      setProofBase64(dataUrl);
-      setStatus('idle');
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const MAX_WIDTH = 800;
+        const MAX_HEIGHT = 800;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > MAX_WIDTH) {
+            height *= MAX_WIDTH / width;
+            width = MAX_WIDTH;
+          }
+        } else {
+          if (height > MAX_HEIGHT) {
+            width *= MAX_HEIGHT / height;
+            height = MAX_HEIGHT;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx?.drawImage(img, 0, 0, width, height);
+        
+        // compress and set
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.6);
+        setProofBase64(dataUrl);
+        setStatus('idle');
+      };
+      img.src = event.target?.result as string;
     };
     reader.onerror = () => setStatus('idle');
     reader.readAsDataURL(file);
@@ -175,37 +203,30 @@ export default function PaymentModal({ item, type, onClose }: { item: any, type:
           <p>Please check the admin dashboard to approve the transaction.</p>
         </div>
       `;
-      try {
-        await fetch('/api/send-email', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            to: 'Contact@jerryautomation.com',
-            subject: 'New Order: ' + (item.title || item.name),
-            body: adminEmailBody
-          })
-        });
-      } catch (e) {
-        console.error("Failed to notify admin via email", e);
-      }
+      // Notify Admin and Send Order Confirmation via EmailJS (non-blocking)
+      fetch('/api/send-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          to: 'Contact@jerryautomation.com',
+          subject: 'New Order: ' + (item.title || item.name),
+          body: adminEmailBody
+        })
+      }).catch(e => console.error("Failed to notify admin via email", e));
       
-      // Send Order Confirmation via EmailJS
-      try {
-        await emailjs.send(
-          'service_2waf97g',
-          'template_qy4fn7n',
-          {
-            customer_name: user?.displayName || 'User',
-            email: user.email,
-            phone: whatsappNumber || 'N/A',
-            items: item.title || item.name,
-            total_price: item.price || 3000
-          },
-          'FgqVRIMv4ZG_8damT'
-        );
-      } catch (err) {
-        console.error("Failed to send order confirmation via EmailJS", err);
-      }
+      emailjs.send(
+        'service_2waf97g',
+        'template_qy4fn7n',
+        {
+          customer_name: user?.displayName || 'User',
+          customer_email: user.email,
+          customer_phone: whatsappNumber || 'N/A',
+          customer_address: 'N/A',
+          order_items: item.title || item.name,
+          total_price: item.price || 3000
+        },
+        'FgqVRIMv4ZG_8damT'
+      ).catch(err => console.error("Failed to send order confirmation via EmailJS", err));
       
       setStatus('success');
     } catch (err) {
