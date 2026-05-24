@@ -77,8 +77,9 @@ export default function Refund() {
           account_name: formData.accountName,
           email_subject: "Refund Request Received - Jerry Automation",
           email_heading: "Refund Request Processing",
-          email_message: "Humain aapki refund ki request mil chuki hai. Humari team isay 24-48 hours mein review karegi.",
-          action_status: "Under Review"
+          email_message: "We have received your refund request. Our team will review it within 24-48 hours.",
+          reject_remarks: "Our verification team is currently reviewing your order details.",
+          action_status: "UNDER REVIEW"
         },
         'FgqVRIMv4ZG_8damT'
       ).catch(err => console.error("Failed to send refund email via EmailJS", err));

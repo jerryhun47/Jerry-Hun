@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { X, Upload, CheckCircle, AlertCircle } from 'lucide-react';
 import { useAuth } from './AuthProvider';
 import { db, auth } from '../lib/firebase';
-import { collection, addDoc, serverTimestamp, getDocs } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, getDocs, doc, getDoc } from 'firebase/firestore';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 import emailjs from '@emailjs/browser';
 
@@ -214,6 +214,21 @@ export default function PaymentModal({ item, type, onClose }: { item: any, type:
         })
       }).catch(e => console.error("Failed to notify admin via email", e));
       
+      // Fetch product credentials
+      let prodGmail = '';
+      let prodPassword = '';
+      try {
+        if (item.id) {
+          const pDoc = await getDoc(doc(db, 'products', item.id));
+          if (pDoc.exists()) {
+            prodGmail = pDoc.data().product_gmail || '';
+            prodPassword = pDoc.data().product_password || '';
+          }
+        }
+      } catch (e) {
+        console.error("Error fetching product credentials", e);
+      }
+      
       emailjs.send(
         'service_2waf97g',
         'template_qy4fn7n',
@@ -223,7 +238,14 @@ export default function PaymentModal({ item, type, onClose }: { item: any, type:
           customer_phone: whatsappNumber || 'N/A',
           customer_address: 'N/A',
           order_items: item.title || item.name,
-          total_price: item.price || 3000
+          total_price: item.price || 3000,
+          email_subject: "Order Received - Jerry Automation",
+          email_heading: "Order Received",
+          email_message: "Thank you for your order! We have received your request and our team is currently processing it. You will receive your access credentials as soon as your order is confirmed by the admin.",
+          product_gmail: "Processing...",
+          product_password: "Processing...",
+          action_status: "PENDING",
+          credentials_visibility: "none"
         },
         'FgqVRIMv4ZG_8damT'
       ).catch(err => console.error("Failed to send order confirmation via EmailJS", err));
@@ -242,21 +264,28 @@ export default function PaymentModal({ item, type, onClose }: { item: any, type:
           <div className="w-16 h-16 bg-green-500/20 text-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
             <CheckCircle size={32} />
           </div>
-          <h2 className="text-2xl font-bold text-white mb-2">Order Successful!</h2>
-          <p className="text-slate-400 mb-6">Your order has been placed successfully. Now please send your transaction screenshot to this WhatsApp number for instant approval.</p>
-          {whatsappNumber && (
-            <a 
-              href={`https://wa.me/${whatsappNumber}`} 
-              target="_blank" 
-              rel="noreferrer"
-              className="inline-flex items-center justify-center gap-2 w-full bg-green-600 hover:bg-green-500 text-white font-bold py-3 rounded-xl transition-all shadow-lg shadow-green-500/20 mb-4"
-            >
-              Message on WhatsApp
-            </a>
-          )}
-          <button onClick={onClose} className="w-full bg-slate-800 hover:bg-slate-700 text-white font-bold py-3 rounded-xl transition cursor-pointer">
-            Close
-          </button>
+          <h2 className="text-2xl font-bold text-white mb-4">Order Successful!</h2>
+          <div className="text-slate-300 space-y-4 mb-6 text-sm text-left bg-slate-800/50 p-6 rounded-2xl border border-slate-700/50 leading-relaxed font-medium">
+             <p className="text-green-400 font-bold text-center text-lg mb-2">Your order has been placed and is currently in pending status.</p>
+             <p className="text-center bg-slate-800 p-3 rounded-xl border border-slate-700">You have ordered: <span className="text-white font-bold">{item.title || item.name}</span></p>
+             <p>Please check your email inbox and spam folder. A confirmation email has been sent to you.</p>
+             <p>Once your access is approved, you will receive your Gmail and password via email.</p>
+             <p>For faster service, please send your payment screenshot to our WhatsApp number below:</p>
+             <p className="text-center font-bold text-green-400 text-lg bg-green-900/20 py-2 rounded-lg border border-green-500/20">WhatsApp: +923271991893</p>
+          </div>
+          <div className="space-y-3">
+             <a 
+               href={`https://wa.me/923271991893`} 
+               target="_blank" 
+               rel="noreferrer"
+               className="inline-flex items-center justify-center gap-2 w-full bg-green-600 hover:bg-green-500 text-white font-bold py-4 rounded-xl transition-all shadow-lg shadow-green-500/20"
+             >
+               Confirm on WhatsApp
+             </a>
+            <button onClick={onClose} className="w-full bg-slate-800 hover:bg-slate-700 text-white font-bold py-4 rounded-xl transition cursor-pointer">
+              Close
+            </button>
+          </div>
         </motion.div>
       </div>
     );

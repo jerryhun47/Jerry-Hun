@@ -498,12 +498,85 @@ function OrdersManager({ orders, refresh, viewProof, setViewProof }: { orders: a
   const [analysisResult, setAnalysisResult] = useState<any>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
-  const updateStatus = async (id: string, status: string) => {
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [bulkAction, setBulkAction] = useState<string>('');
+  const [isApplyingBulk, setIsApplyingBulk] = useState(false);
+
+  const handleSelectAll = (e: any) => {
+    if (e.target.checked) setSelectedIds(orders.map((o: any) => o.id));
+    else setSelectedIds([]);
+  }
+
+  const toggleSelect = (id: string) => {
+    if (selectedIds.includes(id)) setSelectedIds(selectedIds.filter(i => i !== id));
+    else setSelectedIds([...selectedIds, id]);
+  }
+
+  const applyBulkAction = async () => {
+    if (!bulkAction || selectedIds.length === 0) return;
+    const confirmMsg = `Are you sure you want to apply this action to ${selectedIds.length} selected items?`;
+    if (!window.confirm(confirmMsg)) return;
+
+    setIsApplyingBulk(true);
     try {
-      await updateDoc(doc(db, 'orders', id), { status, updatedAt: serverTimestamp() });
+      const itemsToProcess = selectedIds.map(id => orders.find((o: any) => o.id === id)).filter(Boolean);
+      
+      await Promise.all(itemsToProcess.map(async (order) => {
+        if (bulkAction === 'delete') {
+            await deleteDoc(doc(db, 'orders', order.id));
+        } else {
+            await updateStatus(order, bulkAction, true);
+        }
+      }));
+
+      setSelectedIds([]);
+      setBulkAction('');
+      refresh();
+      alert("Bulk action applied successfully.");
     } catch (e) {
       console.error(e);
-      alert("Error updating order");
+      alert('Error applying bulk action');
+    } finally {
+      setIsApplyingBulk(false);
+    }
+  }
+
+  const updateStatus = async (order: any, status: string, silent = false) => {
+    try {
+      await updateDoc(doc(db, 'orders', order.id), { status, updatedAt: serverTimestamp() });
+      if ((status === 'confirmed' || status === 'delivered') && order.customer_email) {
+        try {
+          await emailjs.send(
+            'service_2waf97g',
+            'template_qy4fn7n',
+            {
+              customer_name: order.customer_name || 'Customer',
+              customer_email: order.customer_email,
+              customer_phone: order.customer_phone || 'N/A',
+              customer_address: 'N/A',
+              order_items: order.products?.[0]?.name || 'Item',
+              total_price: order.total_price || 0,
+              email_subject: "Your Product Credentials Inside! - Jerry Automation",
+              email_heading: "Order Confirmed!",
+              email_message: "Good news! Your order has been approved. Below are your login credentials to access your premium product tools.",
+              product_gmail: "jerryaitools431231@gmail.com",
+              product_password: "Tesla@123",
+              action_status: "DELIVERED",
+              credentials_visibility: "block"
+            },
+            'FgqVRIMv4ZG_8damT'
+          );
+          if (!silent) alert("Order status updated and access email sent via EmailJS successfully.");
+        } catch (err) {
+          console.error("Failed to send email via EmailJS", err);
+          if (!silent) alert("Updated, but failed to send email.");
+        }
+      } else {
+         if (!silent) alert("Order status updated successfully.");
+      }
+    } catch (e) {
+      console.error(e);
+      if (!silent) alert("Error updating order");
     }
   }
 
@@ -548,11 +621,57 @@ function OrdersManager({ orders, refresh, viewProof, setViewProof }: { orders: a
           <h2 className="text-2xl font-black">Orders Management</h2>
           <p className="text-slate-500">Manage and fulfill customer orders.</p>
        </div>
+
+       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4 bg-white p-4 rounded-xl border border-slate-200 card-shadow">
+         <div className="flex items-center gap-3">
+           <input 
+             type="checkbox" 
+             className="w-5 h-5 rounded border-slate-300 text-red-600 focus:ring-red-500 cursor-pointer" 
+             onChange={handleSelectAll} 
+             checked={orders.length > 0 && selectedIds.length === orders.length}
+           />
+           <span className="font-bold text-slate-700">Select All</span>
+           {selectedIds.length > 0 && (
+             <span className="bg-slate-100 text-slate-600 text-xs font-bold px-2 py-1 rounded-lg">{selectedIds.length} items selected</span>
+           )}
+         </div>
+         <div className="flex flex-col md:flex-row items-center gap-2 w-full md:w-auto">
+           <select 
+             className="bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-lg focus:ring-red-500 focus:border-red-500 block w-full p-2.5 font-semibold"
+             value={bulkAction}
+             onChange={(e) => setBulkAction(e.target.value)}
+           >
+             <option value="">Bulk Actions</option>
+             <option value="pending">Mark as Pending</option>
+             <option value="confirmed">Confirm</option>
+             <option value="delivered">Deliver</option>
+             <option value="cancelled">Reject / Cancel</option>
+             <option value="delete">Delete</option>
+           </select>
+           <button 
+             onClick={applyBulkAction}
+             disabled={!bulkAction || selectedIds.length === 0 || isApplyingBulk}
+             className="bg-red-600 hover:bg-red-700 text-white font-bold py-2.5 px-6 rounded-lg text-sm w-full md:w-auto disabled:opacity-50 transition-colors"
+           >
+             {isApplyingBulk ? 'Applying...' : 'Apply'}
+           </button>
+         </div>
+       </div>
+
        <div className="grid gap-4">
           {orders.map(o => (
-             <div key={o.id} className="bg-white p-6 rounded-3xl border border-slate-200 card-shadow flex flex-col md:flex-row justify-between gap-6">
-                <div className="flex-1">
-                   <div className="flex items-center gap-3 mb-2">
+             <div key={o.id} className={`bg-white p-6 rounded-3xl border ${selectedIds.includes(o.id) ? 'border-red-500 bg-red-50/20' : 'border-slate-200'} card-shadow flex flex-col md:flex-row justify-between gap-6 transition-colors`}>
+                <div className="flex gap-4 flex-1">
+                   <div className="mt-1">
+                       <input 
+                         type="checkbox" 
+                         className="w-5 h-5 rounded border-slate-300 text-red-600 focus:ring-red-500 cursor-pointer" 
+                         checked={selectedIds.includes(o.id)}
+                         onChange={() => toggleSelect(o.id)}
+                       />
+                   </div>
+                   <div className="flex-1">
+                      <div className="flex flex-wrap items-center gap-3 mb-2">
                       <h3 className="font-bold text-lg">{o.customer_name}</h3>
                       {o.city && <span className="bg-slate-100 text-slate-600 text-[10px] uppercase font-bold px-2 py-0.5 rounded-full">{o.city}</span>}
                       <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${o.status === 'pending' ? 'bg-yellow-100 text-yellow-700' : o.status === 'confirmed' ? 'bg-blue-100 text-blue-700' : o.status === 'delivered' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
@@ -585,6 +704,7 @@ function OrdersManager({ orders, refresh, viewProof, setViewProof }: { orders: a
                      <p className="font-black text-xl mt-3 text-red-600">Total: PKR {o.total_price?.toLocaleString()}</p>
                    </div>
                 </div>
+                </div>
                 <div className="flex flex-col gap-3 min-w-[200px]">
                    <button 
                      onClick={() => analyzeOrder(o)}
@@ -596,7 +716,7 @@ function OrdersManager({ orders, refresh, viewProof, setViewProof }: { orders: a
                      <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Change Status</label>
                      <select 
                        value={o.status} 
-                       onChange={(e) => updateStatus(o.id, e.target.value)}
+                       onChange={(e) => updateStatus(o, e.target.value)}
                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 font-semibold"
                      >
                        <option value="pending">Pending</option>
@@ -720,6 +840,49 @@ function TransactionsManager({ transactions, refresh, viewProof, setViewProof }:
   const [aiEnabled, setAiEnabled] = useState(false);
   const [fraudResult, setFraudResult] = useState<'Safe Order' | 'Suspicious Order' | 'Needs Review' | null>(null);
 
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [bulkAction, setBulkAction] = useState<string>('');
+  const [isApplyingBulk, setIsApplyingBulk] = useState(false);
+
+  const handleSelectAll = (e: any) => {
+    if (e.target.checked) setSelectedIds(transactions.map((t: any) => t.id));
+    else setSelectedIds([]);
+  }
+
+  const toggleSelect = (id: string) => {
+    if (selectedIds.includes(id)) setSelectedIds(selectedIds.filter(i => i !== id));
+    else setSelectedIds([...selectedIds, id]);
+  }
+
+  const applyBulkAction = async () => {
+    if (!bulkAction || selectedIds.length === 0) return;
+    const confirmMsg = `Are you sure you want to apply this action to ${selectedIds.length} selected items?`;
+    if (!window.confirm(confirmMsg)) return;
+
+    setIsApplyingBulk(true);
+    try {
+      const itemsToProcess = selectedIds.map(id => transactions.find((t: any) => t.id === id)).filter(Boolean);
+      
+      await Promise.all(itemsToProcess.map(async (transaction) => {
+        if (bulkAction === 'delete') {
+            await deleteDoc(doc(db, 'transactions', transaction.id));
+        } else {
+            await updateStatus(transaction, bulkAction, true);
+        }
+      }));
+
+      setSelectedIds([]);
+      setBulkAction('');
+      refresh();
+      alert("Bulk action applied successfully.");
+    } catch (e) {
+      console.error(e);
+      alert('Error applying bulk action');
+    } finally {
+      setIsApplyingBulk(false);
+    }
+  }
+
   const openPreview = (img: string) => {
     setPreviewImage(img);
     if (aiEnabled) {
@@ -736,45 +899,43 @@ function TransactionsManager({ transactions, refresh, viewProof, setViewProof }:
      else { navigator.clipboard.writeText(url); alert('Link copied to clipboard!'); }
   };
 
-  const updateStatus = async (id: string, status: string, userEmail?: string, itemType?: string) => {
+  const updateStatus = async (transaction: any, status: string, silent = false) => {
     try {
-      await updateDoc(doc(db, 'transactions', id), { status, updatedAt: serverTimestamp() });
+      await updateDoc(doc(db, 'transactions', transaction.id), { status, updatedAt: serverTimestamp() });
       
-      if (status === 'approved' && userEmail) {
+      if (status === 'completed' && transaction.userEmail) {
         try {
-          const body = `
-            <div style="font-family: sans-serif; max-w: 600px; margin: 0 auto; color: #333;">
-              <h2 style="color: #ef4444;">Order Confirmed!</h2>
-              <p>Hello,</p>
-              <p>Your payment for <strong>${itemType || 'your item'}</strong> has been verified. Thank you for your purchase!</p>
-              <div style="background-color: #f8fafc; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #e2e8f0;">
-                <h3 style="margin-top: 0; color: #0f172a;">Your Access Credentials</h3>
-                <p><strong>Email:</strong> Jerrytools121@gmail.com</p>
-                <p><strong>Password:</strong> Tesla@123</p>
-              </div>
-              <p>If you have any questions, feel free to contact us.</p>
-              <p>Best regards,<br/>Jerry Automation</p>
-            </div>
-          `;
-
-          await fetch('/api/send-email', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              to: userEmail,
-              subject: 'Order Confirmation & Access Details - Jerry Automation',
-              body
-            })
-          });
-          alert("Order approved and access email sent successfully.");
+          await emailjs.send(
+            'service_2waf97g',
+            'template_qy4fn7n',
+            {
+              customer_name: transaction.userName || 'Customer',
+              customer_email: transaction.userEmail,
+              customer_phone: transaction.userPhone || 'N/A',
+              customer_address: 'N/A',
+              order_items: transaction.itemType || transaction.items?.[0]?.name || 'Item',
+              total_price: transaction.price || 0,
+              email_subject: "Your Product Credentials Inside! - Jerry Automation",
+              email_heading: "Order Confirmed!",
+              email_message: "Good news! Your order has been approved. Below are your login credentials to access your premium product tools.",
+              product_gmail: "jerryaitools431231@gmail.com",
+              product_password: "Tesla@123",
+              action_status: "DELIVERED",
+              credentials_visibility: "block"
+            },
+            'FgqVRIMv4ZG_8damT'
+          );
+          if (!silent) alert("Order approved and access email sent via EmailJS successfully.");
         } catch (err) {
-          console.error("Failed to send email", err);
-          alert("Approved, but failed to send email. Ensure SMTP is configured.");
+          console.error("Failed to send email via EmailJS", err);
+          if (!silent) alert("Approved, but failed to send email.");
         }
+      } else {
+         if (!silent) alert("Transaction status updated successfully.");
       }
     } catch (e) {
       console.error(e);
-      alert("Error updating transaction");
+      if (!silent) alert("Error updating transaction");
     }
   }
 
@@ -801,11 +962,55 @@ function TransactionsManager({ transactions, refresh, viewProof, setViewProof }:
           </div>
        </div>
 
+       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4 bg-white p-4 rounded-xl border border-slate-200 card-shadow">
+         <div className="flex items-center gap-3">
+           <input 
+             type="checkbox" 
+             className="w-5 h-5 rounded border-slate-300 text-red-600 focus:ring-red-500 cursor-pointer" 
+             onChange={handleSelectAll} 
+             checked={transactions.length > 0 && selectedIds.length === transactions.length}
+           />
+           <span className="font-bold text-slate-700">Select All</span>
+           {selectedIds.length > 0 && (
+             <span className="bg-slate-100 text-slate-600 text-xs font-bold px-2 py-1 rounded-lg">{selectedIds.length} items selected</span>
+           )}
+         </div>
+         <div className="flex flex-col md:flex-row items-center gap-2 w-full md:w-auto">
+           <select 
+             className="bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-lg focus:ring-red-500 focus:border-red-500 block w-full p-2.5 font-semibold"
+             value={bulkAction}
+             onChange={(e) => setBulkAction(e.target.value)}
+           >
+             <option value="">Bulk Actions</option>
+             <option value="pending">Mark as Pending</option>
+             <option value="completed">Approve</option>
+             <option value="rejected">Reject</option>
+             <option value="delete">Delete</option>
+           </select>
+           <button 
+             onClick={applyBulkAction}
+             disabled={!bulkAction || selectedIds.length === 0 || isApplyingBulk}
+             className="bg-red-600 hover:bg-red-700 text-white font-bold py-2.5 px-6 rounded-lg text-sm w-full md:w-auto disabled:opacity-50 transition-colors"
+           >
+             {isApplyingBulk ? 'Applying...' : 'Apply'}
+           </button>
+         </div>
+       </div>
+
        <div className="grid gap-4">
           {transactions.map((t: any) => (
-             <div key={t.id} className="bg-white p-6 rounded-3xl border border-slate-200 card-shadow flex flex-col md:flex-row justify-between gap-6">
-                <div className="flex-1">
-                   <div className="flex items-center gap-3 mb-2">
+             <div key={t.id} className={`bg-white p-6 rounded-3xl border ${selectedIds.includes(t.id) ? 'border-red-500 bg-red-50/20' : 'border-slate-200'} card-shadow flex flex-col md:flex-row justify-between gap-6 transition-colors`}>
+                <div className="flex gap-4 flex-1">
+                   <div className="mt-1">
+                       <input 
+                         type="checkbox" 
+                         className="w-5 h-5 rounded border-slate-300 text-red-600 focus:ring-red-500 cursor-pointer" 
+                         checked={selectedIds.includes(t.id)}
+                         onChange={() => toggleSelect(t.id)}
+                       />
+                   </div>
+                   <div className="flex-1">
+                      <div className="flex flex-wrap items-center gap-3 mb-2">
                       <h3 className="font-bold text-lg">{t.userEmail}</h3>
                       <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${t.status === 'pending' ? 'bg-yellow-100 text-yellow-700' : t.status === 'approved' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
                          {t.status}
@@ -847,17 +1052,18 @@ function TransactionsManager({ transactions, refresh, viewProof, setViewProof }:
                       </div>
                    )}
                 </div>
+                </div>
                 
                 <div className="flex flex-col gap-2 min-w-[200px]">
                    <label className="text-xs font-bold text-slate-500 uppercase">Action</label>
                    {t.status === 'pending' && (
                      <>
-                        <button onClick={() => updateStatus(t.id, 'approved', t.userEmail, t.itemType)} className="px-4 py-2 bg-green-100 text-green-700 font-bold rounded-xl hover:bg-green-200">Approve Access</button>
-                        <button onClick={() => updateStatus(t.id, 'rejected')} className="px-4 py-2 bg-red-100 text-red-700 font-bold rounded-xl hover:bg-red-200 mt-2">Reject Image</button>
+                        <button onClick={() => updateStatus(t, 'completed')} className="px-4 py-2 bg-green-100 text-green-700 font-bold rounded-xl hover:bg-green-200">Approve Access</button>
+                        <button onClick={() => updateStatus(t, 'rejected')} className="px-4 py-2 bg-red-100 text-red-700 font-bold rounded-xl hover:bg-red-200 mt-2">Reject Image</button>
                      </>
                    )}
                    {t.status !== 'pending' && (
-                     <button onClick={() => updateStatus(t.id, 'pending')} className="px-4 py-2 bg-slate-100 text-slate-700 font-bold rounded-xl hover:bg-slate-200 mt-auto">Revert to Pending</button>
+                     <button onClick={() => updateStatus(t, 'pending')} className="px-4 py-2 bg-slate-100 text-slate-700 font-bold rounded-xl hover:bg-slate-200 mt-auto">Revert to Pending</button>
                    )}
                    <button onClick={() => handleDelete(t.id)} className="px-4 py-2 bg-slate-50 text-red-600 hover:text-red-700 font-bold rounded-xl border border-slate-200 hover:bg-red-50 mt-2">Delete Record</button>
                 </div>
@@ -1654,18 +1860,18 @@ function OverviewAnalytics({ orders, transactions }: { orders: any[], transactio
     const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
     const startOfYesterday = startOfToday - 86400000;
 
-    transactions.forEach(t => {
-       const dateStr = t.createdAt?.toMillis ? t.createdAt.toMillis() : Date.now();
-       const amount = Number(t.amount || 0);
-       totalIncome += amount;
-       if (dateStr >= startOfToday) todayIncome += amount;
-       if (dateStr >= startOfYesterday && dateStr < startOfToday) yesterdayIncome += amount;
-    });
-    
     orders.forEach(o => {
       const dateStr = o.createdAt?.toMillis ? o.createdAt.toMillis() : Date.now();
-      if (dateStr >= startOfToday) todayOrdersCount++;
-      if (dateStr >= startOfYesterday && dateStr < startOfToday) yesterdayOrdersCount++;
+      const amount = Number(o.total_price || o.price || 0);
+      totalIncome += amount;
+      if (dateStr >= startOfToday) {
+        todayOrdersCount++;
+        todayIncome += amount;
+      }
+      if (dateStr >= startOfYesterday && dateStr < startOfToday) {
+        yesterdayOrdersCount++;
+        yesterdayIncome += amount;
+      }
     });
 
     setStats({
@@ -1692,12 +1898,12 @@ function OverviewAnalytics({ orders, transactions }: { orders: any[], transactio
           <p className="text-3xl font-black text-slate-900">PKR {stats.totalIncome.toLocaleString()}</p>
         </div>
         <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
-          <p className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-1">Yesterday Orders</p>
-          <p className="text-3xl font-black text-slate-900">{stats.yesterdayOrdersCount}</p>
-        </div>
-        <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
           <p className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-1">Yesterday Income</p>
           <p className="text-3xl font-black text-slate-900">PKR {stats.yesterdayIncome.toLocaleString()}</p>
+        </div>
+        <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+          <p className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-1">Today Income</p>
+          <p className="text-3xl font-black text-slate-900">PKR {stats.todayIncome.toLocaleString()}</p>
         </div>
       </div>
     </div>
@@ -1708,6 +1914,14 @@ import emailjs from '@emailjs/browser';
 
 function RefundsManager() {
   const [refunds, setRefunds] = React.useState<any[]>([]);
+  const [rejectModalOpen, setRejectModalOpen] = React.useState(false);
+  const [selectedRefundForReject, setSelectedRefundForReject] = React.useState<any>(null);
+  const [rejectReason, setRejectReason] = React.useState('');
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+
+  const [selectedIds, setSelectedIds] = React.useState<string[]>([]);
+  const [bulkAction, setBulkAction] = React.useState<string>('');
+  const [isApplyingBulk, setIsApplyingBulk] = React.useState(false);
 
   React.useEffect(() => {
     const q = query(collection(db, 'refunds'), orderBy('timestamp', 'desc'));
@@ -1717,9 +1931,60 @@ function RefundsManager() {
     return () => unsubscribe();
   }, []);
 
-  const updateStatus = async (refund: any, newStatus: string) => {
+  const handleSelectAll = (e: any) => {
+    if (e.target.checked) setSelectedIds(refunds.map(r => r.id));
+    else setSelectedIds([]);
+  }
+
+  const toggleSelect = (id: string) => {
+    if (selectedIds.includes(id)) setSelectedIds(selectedIds.filter(i => i !== id));
+    else setSelectedIds([...selectedIds, id]);
+  }
+
+  const applyBulkAction = async () => {
+    if (!bulkAction || selectedIds.length === 0) return;
+    const confirmMsg = `Are you sure you want to apply this action to ${selectedIds.length} selected items?`;
+    if (!window.confirm(confirmMsg)) return;
+
+    setIsApplyingBulk(true);
     try {
-      await updateDoc(doc(db, 'refunds', refund.id), { status: newStatus });
+      const itemsToProcess = selectedIds.map(id => refunds.find(r => r.id === id)).filter(Boolean);
+      
+      await Promise.all(itemsToProcess.map(async (refund) => {
+        if (bulkAction === 'delete') {
+            await deleteDoc(doc(db, 'refunds', refund.id));
+        } else {
+            await updateStatus(refund, bulkAction, undefined, true);
+        }
+      }));
+
+      setSelectedIds([]);
+      setBulkAction('');
+      alert("Bulk action applied successfully.");
+    } catch (e) {
+      console.error(e);
+      alert('Error applying bulk action');
+    } finally {
+      setIsApplyingBulk(false);
+    }
+  }
+
+  const openRejectModal = (refund: any) => {
+    setSelectedRefundForReject(refund);
+    setRejectReason('Sorry, we have not received your payment yet, and no screenshot has been shared. Kindly complete the payment and send the screenshot so we can proceed with your order.');
+    setRejectModalOpen(true);
+  };
+
+  const updateStatus = async (refund: any, newStatus: string, adminRemarksState?: string, silent = false) => {
+    try {
+      setIsSubmitting(true);
+      const updateData: any = { status: newStatus };
+      if (adminRemarksState && newStatus === 'refund_rejected') {
+         updateData.rejectReason = adminRemarksState;
+         updateData.rejection_reason = adminRemarksState;
+         updateData.remarks = adminRemarksState;
+      }
+      await updateDoc(doc(db, 'refunds', refund.id), updateData);
       
       let emailConfig = null;
 
@@ -1727,20 +1992,22 @@ function RefundsManager() {
         emailConfig = {
           email_subject: "Refund Approved Successfully - Jerry Automation",
           email_heading: "Refund Successful!",
-          email_message: "Good news! Aapka refund confirm ho chuka hai aur paise aapke account mein transfer kar diye gaye hain.",
+          email_message: "Good news! Your refund request has been approved and the funds have been transferred.",
+          reject_remarks: "The payment has been successfully credited back to your provided account details.",
           action_status: "REFUNDED"
         };
       } else if (newStatus === 'refund_rejected') {
         emailConfig = {
           email_subject: "Refund Request Update - Jerry Automation",
           email_heading: "Refund Request Rejected",
-          email_message: "Afsoos, aapki refund request humari policy par poori nahi utri, isliye isay reject kar diya gaya hai.",
+          email_message: "Your refund request has been reviewed by our team and could not be processed.",
+          reject_remarks: adminRemarksState || "We regret to inform you that your request has been rejected.",
           action_status: "REJECTED"
         };
       }
 
       if (emailConfig && refund.email) {
-        emailjs.send(
+        await emailjs.send(
           'service_2waf97g',
           'template_t2ptckm',
           {
@@ -1754,16 +2021,31 @@ function RefundsManager() {
             email_subject: emailConfig.email_subject,
             email_heading: emailConfig.email_heading,
             email_message: emailConfig.email_message,
+            reject_remarks: emailConfig.reject_remarks,
             action_status: emailConfig.action_status
           },
           'FgqVRIMv4ZG_8damT'
         ).catch(err => console.error("Failed to send refund update email via EmailJS", err));
       }
 
-      alert(`Refund marked as ${newStatus} and email notification triggered.`);
+      if (!silent) {
+        alert(`Refund marked as ${newStatus} and email notification triggered.`);
+      }
+      setRejectModalOpen(false);
+      setSelectedRefundForReject(null);
     } catch (err) {
       console.error(err);
-      alert('Failed to update status.');
+      if (!silent) alert('Failed to update status.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleRejectSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!rejectReason.trim()) return;
+    if (selectedRefundForReject) {
+      updateStatus(selectedRefundForReject, 'refund_rejected', rejectReason);
     }
   };
 
@@ -1776,11 +2058,47 @@ function RefundsManager() {
          </div>
       </div>
 
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4 bg-white p-4 rounded-xl border border-slate-200 card-shadow">
+        <div className="flex items-center gap-3">
+          <input 
+            type="checkbox" 
+            className="w-5 h-5 rounded border-slate-300 text-red-600 focus:ring-red-500 cursor-pointer" 
+            onChange={handleSelectAll} 
+            checked={refunds.length > 0 && selectedIds.length === refunds.length}
+          />
+          <span className="font-bold text-slate-700">Select All</span>
+          {selectedIds.length > 0 && (
+            <span className="bg-slate-100 text-slate-600 text-xs font-bold px-2 py-1 rounded-lg">{selectedIds.length} items selected</span>
+          )}
+        </div>
+        <div className="flex flex-col md:flex-row items-center gap-2 w-full md:w-auto">
+          <select 
+            className="bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-lg focus:ring-red-500 focus:border-red-500 block w-full p-2.5 font-semibold"
+            value={bulkAction}
+            onChange={(e) => setBulkAction(e.target.value)}
+          >
+            <option value="">Bulk Actions</option>
+            <option value="Pending">Mark as Pending</option>
+            <option value="refunded">Approve</option>
+            <option value="refund_rejected">Reject</option>
+            <option value="delete">Delete</option>
+          </select>
+          <button 
+            onClick={applyBulkAction}
+            disabled={!bulkAction || selectedIds.length === 0 || isApplyingBulk}
+            className="bg-red-600 hover:bg-red-700 text-white font-bold py-2.5 px-6 rounded-lg text-sm w-full md:w-auto disabled:opacity-50 transition-colors"
+          >
+            {isApplyingBulk ? 'Applying...' : 'Apply'}
+          </button>
+        </div>
+      </div>
+
       <div className="bg-white rounded-3xl border border-slate-200 card-shadow overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead>
                <tr className="bg-slate-50/50">
+                  <th className="py-4 px-6 font-bold text-slate-500 text-xs tracking-wider uppercase"></th>
                   <th className="py-4 px-6 font-bold text-slate-500 text-xs tracking-wider uppercase">Customer Info</th>
                   <th className="py-4 px-6 font-bold text-slate-500 text-xs tracking-wider uppercase">Product Details</th>
                   <th className="py-4 px-6 font-bold text-slate-500 text-xs tracking-wider uppercase">Reason & Account</th>
@@ -1790,7 +2108,15 @@ function RefundsManager() {
             </thead>
             <tbody className="divide-y divide-slate-100">
                {refunds.map(r => (
-                  <tr key={r.id} className="hover:bg-slate-50 transition-colors">
+                  <tr key={r.id} className={`hover:bg-slate-50 transition-colors ${selectedIds.includes(r.id) ? 'bg-red-50/30' : ''}`}>
+                     <td className="py-4 px-6 w-10">
+                        <input 
+                          type="checkbox" 
+                          className="w-5 h-5 rounded border-slate-300 text-red-600 focus:ring-red-500 cursor-pointer" 
+                          checked={selectedIds.includes(r.id)}
+                          onChange={() => toggleSelect(r.id)}
+                        />
+                     </td>
                      <td className="py-4 px-6">
                         <p className="font-bold text-slate-900">{r.fullName || r.name}</p>
                         <p className="text-sm text-slate-600">{r.phone || 'No phone'}</p>
@@ -1804,6 +2130,12 @@ function RefundsManager() {
                         <p className="text-sm text-slate-600 font-semibold">{r.refundReason || 'No reason provided'}</p>
                         <p className="text-xs text-slate-500 mt-1">Account: {r.accountNumber || 'N/A'}</p>
                         <p className="text-xs text-slate-500 font-bold uppercase">{r.receiveMethod}</p>
+                        {r.status === 'refund_rejected' && r.rejectReason && (
+                           <div className="mt-2 bg-red-50 text-red-700 p-2 rounded-lg text-xs border border-red-100">
+                             <strong>Reject Reason:</strong><br/>
+                             {r.rejectReason}
+                           </div>
+                        )}
                      </td>
                      <td className="py-4 px-6">
                         <span className={`px-3 py-1 rounded-full text-xs font-bold ${
@@ -1819,7 +2151,7 @@ function RefundsManager() {
                         {r.status === 'Pending' && (
                            <>
                              <button onClick={() => updateStatus(r, 'refunded')} className="bg-green-50 text-green-600 hover:bg-green-100 px-3 py-1.5 rounded-lg text-xs font-bold mr-2 transition-colors">Accept Refund</button>
-                             <button onClick={() => updateStatus(r, 'refund_rejected')} className="bg-red-50 text-red-600 hover:bg-red-100 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors">Reject Refund</button>
+                             <button onClick={() => openRejectModal(r)} className="bg-red-50 text-red-600 hover:bg-red-100 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors">Reject Refund</button>
                            </>
                         )}
                      </td>
@@ -1834,6 +2166,46 @@ function RefundsManager() {
           </table>
         </div>
       </div>
+
+      {/* Reject Modal */}
+      {rejectModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-3xl p-6 w-full max-w-md shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+            <h3 className="text-xl font-black text-slate-900 mb-2">Reject Refund Request</h3>
+            <p className="text-slate-500 text-sm mb-6">Please provide a reason for rejecting this request. This will be sent to the user.</p>
+            <form onSubmit={handleRejectSubmit}>
+              <div className="mb-4">
+                <label className="block text-sm font-bold text-slate-700 mb-2">Reject Reason (Required)</label>
+                <textarea
+                  required
+                  rows={4}
+                  value={rejectReason}
+                  onChange={(e) => setRejectReason(e.target.value)}
+                  placeholder="e.g. The account details are incorrect."
+                  className="w-full border-2 border-slate-200 rounded-xl px-4 py-3 focus:border-red-500 outline-none transition-all font-medium text-slate-900 text-sm placeholder:text-slate-400"
+                ></textarea>
+              </div>
+              <div className="flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setRejectModalOpen(false)}
+                  disabled={isSubmitting}
+                  className="px-4 py-2 text-sm font-bold text-slate-600 hover:bg-slate-100 rounded-xl transition-colors disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmitting || !rejectReason.trim()}
+                  className="px-4 py-2 text-sm font-bold bg-red-600 text-white hover:bg-red-700 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                >
+                  {isSubmitting ? 'Rejecting...' : 'Confirm Rejection'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
