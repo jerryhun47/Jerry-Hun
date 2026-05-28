@@ -6,6 +6,7 @@ import { db, auth } from '../lib/firebase';
 import { collection, addDoc, serverTimestamp, getDocs, doc, getDoc } from 'firebase/firestore';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 import emailjs from '@emailjs/browser';
+import { checkAndBanIfSpamming } from '../lib/blocker';
 
 export default function PaymentModal({ item, type, onClose }: { item: any, type: 'course' | 'tool', onClose: () => void }) {
   const { user, signInWithGoogle } = useAuth();
@@ -131,6 +132,14 @@ export default function PaymentModal({ item, type, onClose }: { item: any, type:
         if (data.cityName) city = data.cityName;
         if (data.ipAddress) ipAddress = data.ipAddress;
       } catch (e) {}
+
+      // Check for ban or fake order spamming
+      const banStatus = await checkAndBanIfSpamming(whatsappNumber || 'N/A', user.email || '', ipAddress);
+      if (banStatus.isBanned) {
+         alert(`🚨 Blocked: Your phone number or IP address (${ipAddress}) has been banned due to multiple fake or unpaid order attempts. Please contact support if you believe this is an error.`);
+         setStatus('idle');
+         return;
+      }
 
       if (paymentMode === 'card') {
          const orderData = {

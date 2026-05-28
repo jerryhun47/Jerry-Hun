@@ -106,6 +106,7 @@ export default function Dashboard() {
             { id: 'refunds', icon: RefreshCcw, label: 'Refund Requests', badge: refunds.filter(r=>r.status==='Pending').length },
             { id: 'transactions', icon: ShoppingBag, label: 'Payments', badge: transactions.filter(t=>t.status==='pending').length },
             { id: 'paymentsettings', icon: LayoutDashboard, label: 'Payment Accounts' },
+            { id: 'blocklist', icon: ShieldCheck, label: 'Ban & Blocklist' },
             { id: 'settings', icon: LayoutDashboard, label: 'Global Settings' },
             { id: 'messages', icon: MessageSquare, label: 'Inbox', badge: stats.messages },
             { id: 'users', icon: LayoutDashboard, label: 'Users' },
@@ -197,6 +198,7 @@ export default function Dashboard() {
            {activeTab === 'refunds' && <RefundsManager />}
            {activeTab === 'transactions' && <TransactionsManager transactions={transactions} refresh={fetchData} viewProof={viewProof} setViewProof={setViewProof} />}
            {activeTab === 'paymentsettings' && <PaymentSettingsManager />}
+           {activeTab === 'blocklist' && <BlocklistManager />}
            {activeTab === 'settings' && <GlobalSettingsManager />}
            {activeTab === 'messages' && <MessagesManager contacts={contacts} refresh={fetchData} />}
            {activeTab === 'reviews' && <ReviewsManager />}
@@ -514,8 +516,6 @@ function OrdersManager({ orders, refresh, viewProof, setViewProof }: { orders: a
 
   const applyBulkAction = async () => {
     if (!bulkAction || selectedIds.length === 0) return;
-    const confirmMsg = `Are you sure you want to apply this action to ${selectedIds.length} selected items?`;
-    if (!window.confirm(confirmMsg)) return;
 
     setIsApplyingBulk(true);
     try {
@@ -532,10 +532,9 @@ function OrdersManager({ orders, refresh, viewProof, setViewProof }: { orders: a
       setSelectedIds([]);
       setBulkAction('');
       refresh();
-      alert("Bulk action applied successfully.");
+      // Optional: use a toast instead of alert if possible, but alert is fine as a fallback
     } catch (e) {
       console.error(e);
-      alert('Error applying bulk action');
     } finally {
       setIsApplyingBulk(false);
     }
@@ -856,8 +855,6 @@ function TransactionsManager({ transactions, refresh, viewProof, setViewProof }:
 
   const applyBulkAction = async () => {
     if (!bulkAction || selectedIds.length === 0) return;
-    const confirmMsg = `Are you sure you want to apply this action to ${selectedIds.length} selected items?`;
-    if (!window.confirm(confirmMsg)) return;
 
     setIsApplyingBulk(true);
     try {
@@ -874,10 +871,8 @@ function TransactionsManager({ transactions, refresh, viewProof, setViewProof }:
       setSelectedIds([]);
       setBulkAction('');
       refresh();
-      alert("Bulk action applied successfully.");
     } catch (e) {
       console.error(e);
-      alert('Error applying bulk action');
     } finally {
       setIsApplyingBulk(false);
     }
@@ -1484,7 +1479,7 @@ function PaymentSettingsManager() {
        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
          {methods.map(m => (
            <div key={m.id} className="border border-slate-200 rounded-2xl p-6 relative group hover:border-red-500 transition-colors">
-              <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="absolute top-4 right-4 flex gap-2 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                 <button onClick={() => { setFormData(m as any); setEditingId(m.id); setShowModal(true); }} className="p-1.5 bg-slate-100 hover:bg-white rounded-lg shadow"><Edit size={14}/></button>
                 <button onClick={() => handleDelete(m.id)} className="p-1.5 bg-red-100 hover:bg-white text-red-600 rounded-lg shadow"><Trash2 size={14}/></button>
               </div>
@@ -1550,6 +1545,160 @@ function PaymentSettingsManager() {
              </form>
           </div>
         </div>
+       )}
+    </div>
+  );
+}
+
+function BlocklistManager() {
+  const [bannedUsers, setBannedUsers] = React.useState<any[]>([]);
+  const [loading, setLoading] = React.useState(true);
+  const [showModal, setShowModal] = useState(false);
+  const [formData, setFormData] = useState({ ip: '', phone: '', email: '', reason: '' });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const fetchBannedUsers = async () => {
+    try {
+      setLoading(true);
+      const snap = await getDocs(query(collection(db, 'banned_users'), orderBy('createdAt', 'desc')));
+      setBannedUsers(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    } catch (err) {
+      console.error('Failed to fetch banned users', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  React.useEffect(() => {
+    fetchBannedUsers();
+  }, []);
+
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.ip && !formData.phone && !formData.email) {
+      alert('Please fill at least one criteria (IP address, Phone number, or Email) to ban.');
+      return;
+    }
+    
+    setIsSubmitting(true);
+    try {
+      await addDoc(collection(db, 'banned_users'), {
+        ip: formData.ip.trim(),
+        phone: formData.phone.trim(),
+        email: formData.email.trim().toLowerCase(),
+        reason: formData.reason || 'Banned manually by administrator',
+        createdAt: serverTimestamp()
+      });
+      setShowModal(false);
+      setFormData({ ip: '', phone: '', email: '', reason: '' });
+      fetchBannedUsers();
+      alert('User added to the ban list successfully.');
+    } catch (err) {
+      console.error('Error adding user to ban list', err);
+      alert('Failed to save to ban list.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (confirm('Are you sure you want to unban this user/IP?')) {
+      try {
+        await deleteDoc(doc(db, 'banned_users', id));
+        fetchBannedUsers();
+        alert('User unbanned successfully.');
+      } catch (err) {
+        console.error('Error unbanning user', err);
+        alert('Failed to remove from ban list.');
+      }
+    }
+  };
+
+  return (
+    <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-sm animate-in fade-in max-w-5xl">
+       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+         <div>
+            <h2 className="text-2xl font-black text-slate-900">Ban & Blocklist</h2>
+            <p className="text-slate-500">View auto-banned spam entities or manually restrict phone numbers, emails, and IPs.</p>
+         </div>
+         <button onClick={() => setShowModal(true)} className="bg-red-600 hover:bg-red-500 text-white px-5 py-2.5 rounded-xl font-bold">+ Ban User / IP</button>
+       </div>
+
+       {loading ? (
+         <div className="text-center py-12 text-slate-500 font-semibold">Loading blocklist...</div>
+       ) : (
+         <div className="overflow-x-auto border border-slate-200 rounded-2xl">
+           <table className="w-full text-left">
+             <thead>
+               <tr className="bg-slate-50 border-b border-slate-200">
+                 <th className="py-4 px-6 font-bold text-slate-500 text-xs tracking-wider uppercase">Banned Info</th>
+                 <th className="py-4 px-6 font-bold text-slate-500 text-xs tracking-wider uppercase">Reason</th>
+                 <th className="py-4 px-6 font-bold text-slate-500 text-xs tracking-wider uppercase">Banned On</th>
+                 <th className="py-4 px-6 font-bold text-slate-500 text-xs tracking-wider uppercase text-right">Action</th>
+               </tr>
+             </thead>
+             <tbody className="divide-y divide-slate-100">
+               {bannedUsers.map(u => (
+                 <tr key={u.id} className="hover:bg-slate-50 transition-colors">
+                   <td className="py-4 px-6">
+                     <div className="space-y-1">
+                       {u.ip && <p className="text-sm font-semibold text-slate-800 bg-red-50 px-2 py-0.5 rounded inline-block">IP: {u.ip}</p>}
+                       {u.phone && <p className="text-sm font-medium text-slate-700 block text-nowrap">Phone: <b>{u.phone}</b></p>}
+                       {u.email && <p className="text-xs text-slate-500 block">Email: {u.email}</p>}
+                     </div>
+                   </td>
+                   <td className="py-4 px-6 text-sm text-slate-600">
+                     {u.reason || 'No reason provided'}
+                   </td>
+                   <td className="py-4 px-6 text-xs text-slate-500">
+                     {u.createdAt?.toMillis ? new Date(u.createdAt.toMillis()).toLocaleString() : 'N/A'}
+                   </td>
+                   <td className="py-4 px-6 text-right">
+                     <button onClick={() => handleDelete(u.id)} className="bg-red-50 text-red-600 hover:bg-red-100 font-bold px-3 py-1.5 rounded-lg text-xs transition-colors">Unban</button>
+                   </td>
+                 </tr>
+               ))}
+               {bannedUsers.length === 0 && (
+                 <tr>
+                   <td colSpan={4} className="text-center py-12 text-slate-400">No active bans in blocklist.</td>
+                 </tr>
+               )}
+             </tbody>
+           </table>
+         </div>
+       )}
+
+       {showModal && (
+         <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in">
+           <div className="bg-white rounded-3xl p-8 max-w-xl w-full shadow-2xl relative max-h-[90vh] overflow-y-auto">
+             <button onClick={() => { setShowModal(false); setFormData({ ip: '', phone: '', email: '', reason: '' }); }} className="absolute top-6 right-6 text-slate-400 hover:text-slate-600"><X size={24}/></button>
+             <h2 className="text-2xl font-black mb-6">Ban User, IP, or Email</h2>
+             <form onSubmit={handleSave} className="space-y-4">
+                <p className="text-xs text-slate-400 mb-2">Provide at least one identifier to restrict checkouts and placements.</p>
+                <div>
+                  <label className="block text-sm font-semibold mb-1">IP Address</label>
+                  <input type="text" placeholder="e.g. 192.168.1.1" value={formData.ip} onChange={e=>setFormData({...formData, ip: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2" />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold mb-1">WhatsApp / Phone Number</label>
+                  <input type="text" placeholder="e.g. 923000000000" value={formData.phone} onChange={e=>setFormData({...formData, phone: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2" />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold mb-1">Email Address</label>
+                  <input type="email" placeholder="e.g. spammer@example.com" value={formData.email} onChange={e=>setFormData({...formData, email: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2" />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold mb-1">Reason for Ban</label>
+                  <textarea rows={3} placeholder="e.g. Repeated block of false order uploads" value={formData.reason} onChange={e=>setFormData({...formData, reason: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 resize-none" />
+                </div>
+                <div className="flex justify-end gap-2 pt-4">
+                  <button type="submit" disabled={isSubmitting} className="px-6 py-3 rounded-xl font-bold bg-red-600 hover:bg-red-700 text-white w-full disabled:opacity-50 flex items-center justify-center gap-2">
+                    {isSubmitting ? 'Banning...' : 'Ban & Save'}
+                  </button>
+                </div>
+             </form>
+           </div>
+         </div>
        )}
     </div>
   );
@@ -1943,8 +2092,6 @@ function RefundsManager() {
 
   const applyBulkAction = async () => {
     if (!bulkAction || selectedIds.length === 0) return;
-    const confirmMsg = `Are you sure you want to apply this action to ${selectedIds.length} selected items?`;
-    if (!window.confirm(confirmMsg)) return;
 
     setIsApplyingBulk(true);
     try {
@@ -1960,10 +2107,8 @@ function RefundsManager() {
 
       setSelectedIds([]);
       setBulkAction('');
-      alert("Bulk action applied successfully.");
     } catch (e) {
       console.error(e);
-      alert('Error applying bulk action');
     } finally {
       setIsApplyingBulk(false);
     }

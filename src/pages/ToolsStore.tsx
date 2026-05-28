@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '../components/AuthProvider';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 import emailjs from '@emailjs/browser';
+import { checkAndBanIfSpamming } from '../lib/blocker';
 
 interface Product {
   id: string;
@@ -309,6 +310,14 @@ function CheckoutModal({ product, onClose }: any) {
         if (data.cityName) city = data.cityName;
         if (data.ipAddress) ipAddress = data.ipAddress;
       } catch (e) {}
+
+      // Check for ban or fake order spamming
+      const banStatus = await checkAndBanIfSpamming(phone, email, ipAddress);
+      if (banStatus.isBanned) {
+         alert(`🚨 Blocked: Your phone number or IP address (${ipAddress}) has been banned due to multiple fake or unpaid order attempts. Please contact support if you believe this is an error.`);
+         setStatus('idle');
+         return;
+      }
 
       if (paymentMode === 'card') {
          const orderData = {
