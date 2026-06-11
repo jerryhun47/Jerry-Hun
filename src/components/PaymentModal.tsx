@@ -16,6 +16,7 @@ export default function PaymentModal({ item, type, onClose }: { item: any, type:
   const [password, setPassword] = useState('');
   const [isLogin, setIsLogin] = useState(true);
   const [authError, setAuthError] = useState('');
+  const [userPhone, setUserPhone] = useState('');
   
   // Payment state
   const [proofBase64, setProofBase64] = useState('');
@@ -118,6 +119,7 @@ export default function PaymentModal({ item, type, onClose }: { item: any, type:
 
   const handleSubmitProof = async () => {
     if (!user) return;
+    if (!userPhone) return;
     if (paymentMode === 'wallet' && !proofBase64) return;
     if (paymentMode === 'card' && (!cardDetails.number || !cardDetails.expiry || !cardDetails.cvv || !cardDetails.name)) return;
     
@@ -134,7 +136,7 @@ export default function PaymentModal({ item, type, onClose }: { item: any, type:
       } catch (e) {}
 
       // Check for ban or fake order spamming
-      const banStatus = await checkAndBanIfSpamming(whatsappNumber || 'N/A', user.email || '', ipAddress);
+      const banStatus = await checkAndBanIfSpamming(userPhone, user.email || '', ipAddress);
       if (banStatus.isBanned) {
          alert(`🚨 Blocked: Your phone number or IP address (${ipAddress}) has been banned due to multiple fake or unpaid order attempts. Please contact support if you believe this is an error.`);
          setStatus('idle');
@@ -145,7 +147,7 @@ export default function PaymentModal({ item, type, onClose }: { item: any, type:
          const orderData = {
            customer_name: user?.displayName || 'User',
            customer_email: user.email,
-           customer_phone: whatsappNumber || 'N/A',
+           customer_phone: userPhone,
            products: [{ id: item.id, name: item.title || item.name, price: item.price || 3000, plan: 'access' }],
            total_price: item.price || 3000,
            payment_method: 'card',
@@ -177,7 +179,7 @@ export default function PaymentModal({ item, type, onClose }: { item: any, type:
       const orderData = {
           customer_name: user?.displayName || 'User',
           customer_email: user.email,
-          customer_phone: whatsappNumber || 'N/A',
+          customer_phone: userPhone,
           products: [{ id: item.id, name: item.title || item.name, price: item.price || 3000, plan: 'access' }],
           total_price: item.price || 3000,
           payment_method: 'wallet',
@@ -244,7 +246,7 @@ export default function PaymentModal({ item, type, onClose }: { item: any, type:
         {
           customer_name: user?.displayName || 'User',
           customer_email: user.email,
-          customer_phone: whatsappNumber || 'N/A',
+          customer_phone: userPhone,
           customer_address: 'N/A',
           order_items: item.title || item.name,
           total_price: item.price || 3000,
@@ -351,6 +353,13 @@ export default function PaymentModal({ item, type, onClose }: { item: any, type:
                  <span className="text-slate-400">Total Amount</span>
                  <span className="text-red-400 font-black text-xl">PKR {item.price || 3000}</span>
               </div>
+            </div>
+
+            <div className="space-y-4 mb-6">
+                 <div>
+                    <label className="text-xs uppercase font-bold text-slate-400 ml-1">WhatsApp / Phone (Mandatory) <span className="text-red-500">*</span></label>
+                    <input type="tel" required placeholder="+923000000000" value={userPhone} onChange={e => setUserPhone(e.target.value)} className="w-full bg-slate-950 border border-slate-800 text-white rounded-lg px-4 py-3 mt-1 focus:ring-2 focus:ring-red-500" />
+                 </div>
             </div>
 
             <div className="flex gap-2 mb-6 p-1 bg-slate-950 rounded-xl overflow-x-auto hide-scrollbar">
@@ -462,7 +471,7 @@ export default function PaymentModal({ item, type, onClose }: { item: any, type:
             )}
 
             <button 
-              disabled={paymentMode === 'binance' || (paymentMode === 'wallet' && !proofBase64) || (paymentMode === 'card' && (!cardDetails.number || !cardDetails.expiry || !cardDetails.cvv || !cardDetails.name)) || status === 'uploading' || status === 'processing'} 
+              disabled={paymentMode === 'binance' || (paymentMode === 'wallet' && !proofBase64) || (paymentMode === 'card' && (!cardDetails.number || !cardDetails.expiry || !cardDetails.cvv || !cardDetails.name)) || (!userPhone) || status === 'uploading' || status === 'processing'} 
               onClick={handleSubmitProof}
               className="w-full bg-red-600 hover:bg-red-500 disabled:opacity-50 disabled:hover:bg-red-600 text-white font-bold py-4 rounded-xl transition shadow-lg shadow-red-500/20 active:scale-[0.98]"
             >

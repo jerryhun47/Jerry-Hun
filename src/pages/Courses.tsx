@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { BookOpen, AlertCircle, Play, CheckCircle, Lock } from 'lucide-react';
 import { useAuth } from '../components/AuthProvider';
 import PaymentModal from '../components/PaymentModal';
+import ProductReviews from '../components/ProductReviews';
 import Markdown from 'react-markdown';
 
 export default function Courses() {
@@ -272,6 +273,7 @@ export default function Courses() {
                  )}
                </div>
                
+               <ProductReviews productId={viewingCourse.id} productName={viewingCourse.name} />
              </div>
           </div>
         </motion.div>

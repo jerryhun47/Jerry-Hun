@@ -1708,7 +1708,7 @@ function ReviewsManager() {
   const [reviews, setReviews] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
-  const [newReview, setNewReview] = useState({ name: '', city: '', text: '', rating: 5, image: '' });
+  const [newReview, setNewReview] = useState({ name: '', city: '', text: '', rating: 5, image: '', productId: '', productName: '' });
 
   const fetchReviews = async () => {
     try {
@@ -1779,10 +1779,79 @@ function ReviewsManager() {
         createdAt: serverTimestamp()
       });
       setShowAddModal(false);
-      setNewReview({ name: '', city: '', text: '', rating: 5, image: '' });
+      setNewReview({ name: '', city: '', text: '', rating: 5, image: '', productId: '', productName: '' });
       fetchReviews();
     } catch (err) {
       alert("Error adding review");
+    }
+  };
+
+  const handleGenerateFakeReviews = async () => {
+    if(!confirm("This will automatically generate and attach 8-10 fake positive Urdu/English reviews for EVERY product in your store. Proceed?")) return;
+
+    try {
+      const productsSnap = await getDocs(collection(db, 'products'));
+      const products = productsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+      const names = ['Ali Raza', 'Fatima N.', 'Usman Tariq', 'Ayesha', 'Bilal Ahmed', 'Zainab', 'Omar', 'Khadija M.', 'Hassan R.', 'Hamza', 'Saad A.', 'Amna', 'Waqas', 'Imran', 'Ammar', 'Maha', 'Sana', 'Zeeshan'];
+      const cities = ['Karachi', 'Lahore', 'Islamabad', 'Rawalpindi', 'Faisalabad', 'Multan', 'Peshawar', 'Quetta', 'Sialkot', 'Gujranwala'];
+      
+      const templates = [
+        "Bhai maza aagaya, {product} use kar ke kam kafi asaan ho gya hai. Recommended!",
+        "Best tool ever! Customer support bhi bohat achi hai. Very happy.",
+        "{product} is exactly what I needed. Pricing bhi theek hai awam k mutabiq.",
+        "Bohot zabardast service hai. Me pichle 2 mahinay se use kar raha hu problems nahi aai.",
+        "Yaar baki sab to theek hai lekin interface bohot smooth hai. I easily configured {product}.",
+        "100% working and fast. Pakistan me aisi service milna mushkil hai. Great work guys.",
+        "Amazing experience so far. Highly recommended for everyone looking for this.",
+        "Bohot aala! Paise pure ho gaye use kar ke.",
+        "Main pehle hesitate kar raha tha par jab buy kiya to kafi faida hua. Great job guys.",
+        "Fantastic! {product} ne mera time bacha liya completely.",
+        "Support team was very responsive. {product} easily setup ho gaya tha.",
+        "Zabardast! Ye bohat useful cheez hai. Really like how it works.",
+        "Sir completely satisfied. Will buy more tools from you soon.",
+        "Genuine cheez hai. Thanks a lot for the fast delivery."
+      ];
+
+      for (const product of products) {
+        const pName = (product as any).name || 'product';
+        const numReviews = Math.floor(Math.random() * 3) + 8; // 8 to 10
+        for(let i = 0; i < numReviews; i++) {
+            const name = names[Math.floor(Math.random() * names.length)];
+            const city = cities[Math.floor(Math.random() * cities.length)];
+            let text = templates[Math.floor(Math.random() * templates.length)].replace('{product}', pName);
+            const rating = Math.floor(Math.random() * 2) + 4; // 4 or 5
+            
+            // Randomly attach a placeholder logo/image occasionally
+            const wantsImage = Math.random() > 0.3;
+            let avatar = '';
+            if (wantsImage) {
+              avatar = `https://api.dicebear.com/7.x/initials/svg?seed=${name}&backgroundColor=475569`;
+            }
+
+            // Stagger mock dates slightly (past few months)
+            const randomDaysAgo = Math.floor(Math.random() * 60);
+            const mockDate = new Date();
+            mockDate.setDate(mockDate.getDate() - randomDaysAgo);
+
+            await addDoc(collection(db, 'reviews'), {
+                productId: product.id,
+                productName: pName,
+                name: name,
+                city: city,
+                text: text,
+                rating: rating,
+                avatar: avatar,
+                approved: true,
+                createdAt: mockDate
+            });
+        }
+      }
+      alert("Success! Generated fake reviews for all products.");
+      fetchReviews();
+    } catch (err) {
+      console.error(err);
+      alert("Error generating reviews");
     }
   };
 
@@ -1793,9 +1862,15 @@ function ReviewsManager() {
             <h2 className="text-2xl font-black">Reviews Management</h2>
             <p className="text-slate-500">View, approve, and add client reviews manually.</p>
           </div>
-          <button onClick={() => setShowAddModal(true)} className="bg-red-600 hover:bg-red-700 text-white px-5 py-2.5 rounded-xl font-bold flex items-center gap-2">
-             <Plus size={18} /> Add Review
-          </button>
+          <div className="flex items-center gap-3">
+            <button onClick={handleGenerateFakeReviews} className="bg-slate-800 hover:bg-slate-700 text-white px-5 py-2.5 rounded-xl font-bold flex items-center gap-2">
+               Auto Generate Reviews
+            </button>
+            <button onClick={() => setShowAddModal(true)} className="bg-red-600 hover:bg-red-700 text-white px-5 py-2.5 rounded-xl font-bold flex items-center gap-2">
+               <Plus size={18} /> Add Review
+            </button>
+          </div>
+
        </div>
 
        <div className="bg-white rounded-3xl border border-slate-200 card-shadow overflow-hidden">
@@ -1803,6 +1878,7 @@ function ReviewsManager() {
              <thead className="bg-slate-50 border-b border-slate-100 uppercase tracking-wider text-slate-500 font-semibold">
                 <tr>
                    <th className="p-4">Client</th>
+                   <th className="p-4">Product</th>
                    <th className="p-4">Review Text</th>
                    <th className="p-4">Rating</th>
                    <th className="p-4">Status</th>
@@ -1821,6 +1897,7 @@ function ReviewsManager() {
                            </div>
                         </div>
                       </td>
+                      <td className="p-4 text-xs font-semibold text-slate-500">{rev.productName || 'Generic / System'}</td>
                       <td className="p-4 text-slate-600 max-w-xs truncate" title={rev.text}>{rev.text}</td>
                       <td className="p-4 font-bold text-slate-900">{rev.rating} / 5</td>
                       <td className="p-4">
@@ -1856,6 +1933,14 @@ function ReviewsManager() {
                   <div>
                     <label className="block text-sm font-semibold mb-2">City</label>
                     <input type="text" value={newReview.city} onChange={e => setNewReview({...newReview, city: e.target.value})} className="w-full border rounded-lg px-4 py-2" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold mb-2">Product Id (Optional, link to specific product)</label>
+                    <input type="text" value={newReview.productId || ''} onChange={e => setNewReview({...newReview, productId: e.target.value})} className="w-full border rounded-lg px-4 py-2" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold mb-2">Product Name (Optional)</label>
+                    <input type="text" value={newReview.productName || ''} onChange={e => setNewReview({...newReview, productName: e.target.value})} className="w-full border rounded-lg px-4 py-2" />
                   </div>
                   <div>
                     <label className="block text-sm font-semibold mb-2">Review Text</label>

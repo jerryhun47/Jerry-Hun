@@ -7,6 +7,7 @@ import { useAuth } from '../components/AuthProvider';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 import emailjs from '@emailjs/browser';
 import { checkAndBanIfSpamming } from '../lib/blocker';
+import ProductReviews from '../components/ProductReviews';
 
 interface Product {
   id: string;
@@ -536,6 +537,8 @@ function CheckoutModal({ product, onClose }: any) {
               >
                  Continue to Payment
               </button>
+
+              <ProductReviews productId={product.id} productName={product.name} />
            </>
          ) : (
            <>
@@ -554,13 +557,16 @@ function CheckoutModal({ product, onClose }: any) {
 
               <div className="space-y-4 mb-6">
                  <div>
-                    <input type="text" required placeholder="Full Name" value={name} onChange={e => setName(e.target.value)} className="w-full bg-slate-950 border border-slate-800 text-white rounded-lg px-4 py-3 focus:ring-2 focus:ring-red-500" />
+                    <label className="text-xs uppercase font-bold text-slate-400 ml-1">Full Name <span className="text-red-500">*</span></label>
+                    <input type="text" required placeholder="John Doe" value={name} onChange={e => setName(e.target.value)} className="w-full bg-slate-950 border border-slate-800 text-white rounded-lg px-4 py-3 focus:ring-2 focus:ring-red-500 mt-1" />
                  </div>
                  <div>
-                    <input type="email" required placeholder="Email Address" value={email} onChange={e => setEmail(e.target.value)} className="w-full bg-slate-950 border border-slate-800 text-white rounded-lg px-4 py-3 focus:ring-2 focus:ring-red-500" />
+                    <label className="text-xs uppercase font-bold text-slate-400 ml-1">Email (Mandatory) <span className="text-red-500">*</span></label>
+                    <input type="email" required placeholder="user@gmail.com" value={email} onChange={e => setEmail(e.target.value)} className="w-full bg-slate-950 border border-slate-800 text-white rounded-lg px-4 py-3 focus:ring-2 focus:ring-red-500 mt-1" />
                  </div>
                  <div>
-                    <input type="tel" required placeholder="WhatsApp / Phone Number" value={phone} onChange={e => setPhone(e.target.value)} className="w-full bg-slate-950 border border-slate-800 text-white rounded-lg px-4 py-3 focus:ring-2 focus:ring-red-500" />
+                    <label className="text-xs uppercase font-bold text-slate-400 ml-1">WhatsApp / Phone (Mandatory) <span className="text-red-500">*</span></label>
+                    <input type="tel" required placeholder="+923000000000" value={phone} onChange={e => setPhone(e.target.value)} className="w-full bg-slate-950 border border-slate-800 text-white rounded-lg px-4 py-3 focus:ring-2 focus:ring-red-500 mt-1" />
                  </div>
               </div>
 
