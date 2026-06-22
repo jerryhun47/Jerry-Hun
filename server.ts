@@ -2,7 +2,6 @@ import express from "express";
 import path from "path";
 import fs from "fs";
 import { createServer as createViteServer } from "vite";
-import nodemailer from "nodemailer";
 import cors from "cors";
 import dotenv from "dotenv";
 
@@ -108,51 +107,39 @@ async function startServer() {
 
   app.post("/api/send-email", async (req, res) => {
     try {
+      console.log("[/api/send-email] Received request");
       const { to, subject, body } = req.body;
+      const resendApiKey = "re_A95Lhfq2_EUk3SnKLxMS2eZSyYBP3xhV1"; // Use explicitly specified key
 
-      if (process.env.RESEND_API_KEY) {
-        // Use Resend
-        const { Resend } = await import("resend");
-        const resend = new Resend(process.env.RESEND_API_KEY);
-        
-        await resend.emails.send({
-          from: 'Jerry Automation <onboarding@resend.dev>', // or a verified domain if they have one
-          to: [to],
-          subject,
-          html: body,
-        });
-        
+      const requestData = {
+        from: "Jerry Automation <noreply@jerryautomation.com>",
+        to: Array.isArray(to) ? to : [to],
+        subject: subject,
+        html: body,
+      };
+      
+      console.log("[/api/send-email] Data being sent to Resend:", JSON.stringify(requestData, null, 2));
+
+      const response = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${resendApiKey}`,
+        },
+        body: JSON.stringify(requestData),
+      });
+
+      if (response.ok) {
+        console.log("[/api/send-email] Email sent successfully");
         return res.json({ success: true });
       }
 
-      if (!process.env.SMTP_EMAIL || !process.env.SMTP_PASSWORD) {
-        return res.status(500).json({ error: "No email service configured. Please provide RESEND_API_KEY or SMTP credentials." });
-      }
-
-      const transporter = nodemailer.createTransport({
-        service: "gmail",
-        auth: {
-          user: process.env.SMTP_EMAIL,
-          pass: process.env.SMTP_PASSWORD, // App Password
-        },
-      });
-
-      const mailOptions = {
-        from: '"Jerry Automation" <' + process.env.SMTP_EMAIL + '>',
-        to,
-        subject,
-        html: body,
-      };
-
-      await transporter.sendMail(mailOptions);
-      res.json({ success: true });
+      const errorData = await response.json();
+      console.error("[/api/send-email] Resend error validation JSON:", JSON.stringify(errorData, null, 2));
+      return res.status(400).json({ error: errorData });
     } catch (error: any) {
-      console.error("Email send error:", error);
-      let errorMessage = error.message;
-      if (errorMessage.includes('535-5.7.8')) {
-        errorMessage = "SMTP Authentication failed. If using Gmail, make sure you are using an App Password instead of your regular password. Go to https://myaccount.google.com/apppasswords to generate one.";
-      }
-      res.status(500).json({ error: errorMessage });
+      console.error("[/api/send-email] Email send network error:", error.stack || error.message || error);
+      res.status(500).json({ error: error.message });
     }
   });
 

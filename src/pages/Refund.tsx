@@ -3,7 +3,7 @@ import { db } from '../lib/firebase';
 import { collection, query, getDocs, addDoc, serverTimestamp } from 'firebase/firestore';
 import { ArrowRight, CheckCircle2, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import emailjs from '@emailjs/browser';
+
 
 export default function Refund() {
   const [reason, setReason] = useState('');
@@ -64,25 +64,35 @@ export default function Refund() {
         timestamp: serverTimestamp()
       });
       
-      emailjs.send(
-        'service_2waf97g',
-        'template_t2ptckm',
-        {
-          customer_name: formData.fullName,
-          customer_email: formData.email,
-          item_name: selectedProduct.name,
-          total_price: selectedProduct.price || 0,
-          refund_method: formData.receiveMethod,
-          account_number: formData.accountNumber,
-          account_name: formData.accountName,
-          email_subject: "Refund Request Received - Jerry Automation",
-          email_heading: "Refund Request Processing",
-          email_message: "We have received your refund request. Our team will review it within 24-48 hours.",
-          reject_remarks: "Our verification team is currently reviewing your order details.",
-          action_status: "UNDER REVIEW"
-        },
-        'FgqVRIMv4ZG_8damT'
-      ).catch(err => console.error("Failed to send refund email via EmailJS", err));
+      const { getRefundEmailTemplate } = await import('../lib/emailTemplate');
+      const emailHtmlBody = getRefundEmailTemplate({
+        customerName: formData.fullName,
+        itemName: selectedProduct.name,
+        totalPrice: selectedProduct.price || 0,
+        status: 'UNDER REVIEW',
+      });
+
+      // Send to Customer
+      fetch('/api/send-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          to: formData.email,
+          subject: "Refund Request Received - Jerry Automation",
+          body: emailHtmlBody
+        })
+      }).catch(err => console.error("Failed to send refund email", err));
+
+      // Send to Admin
+      fetch('/api/send-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          to: 'jerryhun47@gmail.com',
+          subject: `New Refund Request: ${formData.fullName} - ${selectedProduct.name}`,
+          body: emailHtmlBody
+        })
+      }).catch(err => console.error("Failed to notify admin of refund request", err));
 
       setSubmittedData({
         accountNumber: formData.accountNumber,

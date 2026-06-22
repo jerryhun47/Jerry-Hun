@@ -5,7 +5,7 @@ import { useAuth } from './AuthProvider';
 import { db, auth } from '../lib/firebase';
 import { collection, addDoc, serverTimestamp, getDocs, doc, getDoc } from 'firebase/firestore';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
-import emailjs from '@emailjs/browser';
+
 import { checkAndBanIfSpamming } from '../lib/blocker';
 
 export default function PaymentModal({ item, type, onClose }: { item: any, type: 'course' | 'tool', onClose: () => void }) {
@@ -204,27 +204,6 @@ export default function PaymentModal({ item, type, onClose }: { item: any, type:
         createdAt: serverTimestamp()
       });
 
-      // Notify Admin
-      const adminEmailBody = `
-        <div style="font-family: sans-serif;">
-          <h2 style="color: #ef4444;">New Order Placed!</h2>
-          <p><strong>Item:</strong> ${item.title || item.name}</p>
-          <p><strong>Customer Email:</strong> ${user.email}</p>
-          <p><strong>Price:</strong> PKR ${item.price || 3000}</p>
-          <p>Please check the admin dashboard to approve the transaction.</p>
-        </div>
-      `;
-      // Notify Admin and Send Order Confirmation via EmailJS (non-blocking)
-      fetch('/api/send-email', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          to: 'Contact@jerryautomation.com',
-          subject: 'New Order: ' + (item.title || item.name),
-          body: adminEmailBody
-        })
-      }).catch(e => console.error("Failed to notify admin via email", e));
-      
       // Fetch product credentials
       let prodGmail = '';
       let prodPassword = '';
@@ -240,27 +219,39 @@ export default function PaymentModal({ item, type, onClose }: { item: any, type:
         console.error("Error fetching product credentials", e);
       }
       
-      emailjs.send(
-        'service_2waf97g',
-        'template_qy4fn7n',
-        {
-          customer_name: user?.displayName || 'User',
-          customer_email: user.email,
-          customer_phone: userPhone,
-          customer_address: 'N/A',
-          order_items: item.title || item.name,
-          total_price: item.price || 3000,
-          email_subject: "Order Received - Jerry Automation",
-          email_heading: "Order Received",
-          email_message: "Thank you for your order! We have received your request and our team is currently processing it. You will receive your access credentials as soon as your order is confirmed by the admin.",
-          product_gmail: "Processing...",
-          product_password: "Processing...",
-          action_status: "PENDING",
-          credentials_visibility: "none"
-        },
-        'FgqVRIMv4ZG_8damT'
-      ).catch(err => console.error("Failed to send order confirmation via EmailJS", err));
-      
+      const { getEmailTemplate } = await import('../lib/emailTemplate');
+      const emailHtmlBody = getEmailTemplate({
+        customerName: user?.displayName || 'User',
+        customerWhatsapp: userPhone,
+        orderItems: item.title || item.name,
+        totalPrice: item.price || 3000,
+        status: 'PENDING',
+        productGmail: prodGmail,
+        productPassword: prodPassword
+      });
+
+      // Send to Admin
+      fetch('/api/send-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          to: 'jerryhun47@gmail.com',
+          subject: 'New Order Received: ' + (item.title || item.name),
+          body: emailHtmlBody
+        })
+      }).catch(e => console.error("Failed to notify admin via email", e));
+
+      // Send to Customer
+      fetch('/api/send-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          to: user.email,
+          subject: "Your Order is Pending - Jerry Automation",
+          body: emailHtmlBody
+        })
+      }).catch(err => console.error("Failed to send order confirmation", err));
+
       setStatus('success');
     } catch (err) {
       console.error(err);

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { db, auth, signOut } from '../../lib/firebase';
-import { collection, getDocs, doc, deleteDoc, updateDoc, addDoc, serverTimestamp, query, orderBy, onSnapshot } from 'firebase/firestore';
+import { collection, getDocs, doc, deleteDoc, updateDoc, addDoc, serverTimestamp, query, orderBy, onSnapshot, getDoc } from 'firebase/firestore';
 import { LayoutDashboard, ShoppingBag, MessageSquare, Package, LogOut, Plus, Trash2, Edit, X, Menu, DollarSign as DollarSign2, ArrowUp, ArrowDown, RefreshCcw, ShieldCheck, Copy, Download } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import WebsiteEditor from './WebsiteEditor';
@@ -548,29 +548,59 @@ function OrdersManager({ orders, refresh, viewProof, setViewProof }: { orders: a
       await updateDoc(doc(db, 'orders', order.id), { status, updatedAt: serverTimestamp() });
       if ((status === 'confirmed' || status === 'delivered') && order.customer_email) {
         try {
-          await emailjs.send(
-            'service_2waf97g',
-            'template_qy4fn7n',
-            {
-              customer_name: order.customer_name || 'Customer',
-              customer_email: order.customer_email,
-              customer_phone: order.customer_phone || 'N/A',
-              customer_address: 'N/A',
-              order_items: order.products?.[0]?.name || 'Item',
-              total_price: order.total_price || 0,
-              email_subject: "Your Product Credentials Inside! - Jerry Automation",
-              email_heading: "Order Confirmed!",
-              email_message: "Good news! Your order has been approved. Below are your login credentials to access your premium product tools.",
-              product_gmail: "jerryaitools431231@gmail.com",
-              product_password: "Tesla@123",
-              action_status: "DELIVERED",
-              credentials_visibility: "block"
-            },
-            'FgqVRIMv4ZG_8damT'
-          );
-          if (!silent) alert("Order status updated and access email sent via EmailJS successfully.");
+          // Generate unique temp credentials
+          const tempId = Math.random().toString(36).substring(2, 8);
+          let prodGmail = `temp_${tempId}@jerryautomation.com`;
+          let prodPassword = Math.random().toString(36).slice(-8) + 'Aa1!';
+          try {
+            if (order.products?.[0]?.id) {
+              const pDoc = await getDoc(doc(db, 'products', order.products[0].id));
+              // We overrides it with DB credentials if they exist, but fallback to temp if none
+              if (pDoc.exists() && pDoc.data().product_gmail) {
+                prodGmail = pDoc.data().product_gmail;
+                prodPassword = pDoc.data().product_password;
+              }
+            }
+          } catch (err) {
+             console.error("Error fetching dynamic credentials", err);
+          }
+
+          const { getEmailTemplate } = await import('../../lib/emailTemplate');
+          const emailHtmlBody = getEmailTemplate({
+            customerName: order.customer_name || 'Customer',
+            customerWhatsapp: order.customer_phone,
+            orderItems: order.products?.[0]?.name || 'Item',
+            totalPrice: order.total_price || 0,
+            status: 'CONFIRMED',
+            productGmail: prodGmail,
+            productPassword: prodPassword
+          });
+
+          // Send to Customer
+          await fetch('/api/send-email', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              to: order.customer_email,
+              subject: "Your Product Credentials Inside! - Jerry Automation",
+              body: emailHtmlBody
+            })
+          });
+
+          // Send to Admin
+          await fetch('/api/send-email', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              to: 'jerryhun47@gmail.com',
+              subject: `Order Confirmed: ${order.customer_name} - ${order.products?.[0]?.name}`,
+              body: emailHtmlBody
+            })
+          });
+
+          if (!silent) alert("Order status updated and access email sent successfully.");
         } catch (err) {
-          console.error("Failed to send email via EmailJS", err);
+          console.error("Failed to send email", err);
           if (!silent) alert("Updated, but failed to send email.");
         }
       } else {
@@ -903,29 +933,56 @@ function TransactionsManager({ transactions, refresh, viewProof, setViewProof }:
       
       if (status === 'completed' && transaction.userEmail) {
         try {
-          await emailjs.send(
-            'service_2waf97g',
-            'template_qy4fn7n',
-            {
-              customer_name: transaction.userName || 'Customer',
-              customer_email: transaction.userEmail,
-              customer_phone: transaction.userPhone || 'N/A',
-              customer_address: 'N/A',
-              order_items: transaction.itemType || transaction.items?.[0]?.name || 'Item',
-              total_price: transaction.price || 0,
-              email_subject: "Your Product Credentials Inside! - Jerry Automation",
-              email_heading: "Order Confirmed!",
-              email_message: "Good news! Your order has been approved. Below are your login credentials to access your premium product tools.",
-              product_gmail: "jerryaitools431231@gmail.com",
-              product_password: "Tesla@123",
-              action_status: "DELIVERED",
-              credentials_visibility: "block"
-            },
-            'FgqVRIMv4ZG_8damT'
-          );
-          if (!silent) alert("Order approved and access email sent via EmailJS successfully.");
+          const tempId = Math.random().toString(36).substring(2, 8);
+          let prodGmail = `temp_${tempId}@jerryautomation.com`;
+          let prodPassword = Math.random().toString(36).slice(-8) + 'Aa1!';
+          try {
+            if (transaction.itemId) {
+              const pDoc = await getDoc(doc(db, 'products', transaction.itemId));
+              if (pDoc.exists() && pDoc.data().product_gmail) {
+                prodGmail = pDoc.data().product_gmail;
+                prodPassword = pDoc.data().product_password;
+              }
+            }
+          } catch (err) {
+             console.error("Error fetching dynamic credentials", err);
+          }
+
+          const { getEmailTemplate } = await import('../../lib/emailTemplate');
+          const emailHtmlBody = getEmailTemplate({
+            customerName: transaction.userName || 'Customer',
+            orderItems: transaction.itemTitle || transaction.itemType || 'Item',
+            totalPrice: transaction.price || 0,
+            status: 'CONFIRMED',
+            productGmail: prodGmail,
+            productPassword: prodPassword
+          });
+
+          // Send to Customer
+          await fetch('/api/send-email', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              to: transaction.userEmail,
+              subject: "Your Product Credentials Inside! - Jerry Automation",
+              body: emailHtmlBody
+            })
+          });
+
+          // Send to Admin
+          await fetch('/api/send-email', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              to: 'jerryhun47@gmail.com',
+              subject: `Order Confirmed: ${transaction.userName || 'Customer'} - ${transaction.itemTitle || transaction.itemType || 'Item'}`,
+              body: emailHtmlBody
+            })
+          });
+
+          if (!silent) alert("Order approved and access email sent successfully.");
         } catch (err) {
-          console.error("Failed to send email via EmailJS", err);
+          console.error("Failed to send email", err);
           if (!silent) alert("Approved, but failed to send email.");
         }
       } else {
@@ -2147,7 +2204,7 @@ function OverviewAnalytics({ orders, transactions }: { orders: any[], transactio
   );
 }
 
-import emailjs from '@emailjs/browser';
+
 
 function RefundsManager() {
   const [refunds, setRefunds] = React.useState<any[]>([]);
@@ -2224,41 +2281,39 @@ function RefundsManager() {
       if (newStatus === 'refunded') {
         emailConfig = {
           email_subject: "Refund Approved Successfully - Jerry Automation",
-          email_heading: "Refund Successful!",
-          email_message: "Good news! Your refund request has been approved and the funds have been transferred.",
-          reject_remarks: "The payment has been successfully credited back to your provided account details.",
           action_status: "REFUNDED"
         };
       } else if (newStatus === 'refund_rejected') {
         emailConfig = {
           email_subject: "Refund Request Update - Jerry Automation",
-          email_heading: "Refund Request Rejected",
-          email_message: "Your refund request has been reviewed by our team and could not be processed.",
           reject_remarks: adminRemarksState || "We regret to inform you that your request has been rejected.",
           action_status: "REJECTED"
         };
       }
 
       if (emailConfig && refund.email) {
-        await emailjs.send(
-          'service_2waf97g',
-          'template_t2ptckm',
-          {
-            customer_name: refund.fullName || refund.name,
-            customer_email: refund.email,
-            item_name: refund.productName,
-            total_price: refund.amount || 0,
-            refund_method: refund.receiveMethod,
-            account_number: refund.accountNumber,
-            account_name: refund.name,
-            email_subject: emailConfig.email_subject,
-            email_heading: emailConfig.email_heading,
-            email_message: emailConfig.email_message,
-            reject_remarks: emailConfig.reject_remarks,
-            action_status: emailConfig.action_status
-          },
-          'FgqVRIMv4ZG_8damT'
-        ).catch(err => console.error("Failed to send refund update email via EmailJS", err));
+        try {
+          const { getRefundEmailTemplate } = await import('../../lib/emailTemplate');
+          const userHtmlBody = getRefundEmailTemplate({
+            customerName: refund.fullName || refund.name || 'Customer',
+            itemName: refund.productName || 'Item',
+            totalPrice: refund.amount || 0,
+            status: emailConfig.action_status,
+            rejectRemarks: emailConfig.reject_remarks
+          });
+
+          await fetch('/api/send-email', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              to: refund.email,
+              subject: emailConfig.email_subject,
+              body: userHtmlBody
+            })
+          });
+        } catch (err) {
+          console.error("Failed to send refund update email", err);
+        }
       }
 
       if (!silent) {

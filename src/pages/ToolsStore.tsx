@@ -5,7 +5,7 @@ import { ShoppingCart, Search, Lock, CheckCircle, X, Upload } from 'lucide-react
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '../components/AuthProvider';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
-import emailjs from '@emailjs/browser';
+
 import { checkAndBanIfSpamming } from '../lib/blocker';
 import ProductReviews from '../components/ProductReviews';
 
@@ -381,64 +381,53 @@ function CheckoutModal({ product, onClose }: any) {
         createdAt: serverTimestamp()
       });
       
-      // Notify Admin Email
-      const adminEmailBody = `
-        <div style="font-family: sans-serif;">
-          <h2 style="color: #ef4444;">New Order Placed!</h2>
-          <p><strong>Item:</strong> ${product.name} (${selectedPlan} plan)</p>
-          <p><strong>Customer:</strong> ${name}</p>
-          <p><strong>Email:</strong> ${email}</p>
-          <p><strong>Phone:</strong> ${phone}</p>
-          <p><strong>Price:</strong> PKR ${selectedPrice}</p>
-          <p>Please check the admin dashboard to approve the transaction and view the payment screenshot.</p>
-        </div>
-      `;
-      // Notify Admin Email and Send Order Confirmation via EmailJS (non-blocking)
+      // Fetch product credentials
+       let prodGmail = '';
+       let prodPassword = '';
+       try {
+         const pDoc = await getDoc(doc(db, 'products', product.id));
+         if (pDoc.exists()) {
+           prodGmail = pDoc.data().product_gmail || '';
+           prodPassword = pDoc.data().product_password || '';
+         }
+       } catch (e) {
+         console.error("Error fetching product credentials", e);
+       }
+ 
+       const { getEmailTemplate } = await import('../lib/emailTemplate');
+       const emailHtmlBody = getEmailTemplate({
+         customerName: name,
+         customerWhatsapp: phone,
+         orderItems: `${product.name} (${selectedPlan} plan)`,
+         totalPrice: selectedPrice,
+         status: 'PENDING',
+         productGmail: prodGmail,
+         productPassword: prodPassword
+       });
+
+      // Send to Admin
       fetch('/api/send-email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          to: 'Contact@jerryautomation.com',
-          subject: 'New Order: ' + product.name,
-          body: adminEmailBody
+          to: 'jerryhun47@gmail.com',
+          subject: 'New Order Received: ' + product.name,
+          body: emailHtmlBody
         })
       }).catch(e => console.error("Failed to notify admin via email", e));
 
-     // Fetch product credentials
-      let prodGmail = '';
-      let prodPassword = '';
-      try {
-        const pDoc = await getDoc(doc(db, 'products', product.id));
-        if (pDoc.exists()) {
-          prodGmail = pDoc.data().product_gmail || '';
-          prodPassword = pDoc.data().product_password || '';
-        }
-      } catch (e) {
-        console.error("Error fetching product credentials", e);
-      }
-
-      emailjs.send(
-        'service_2waf97g',
-        'template_qy4fn7n',
-        {
-          customer_name: name,
-          customer_email: email,
-          customer_phone: phone,
-          customer_address: 'N/A',
-          order_items: `${product.name} (${selectedPlan} plan)`,
-          total_price: selectedPrice,
-          email_subject: "Order Received - Jerry Automation",
-          email_heading: "Order Received",
-          email_message: "Thank you for your order! We have received your request and our team is currently processing it. You will receive your access credentials as soon as your order is confirmed by the admin.",
-          product_gmail: "Processing...",
-          product_password: "Processing...",
-          action_status: "PENDING",
-          credentials_visibility: "none"
-        },
-        'FgqVRIMv4ZG_8damT'
-      ).catch(err => console.error("Failed to send order confirmation via EmailJS", err));
-
-      setStatus('success');
+      // Send to Customer
+      fetch('/api/send-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          to: email,
+          subject: "Your Order is Pending - Jerry Automation",
+          body: emailHtmlBody
+        })
+      }).catch(err => console.error("Failed to send order confirmation", err));
+ 
+       setStatus('success');
     } catch (err) {
       console.error(err);
       setStatus('error');
