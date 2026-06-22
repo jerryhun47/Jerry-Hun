@@ -240,6 +240,9 @@ export default function Home() {
               <Link to="/tools" className="bg-slate-900 hover:bg-slate-800 text-white border border-slate-800 px-5 py-3 rounded-full font-bold flex items-center justify-center gap-2 transition-all text-sm shadow-md">
                 <Wrench size={18} /> Buy Tools
               </Link>
+              <Link to="/prompts" className="bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 px-5 py-3 rounded-full font-bold flex items-center justify-center gap-2 transition-all text-sm shadow-md">
+                👉 Explore Prompts
+              </Link>
             </div>
           </motion.div>
           

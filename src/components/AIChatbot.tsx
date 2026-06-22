@@ -62,17 +62,22 @@ If user asks about discount, provide the code (SAVE30 / JERRY20 / AUTO30 - max 3
 If user asks for a 'cheap tool', strictly suggest: Veo 3 Ultra, Grok AI with a short description and ask them to navigate to the tools store below to buy.
 Keep responses concise, helpful, and natural.`;
 
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
+        signal: controller.signal,
         body: JSON.stringify({
           message: userMessage,
           history: messages,
           systemPrompt
         }),
       });
+      clearTimeout(timeoutId);
 
       const data = await response.json();
 
@@ -82,8 +87,12 @@ Keep responses concise, helpful, and natural.`;
         setMessages(prev => [...prev, { role: 'model', text: data.response }]);
         saveLog(userMessage, data.response);
       }
-    } catch (err) {
-      setMessages(prev => [...prev, { role: 'model', text: 'Sorry, I am having trouble reaching the server.' }]);
+    } catch (err: any) {
+      if (err.name === 'AbortError') {
+        setMessages(prev => [...prev, { role: 'model', text: 'Server is busy, please try again in a few seconds.' }]);
+      } else {
+        setMessages(prev => [...prev, { role: 'model', text: 'Server is busy, please try again in a few seconds.' }]);
+      }
     } finally {
       setIsLoading(false);
     }

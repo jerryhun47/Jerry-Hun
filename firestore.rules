@@ -156,6 +156,12 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // Prompts
+    match /prompts/{promptId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
     // Refunds
     match /refunds/{refundId} {
       allow create: if true;

@@ -45,6 +45,7 @@ export default function Layout() {
     { name: 'Tools Store', path: '/tools' },
     { name: 'Courses', path: '/courses' },
     { name: 'Refund', path: '/refund' },
+    { name: 'Prompts', path: '/prompts' },
   ];
 
   const { scrollY } = useScroll();
@@ -139,6 +140,7 @@ export default function Layout() {
               <li><Link to="/" className="hover:text-red-400 transition-colors">Home</Link></li>
               <li><Link to="/tools" className="hover:text-red-400 transition-colors">Tools Store</Link></li>
               <li><Link to="/courses" className="hover:text-red-400 transition-colors">Courses</Link></li>
+              <li><Link to="/prompts" className="hover:text-red-400 transition-colors">Prompts</Link></li>
               <li><Link to="/refund" className="hover:text-red-400 transition-colors">Refund</Link></li>
             </ul>
           </div>

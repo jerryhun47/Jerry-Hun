@@ -10,6 +10,7 @@ import Layout from './components/Layout';
 import Home from './pages/Home';
 import ToolsStore from './pages/ToolsStore';
 import Courses from './pages/Courses';
+import Prompts from './pages/Prompts';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsConditions from './pages/TermsConditions';
 import Refund from './pages/Refund';
@@ -42,6 +43,7 @@ export default function App() {
             <Route index element={<Home />} />
             <Route path="tools" element={<ToolsStore />} />
             <Route path="courses" element={<Courses />} />
+            <Route path="prompts" element={<Prompts />} />
             <Route path="refund" element={<Refund />} />
             <Route path="privacy-policy" element={<PrivacyPolicy />} />
             <Route path="terms-conditions" element={<TermsConditions />} />

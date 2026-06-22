@@ -5,6 +5,7 @@ import { collection, getDocs, doc, deleteDoc, updateDoc, addDoc, serverTimestamp
 import { LayoutDashboard, ShoppingBag, MessageSquare, Package, LogOut, Plus, Trash2, Edit, X, Menu, DollarSign as DollarSign2, ArrowUp, ArrowDown, RefreshCcw, ShieldCheck, Copy, Download } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import WebsiteEditor from './WebsiteEditor';
+import PromptManager from '../../components/PromptManager';
 import MessagesManager from '../../components/MessagesManager';
 import { UsersManager, DiscountsManager, SEOSettingsManager, BannersManager, MediaManager, NotificationsManager, AISettingsManager, AIChatLogsManager } from '../../components/AdminFeatures';
 
@@ -102,6 +103,7 @@ export default function Dashboard() {
             { id: 'analytics', icon: LayoutDashboard, label: 'Analytics' },
             { id: 'products', icon: Package, label: 'Products (Tools)' },
             { id: 'courses', icon: Package, label: 'Courses' },
+            { id: 'prompts', icon: Package, label: 'Prompts Manager' },
             { id: 'orders', icon: ShoppingBag, label: 'Orders', badge: orders.filter(o=>o.status==='pending').length },
             { id: 'refunds', icon: RefreshCcw, label: 'Refund Requests', badge: refunds.filter(r=>r.status==='Pending').length },
             { id: 'transactions', icon: ShoppingBag, label: 'Payments', badge: transactions.filter(t=>t.status==='pending').length },
@@ -194,6 +196,7 @@ export default function Dashboard() {
            {activeTab === 'analytics' && <AnalyticsManager />}
            {activeTab === 'products' && <ProductsManager products={products} type="Tool" refresh={fetchData} />}
            {activeTab === 'courses' && <ProductsManager products={products} type="Course" refresh={fetchData} />}
+           {activeTab === 'prompts' && <PromptManager />}
            {activeTab === 'orders' && <OrdersManager orders={orders} refresh={fetchData} viewProof={viewProof} setViewProof={setViewProof} />}
            {activeTab === 'refunds' && <RefundsManager />}
            {activeTab === 'transactions' && <TransactionsManager transactions={transactions} refresh={fetchData} viewProof={viewProof} setViewProof={setViewProof} />}
