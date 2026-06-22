@@ -2299,7 +2299,10 @@ function RefundsManager() {
             itemName: refund.productName || 'Item',
             totalPrice: refund.amount || 0,
             status: emailConfig.action_status,
-            rejectRemarks: emailConfig.reject_remarks
+            rejectRemarks: emailConfig.reject_remarks,
+            refundMethod: refund.receiveMethod,
+            accountNumber: refund.accountNumber,
+            accountTitle: refund.name
           });
 
           await fetch('/api/send-email', {

@@ -70,6 +70,9 @@ export default function Refund() {
         itemName: selectedProduct.name,
         totalPrice: selectedProduct.price || 0,
         status: 'UNDER REVIEW',
+        refundMethod: formData.receiveMethod,
+        accountNumber: formData.accountNumber,
+        accountTitle: formData.accountName
       });
 
       // Send to Customer
