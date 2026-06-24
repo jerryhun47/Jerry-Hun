@@ -3,7 +3,7 @@ import { db } from '../lib/firebase';
 import { collection, query, orderBy, onSnapshot } from 'firebase/firestore';
 import { motion, AnimatePresence } from 'motion/react';
 import { Copy, Eye, X, CheckCircle, Zap, Shield, TrendingUp, Search, PlayCircle, ExternalLink } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useParams, useNavigate } from 'react-router-dom';
 
 const PromoProducts = ({ isCopy }: { isCopy?: boolean }) => (
   <div className="flex flex-col gap-4 mt-4 text-left">
@@ -39,6 +39,8 @@ const PromoProducts = ({ isCopy }: { isCopy?: boolean }) => (
 );
 
 export default function Prompts() {
+  const { slug } = useParams();
+  const navigate = useNavigate();
   const [prompts, setPrompts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedPrompt, setSelectedPrompt] = useState<any | null>(null);
@@ -47,6 +49,19 @@ export default function Prompts() {
   
   const [showEntryPromo, setShowEntryPromo] = useState(false);
   const [showCopyPromo, setShowCopyPromo] = useState(false);
+
+  const generateSlug = (title: string) => (title || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+
+  useEffect(() => {
+    if (!loading && prompts.length > 0 && slug) {
+      const p = prompts.find(p => generateSlug(p.title) === slug);
+      if (p) {
+        setSelectedPrompt(p);
+      }
+    } else if (!slug) {
+      setSelectedPrompt(null);
+    }
+  }, [slug, prompts, loading]);
 
   useEffect(() => {
     const q = query(collection(db, 'prompts'), orderBy('createdAt', 'desc'));
@@ -133,7 +148,7 @@ export default function Prompts() {
                  viewport={{ once: true }}
                  key={prompt.id} 
                  className="bg-slate-900/60 backdrop-blur-md border border-slate-800 rounded-3xl overflow-hidden hover:border-slate-700 hover:shadow-2xl hover:shadow-red-500/10 transition-all duration-300 flex flex-col cursor-pointer"
-                 onClick={() => setSelectedPrompt(prompt)}
+                 onClick={() => navigate(`/prompts/${generateSlug(prompt.title)}`)}
                >
                  <div className="relative aspect-video overflow-hidden bg-slate-950">
                     {prompt.imageUrl ? (
@@ -154,12 +169,19 @@ export default function Prompts() {
                     <h3 className="text-xl font-bold text-white mb-2 line-clamp-1">{prompt.title}</h3>
                     {prompt.shortDesc && <p className="text-sm text-slate-400 mb-4 line-clamp-2 md:line-clamp-3">{prompt.shortDesc}</p>}
                     
+                    <div className="flex flex-wrap gap-1.5 mb-4">
+                       <span className="bg-red-500/10 text-red-400 border border-red-500/20 text-[10px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1">🔥 Viral</span>
+                       <span className="bg-green-500/10 text-green-400 border border-green-500/20 text-[10px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1">💰 High RPM</span>
+                       <span className="bg-blue-500/10 text-blue-400 border border-blue-500/20 text-[10px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1">🎯 Low Comp</span>
+                       <span className="bg-purple-500/10 text-purple-400 border border-purple-500/20 text-[10px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1">🎬 Faceless</span>
+                    </div>
+
                     <div className="mt-auto flex flex-col gap-2">
-                       <button onClick={(e) => { e.stopPropagation(); setSelectedPrompt(prompt); }} className="w-full bg-slate-800 hover:bg-slate-700 text-white font-bold py-2.5 rounded-xl transition-all flex items-center justify-center gap-2 text-sm z-10 relative shadow-sm">
+                       <button onClick={(e) => { e.stopPropagation(); navigate(`/prompts/${generateSlug(prompt.title)}`); }} className="w-full bg-slate-800 hover:bg-slate-700 text-white font-bold py-2.5 rounded-xl transition-all flex items-center justify-center gap-2 text-sm z-10 relative shadow-sm">
                           <Eye size={16} /> View Prompt
                        </button>
                        {prompt.videoLink && (
-                          <button onClick={(e) => { e.stopPropagation(); setSelectedPrompt(prompt); }} className="w-full bg-red-600 hover:bg-red-500 text-white font-bold py-2.5 rounded-xl transition-all shadow-[0_0_15px_rgba(220,38,38,0.4)] hover:shadow-[0_0_20px_rgba(220,38,38,0.6)] active:scale-95 flex items-center justify-center gap-2 text-sm z-10 relative">
+                          <button onClick={(e) => { e.stopPropagation(); navigate(`/prompts/${generateSlug(prompt.title)}`); }} className="w-full bg-red-600 hover:bg-red-500 text-white font-bold py-2.5 rounded-xl transition-all shadow-[0_0_15px_rgba(220,38,38,0.4)] hover:shadow-[0_0_20px_rgba(220,38,38,0.6)] active:scale-95 flex items-center justify-center gap-2 text-sm z-10 relative">
                              <PlayCircle size={16} /> Watch Tutorial
                           </button>
                        )}
@@ -185,14 +207,14 @@ export default function Prompts() {
             <motion.div 
                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                className="fixed inset-0 bg-slate-950/90 backdrop-blur-xl z-[150] flex items-center justify-center p-4 sm:p-6 overflow-y-auto minimal-scrollbar"
-               onClick={() => setSelectedPrompt(null)}
+               onClick={() => navigate('/prompts')}
             >
                <motion.div 
                   initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 20 }}
                   onClick={e => e.stopPropagation()}
                   className="bg-slate-900 border border-slate-800 rounded-[2rem] w-full max-w-4xl shadow-2xl overflow-hidden relative flex flex-col max-h-[90vh]"
                >
-                  <button onClick={() => setSelectedPrompt(null)} className="absolute top-4 right-4 z-10 w-10 h-10 bg-black/50 backdrop-blur-md hover:bg-black/80 text-white rounded-full flex items-center justify-center transition-colors">
+                  <button onClick={() => navigate('/prompts')} className="absolute top-4 right-4 z-10 w-10 h-10 bg-black/50 backdrop-blur-md hover:bg-black/80 text-white rounded-full flex items-center justify-center transition-colors">
                      <X size={20} />
                   </button>
 
@@ -217,16 +239,30 @@ export default function Prompts() {
                         <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-white mb-4 tracking-tight">{selectedPrompt.title}</h2>
                         {selectedPrompt.shortDesc && <p className="text-lg text-slate-300 mb-8 leading-relaxed max-w-3xl">{selectedPrompt.shortDesc}</p>}
                         
+                        <div className="flex flex-wrap gap-2 mb-8">
+                           {['High RPM Potential', 'Low Competition', 'Beginner Friendly', 'Evergreen Niche', 'AI Automation Friendly', 'High Viral Potential', 'Monetization Ready', 'Trending Opportunity'].map((badge, i) => (
+                             <span key={i} className="bg-slate-800 text-slate-300 px-3 py-1.5 rounded-lg text-sm font-medium border border-slate-700 flex items-center gap-1.5">
+                               <CheckCircle size={14} className="text-green-500" /> {badge}
+                             </span>
+                           ))}
+                        </div>
+
                         <div className="grid sm:grid-cols-2 gap-4">
-                           {selectedPrompt.promptLink && (
-                              <a href={selectedPrompt.promptLink} target="_blank" rel="noopener noreferrer" className="w-full bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white font-bold py-4 px-6 rounded-2xl transition-all shadow-md active:scale-95 flex items-center justify-center gap-2">
-                                 <ExternalLink size={20} /> Open Prompt
-                              </a>
+                           {selectedPrompt.promptLink ? (
+                              <>
+                                 <a href={selectedPrompt.promptLink} target="_blank" rel="noopener noreferrer" className="w-full bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white font-bold py-4 px-6 rounded-2xl transition-all shadow-md active:scale-95 flex items-center justify-center gap-2">
+                                    <ExternalLink size={20} /> Open Prompt
+                                 </a>
+                                 <button onClick={(e) => handleCopy(selectedPrompt.id, selectedPrompt.promptLink || '', e)} className="w-full bg-red-600 hover:bg-red-500 text-white font-bold py-4 px-6 rounded-2xl transition-all shadow-lg shadow-red-500/20 active:scale-95 flex items-center justify-center gap-2">
+                                    {copiedId === selectedPrompt.id ? <CheckCircle size={20} /> : <Copy size={20} />}
+                                    {copiedId === selectedPrompt.id ? 'Copied Successfully!' : 'Copy Prompt Link'}
+                                 </button>
+                              </>
+                           ) : (
+                              <div className="sm:col-span-2 bg-slate-800/50 border border-slate-700 rounded-2xl p-6 text-center">
+                                 <p className="text-slate-300 font-bold text-lg">Check Video Description For Prompt</p>
+                              </div>
                            )}
-                           <button onClick={(e) => handleCopy(selectedPrompt.id, selectedPrompt.promptLink || '', e)} className="w-full bg-red-600 hover:bg-red-500 text-white font-bold py-4 px-6 rounded-2xl transition-all shadow-lg shadow-red-500/20 active:scale-95 flex items-center justify-center gap-2">
-                              {copiedId === selectedPrompt.id ? <CheckCircle size={20} /> : <Copy size={20} />}
-                              {copiedId === selectedPrompt.id ? 'Copied Successfully!' : 'Copy Prompt'}
-                           </button>
                         </div>
                      </div>
                   </div>

@@ -1,3 +1,4 @@
+import { apiFetch } from '../lib/api';
 import React, { useState, useEffect } from 'react';
 import { db } from '../lib/firebase';
 import { collection, query, getDocs, addDoc, serverTimestamp } from 'firebase/firestore';
@@ -64,19 +65,18 @@ export default function Refund() {
         timestamp: serverTimestamp()
       });
       
-      const { getRefundEmailTemplate } = await import('../lib/emailTemplate');
-      const emailHtmlBody = getRefundEmailTemplate({
-        customerName: formData.fullName,
-        itemName: selectedProduct.name,
-        totalPrice: selectedProduct.price || 0,
-        status: 'UNDER REVIEW',
-        refundMethod: formData.receiveMethod,
-        accountNumber: formData.accountNumber,
-        accountTitle: formData.accountName
-      });
+      const { getRefundRequestedEmail } = await import('../lib/emailTemplate');
+      const emailHtmlBody = getRefundRequestedEmail(
+        formData.fullName,
+        selectedProduct.name,
+        selectedProduct.price || 0,
+        formData.receiveMethod,
+        formData.accountNumber,
+        formData.accountName
+      );
 
       // Send to Customer
-      fetch('/api/send-email', {
+      apiFetch('/api/send-email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -87,7 +87,7 @@ export default function Refund() {
       }).catch(err => console.error("Failed to send refund email", err));
 
       // Send to Admin
-      fetch('/api/send-email', {
+      apiFetch('/api/send-email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

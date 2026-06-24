@@ -83,13 +83,15 @@ export default function PromptManager() {
     let videoId = extractYouTubeId(data.videoLink);
     
     if (!finalImageUrl && videoId) {
-       finalImageUrl = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+       finalImageUrl = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
     }
+
+    const defaultDesc = "Create highly engaging AI-generated videos using this proven workflow.\n\n🔥 High RPM niche\n🎯 Low competition market\n🚀 Strong viral potential\n💰 Monetization friendly\n📈 Growing audience demand\n\nPerfect for YouTube automation creators looking to scale faster.";
 
     return {
        title: data.title || 'Untitled Prompt',
-       shortDesc: data.shortDesc || '',
-       promptLink: data.promptLink,
+       shortDesc: data.shortDesc || defaultDesc,
+       promptLink: data.promptLink || '',
        videoLink: data.videoLink || '',
        videoId: videoId || '',
        imageUrl: finalImageUrl || '',
@@ -100,8 +102,8 @@ export default function PromptManager() {
     e.preventDefault();
     setMessage({ type: '', text: '' });
     
-    if (!formData.promptLink) {
-       setMessage({ type: 'error', text: 'Prompt Link is required' });
+    if (!formData.videoLink) {
+       setMessage({ type: 'error', text: 'Video Link is required' });
        return;
     }
 
@@ -144,19 +146,21 @@ export default function PromptManager() {
        for (let i = 0; i < lines.length; i++) {
           const line = lines[i].trim();
           
-          if (line.toLowerCase().startsWith('title:')) {
-             if (currentPrompt.promptLink) { // Save previous if complete
+          if (line.match(/^\d+\.$/) || line.toLowerCase().startsWith('title:')) {
+             if (currentPrompt.videoLink) {
+                if (!currentPrompt.title) currentPrompt.title = `Prompt ${promptsToAdd.length + 1}`;
                 promptsToAdd.push(processPromptData({ ...formData, ...currentPrompt }));
                 currentPrompt = {};
              }
-             currentPrompt.title = line.substring(6).trim();
+             if (line.toLowerCase().startsWith('title:')) {
+                currentPrompt.title = line.substring(6).trim();
+             }
           } else if (line.toLowerCase().startsWith('video:')) {
              currentPrompt.videoLink = line.substring(6).trim();
           } else if (line.toLowerCase().startsWith('prompt:')) {
              currentPrompt.promptLink = line.substring(7).trim();
           } else if (line.toLowerCase().match(/^🔥 \d+\./)) {
-             // Handling the title format from user string eg: "🔥 1. ASMR Jungle Survival Videos"
-             if (currentPrompt.promptLink) {
+             if (currentPrompt.videoLink) {
                 promptsToAdd.push(processPromptData({ ...formData, ...currentPrompt }));
                 currentPrompt = {};
              }
@@ -164,8 +168,8 @@ export default function PromptManager() {
           }
        }
        
-       if (currentPrompt.promptLink || currentPrompt.videoLink) {
-          if (!currentPrompt.title && currentPrompt.videoLink) currentPrompt.title = 'Special Video Prompt';
+       if (currentPrompt.videoLink) {
+          if (!currentPrompt.title) currentPrompt.title = `Prompt ${promptsToAdd.length + 1}`;
           promptsToAdd.push(processPromptData({ ...formData, ...currentPrompt }));
        }
 

@@ -4,11 +4,14 @@ import { collection, getDocs, query, where } from 'firebase/firestore';
 import { motion, AnimatePresence } from 'motion/react';
 import { BookOpen, AlertCircle, Play, CheckCircle, Lock } from 'lucide-react';
 import { useAuth } from '../components/AuthProvider';
+import { useParams, useNavigate } from 'react-router-dom';
 import PaymentModal from '../components/PaymentModal';
 import ProductReviews from '../components/ProductReviews';
 import Markdown from 'react-markdown';
 
 export default function Courses() {
+  const { slug } = useParams();
+  const navigate = useNavigate();
   const [courses, setCourses] = useState<any[]>([]);
   const [enrollments, setEnrollments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -19,6 +22,20 @@ export default function Courses() {
   
   const [playingCourse, setPlayingCourse] = useState<any | null>(null);
   const [activeLessonIndex, setActiveLessonIndex] = useState(0);
+
+  const generateSlug = (name: string) => (name || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+
+  useEffect(() => {
+    if (!loading && courses.length > 0 && slug) {
+      const c = courses.find(c => generateSlug(c.name) === slug);
+      if (c && !playingCourse) {
+        setViewingCourse(c);
+      }
+    } else if (!slug) {
+      setViewingCourse(null);
+      setPlayingCourse(null);
+    }
+  }, [slug, courses, loading, playingCourse]);
 
   useEffect(() => {
     const fetchCourses = async () => {
@@ -194,7 +211,7 @@ export default function Courses() {
                     <div className="flex items-center justify-between mt-auto">
                       <div className="font-black text-xl text-white">PKR {(course.price || 3000).toLocaleString()}</div>
                       <button 
-                        onClick={() => setViewingCourse(course)}
+                        onClick={() => navigate(`/courses/${generateSlug(course.name)}`)}
                         className={`px-5 py-2.5 rounded-xl transition-all shadow-lg font-bold flex items-center gap-2 ${
                           isEnrolled ? 'bg-green-600 hover:bg-green-500 text-white shadow-green-500/20' :
                           isPending ? 'bg-yellow-600 text-white shadow-yellow-500/20' :
@@ -212,7 +229,7 @@ export default function Courses() {
         </>
       ) : (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-4xl mx-auto">
-          <button onClick={() => setViewingCourse(null)} className="text-slate-400 hover:text-white mb-6 font-bold uppercase text-sm tracking-wider flex items-center gap-2 transition-colors">
+          <button onClick={() => navigate('/courses')} className="text-slate-400 hover:text-white mb-6 font-bold uppercase text-sm tracking-wider flex items-center gap-2 transition-colors">
             &larr; Back to Courses
           </button>
           

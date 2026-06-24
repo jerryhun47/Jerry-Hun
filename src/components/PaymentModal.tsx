@@ -1,3 +1,4 @@
+import { apiFetch } from '../lib/api';
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Upload, CheckCircle, AlertCircle } from 'lucide-react';
@@ -219,19 +220,15 @@ export default function PaymentModal({ item, type, onClose }: { item: any, type:
         console.error("Error fetching product credentials", e);
       }
       
-      const { getEmailTemplate } = await import('../lib/emailTemplate');
-      const emailHtmlBody = getEmailTemplate({
-        customerName: user?.displayName || 'User',
-        customerWhatsapp: userPhone,
-        orderItems: item.title || item.name,
-        totalPrice: item.price || 3000,
-        status: 'PENDING',
-        productGmail: prodGmail,
-        productPassword: prodPassword
-      });
+      const { getOrderReceivedEmail } = await import('../lib/emailTemplate');
+      const emailHtmlBody = getOrderReceivedEmail(
+        user?.displayName || 'User',
+        item.title || item.name,
+        item.price || 3000
+      );
 
       // Send to Admin
-      fetch('/api/send-email', {
+      apiFetch('/api/send-email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -242,7 +239,7 @@ export default function PaymentModal({ item, type, onClose }: { item: any, type:
       }).catch(e => console.error("Failed to notify admin via email", e));
 
       // Send to Customer
-      fetch('/api/send-email', {
+      apiFetch('/api/send-email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

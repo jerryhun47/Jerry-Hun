@@ -19,6 +19,7 @@ import Dashboard from './pages/admin/Dashboard';
 import { useVisitorTracking } from './lib/useVisitorTracking';
 
 import { useLocation } from 'react-router-dom';
+import AutoImporter from './components/AutoImporter';
 
 function GlobalTracker() {
   const location = useLocation();
@@ -37,16 +38,21 @@ export default function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
+        <AutoImporter />
         <GlobalTracker />
         <Routes>
           <Route path="/" element={<Layout />}>
             <Route index element={<Home />} />
             <Route path="tools" element={<ToolsStore />} />
+            <Route path="tools/:slug" element={<ToolsStore />} />
             <Route path="courses" element={<Courses />} />
+            <Route path="courses/:slug" element={<Courses />} />
             <Route path="prompts" element={<Prompts />} />
+            <Route path="prompts/:slug" element={<Prompts />} />
             <Route path="refund" element={<Refund />} />
             <Route path="privacy-policy" element={<PrivacyPolicy />} />
             <Route path="terms-conditions" element={<TermsConditions />} />
+            <Route path="*" element={<Home />} />
           </Route>
           <Route path="/admin/login" element={<Login />} />
           <Route path="/admin" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />

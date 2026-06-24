@@ -1,3 +1,4 @@
+import { apiFetch } from '../lib/api';
 import React, { useState, useEffect } from 'react';
 import { collection, onSnapshot, addDoc, updateDoc, doc, deleteDoc, query, orderBy } from 'firebase/firestore';
 import { db } from '../lib/firebase';
@@ -367,7 +368,7 @@ export function AISettingsManager() {
   const [status, setStatus] = useState('');
 
   useEffect(() => {
-    fetch('/api/ai-config').then(res => res.json()).then(data => {
+    apiFetch('/api/ai-config').then(res => res.json()).then(data => {
        if (data.keyPreview) setKeyPreview(data.keyPreview);
        if (data.enabled !== undefined) setAiEnabled(data.enabled);
     }).catch(console.error);
@@ -376,7 +377,7 @@ export function AISettingsManager() {
   const saveConfig = async () => {
     setStatus('Saving...');
     try {
-      const res = await fetch('/api/ai-config', {
+      const res = await apiFetch('/api/ai-config', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ key: apiKey, enabled: aiEnabled })
@@ -435,7 +436,7 @@ export function AISettingsManager() {
              if (!apiKey) return alert('Please enter an API key to test.');
              setStatus('Testing...');
              try {
-               const res = await fetch('/api/test-ai-key', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ key: apiKey }) });
+               const res = await apiFetch('/api/test-ai-key', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ key: apiKey }) });
                const data = await res.json();
                if (data.valid) setStatus('✅ Working');
                else setStatus('❌ Invalid: ' + (data.error || 'Check key'));

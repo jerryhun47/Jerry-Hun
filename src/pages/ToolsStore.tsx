@@ -1,3 +1,4 @@
+import { apiFetch } from '../lib/api';
 import React, { useState, useEffect } from 'react';
 import { db, auth } from '../lib/firebase';
 import { collection, getDocs, addDoc, serverTimestamp, query, onSnapshot, doc, getDoc } from 'firebase/firestore';
@@ -5,6 +6,7 @@ import { ShoppingCart, Search, Lock, CheckCircle, X, Upload } from 'lucide-react
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '../components/AuthProvider';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 
 import { checkAndBanIfSpamming } from '../lib/blocker';
 import ProductReviews from '../components/ProductReviews';
@@ -23,12 +25,29 @@ interface Product {
 }
 
 export default function ToolsStore() {
+  const { slug } = useParams();
+  const navigate = useNavigate();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [showCheckout, setShowCheckout] = useState(false);
+
+  const generateSlug = (name: string) => (name || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+
+  useEffect(() => {
+    if (!loading && products.length > 0 && slug) {
+      const p = products.find(p => generateSlug(p.name) === slug);
+      if (p) {
+        setSelectedProduct(p);
+        setShowCheckout(true);
+      }
+    } else if (!slug) {
+      setSelectedProduct(null);
+      setShowCheckout(false);
+    }
+  }, [slug, products, loading]);
 
   useEffect(() => {
     let unsubscribe: any = null;
@@ -177,7 +196,7 @@ export default function ToolsStore() {
                         <p className="text-slate-300 text-sm mb-6 flex-1 line-clamp-3">{product.description}</p>
                         <div className="flex items-center justify-between mt-auto border-t border-slate-700 pt-4">
                           <div className="font-black text-2xl text-white">PKR {product.price.toLocaleString()}</div>
-                          <button onClick={() => { setSelectedProduct(product); setShowCheckout(true); }} className="bg-red-600 hover:bg-red-500 cursor-pointer text-white px-6 py-2 rounded-xl transition-all shadow-lg shadow-red-500/20 active:scale-95 font-bold">
+                          <button onClick={() => { navigate(`/tools/${generateSlug(product.name)}`); }} className="bg-red-600 hover:bg-red-500 cursor-pointer text-white px-6 py-2 rounded-xl transition-all shadow-lg shadow-red-500/20 active:scale-95 font-bold">
                              Buy Now
                           </button>
                         </div>
@@ -203,7 +222,7 @@ export default function ToolsStore() {
 
       <AnimatePresence>
         {showCheckout && selectedProduct && (
-          <CheckoutModal product={selectedProduct} onClose={() => { setShowCheckout(false); setSelectedProduct(null); }} />
+          <CheckoutModal product={selectedProduct} onClose={() => { navigate('/tools'); }} />
         )}
       </AnimatePresence>
     </div>
@@ -394,19 +413,15 @@ function CheckoutModal({ product, onClose }: any) {
          console.error("Error fetching product credentials", e);
        }
  
-       const { getEmailTemplate } = await import('../lib/emailTemplate');
-       const emailHtmlBody = getEmailTemplate({
-         customerName: name,
-         customerWhatsapp: phone,
-         orderItems: `${product.name} (${selectedPlan} plan)`,
-         totalPrice: selectedPrice,
-         status: 'PENDING',
-         productGmail: prodGmail,
-         productPassword: prodPassword
-       });
+       const { getOrderReceivedEmail } = await import('../lib/emailTemplate');
+       const emailHtmlBody = getOrderReceivedEmail(
+         name,
+         `${product.name} (${selectedPlan} plan)`,
+         selectedPrice
+       );
 
       // Send to Admin
-      fetch('/api/send-email', {
+      apiFetch('/api/send-email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -417,7 +432,7 @@ function CheckoutModal({ product, onClose }: any) {
       }).catch(e => console.error("Failed to notify admin via email", e));
 
       // Send to Customer
-      fetch('/api/send-email', {
+      apiFetch('/api/send-email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

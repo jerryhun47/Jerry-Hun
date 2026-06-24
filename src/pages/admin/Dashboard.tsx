@@ -1,3 +1,4 @@
+import { apiFetch } from '../../lib/api';
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { db, auth, signOut } from '../../lib/firebase';
@@ -37,37 +38,37 @@ export default function Dashboard() {
       const pData = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       setProducts(pData);
       setStats(s => ({ ...s, products: pData.length }));
-    }));
+    }, (err) => console.error(err)));
 
     // Realtime Orders
     unsubs.push(onSnapshot(query(collection(db, 'orders'), orderBy('createdAt', 'desc')), (snap) => {
       const oData = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       setOrders(oData);
       setStats(s => ({ ...s, orders: oData.length, revenue: oData.reduce((acc: number, curr: any) => acc + (curr.total_price || 0), 0) }));
-    }));
+    }, (err) => console.error(err)));
 
     // Realtime Contacts
     unsubs.push(onSnapshot(query(collection(db, 'contacts'), orderBy('createdAt', 'desc')), (snap) => {
       const cData = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       setContacts(cData);
       setStats(s => ({ ...s, messages: cData.filter((c:any) => !c.is_read).length }));
-    }));
+    }, (err) => console.error(err)));
 
     // Realtime Transactions
     unsubs.push(onSnapshot(query(collection(db, 'transactions'), orderBy('createdAt', 'desc')), (snap) => {
       const tData = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       setTransactions(tData);
-    }));
+    }, (err) => console.error(err)));
 
     // Realtime Refunds
     unsubs.push(onSnapshot(collection(db, 'refunds'), (snap) => {
       setRefunds(snap.docs.map(d => ({ id: d.id, ...d.data() })));
-    }));
+    }, (err) => console.error(err)));
 
     // Realtime Users
     unsubs.push(onSnapshot(collection(db, 'users'), (snap) => {
       setUsersList(snap.docs.map(d => ({ id: d.id, ...d.data() })));
-    }));
+    }, (err) => console.error(err)));
 
     return () => unsubs.forEach(u => u());
   }, []);
@@ -565,19 +566,17 @@ function OrdersManager({ orders, refresh, viewProof, setViewProof }: { orders: a
              console.error("Error fetching dynamic credentials", err);
           }
 
-          const { getEmailTemplate } = await import('../../lib/emailTemplate');
-          const emailHtmlBody = getEmailTemplate({
-            customerName: order.customer_name || 'Customer',
-            customerWhatsapp: order.customer_phone,
-            orderItems: order.products?.[0]?.name || 'Item',
-            totalPrice: order.total_price || 0,
-            status: 'CONFIRMED',
-            productGmail: prodGmail,
-            productPassword: prodPassword
-          });
+          const { getOrderConfirmedEmail } = await import('../../lib/emailTemplate');
+          const emailHtmlBody = getOrderConfirmedEmail(
+            order.customer_name || 'Customer',
+            order.products?.[0]?.name || 'Item',
+            order.total_price || 0,
+            prodGmail,
+            prodPassword
+          );
 
           // Send to Customer
-          await fetch('/api/send-email', {
+          await apiFetch('/api/send-email', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -588,7 +587,7 @@ function OrdersManager({ orders, refresh, viewProof, setViewProof }: { orders: a
           });
 
           // Send to Admin
-          await fetch('/api/send-email', {
+          await apiFetch('/api/send-email', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -948,18 +947,17 @@ function TransactionsManager({ transactions, refresh, viewProof, setViewProof }:
              console.error("Error fetching dynamic credentials", err);
           }
 
-          const { getEmailTemplate } = await import('../../lib/emailTemplate');
-          const emailHtmlBody = getEmailTemplate({
-            customerName: transaction.userName || 'Customer',
-            orderItems: transaction.itemTitle || transaction.itemType || 'Item',
-            totalPrice: transaction.price || 0,
-            status: 'CONFIRMED',
-            productGmail: prodGmail,
-            productPassword: prodPassword
-          });
+          const { getOrderConfirmedEmail } = await import('../../lib/emailTemplate');
+          const emailHtmlBody = getOrderConfirmedEmail(
+            transaction.userName || 'Customer',
+            transaction.itemTitle || transaction.itemType || 'Item',
+            transaction.price || 0,
+            prodGmail,
+            prodPassword
+          );
 
           // Send to Customer
-          await fetch('/api/send-email', {
+          await apiFetch('/api/send-email', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -970,7 +968,7 @@ function TransactionsManager({ transactions, refresh, viewProof, setViewProof }:
           });
 
           // Send to Admin
-          await fetch('/api/send-email', {
+          await apiFetch('/api/send-email', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -2293,19 +2291,19 @@ function RefundsManager() {
 
       if (emailConfig && refund.email) {
         try {
-          const { getRefundEmailTemplate } = await import('../../lib/emailTemplate');
-          const userHtmlBody = getRefundEmailTemplate({
-            customerName: refund.fullName || refund.name || 'Customer',
-            itemName: refund.productName || 'Item',
-            totalPrice: refund.amount || 0,
-            status: emailConfig.action_status,
-            rejectRemarks: emailConfig.reject_remarks,
-            refundMethod: refund.receiveMethod,
-            accountNumber: refund.accountNumber,
-            accountTitle: refund.name
-          });
+          const { getRefundProcessedEmail } = await import('../../lib/emailTemplate');
+          const userHtmlBody = getRefundProcessedEmail(
+            refund.fullName || refund.name || 'Customer',
+            refund.productName || 'Item',
+            refund.amount || 0,
+            emailConfig.action_status,
+            refund.receiveMethod || '',
+            refund.accountNumber || '',
+            refund.name || '',
+            emailConfig.reject_remarks
+          );
 
-          await fetch('/api/send-email', {
+          await apiFetch('/api/send-email', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
