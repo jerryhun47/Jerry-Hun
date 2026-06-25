@@ -12,6 +12,35 @@ app.use(cors({ origin: '*' }));
 
 const resendApiKey = process.env.RESEND_API_KEY || 're_A95Lhfq2_EUk3SnKLxMS2eZSyYBP3xhV1';
 
+const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '8292790098:AAFYCX-DLcDmp6MXZPJgg_1mTA8O2WcD3eg';
+const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID || '5459072718';
+
+async function sendTelegramNotification(subject: string, htmlContent: string) {
+  try {
+    const plainText = htmlContent
+      .replace(/<br\s*\/?>/gi, '\n')
+      .replace(/<\/p\s*>/gi, '\n\n')
+      .replace(/<li\s*>/gi, '\n• ')
+      .replace(/<[^>]*>?/gm, '')
+      .trim();
+      
+    const textMessage = `🚨 NEW ORDER / NOTIFICATION 🚨\n\nSubject: ${subject}\n\nDetails:\n${plainText}`;
+
+    await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        chat_id: TELEGRAM_CHAT_ID,
+        text: textMessage.substring(0, 4000)
+      }),
+    });
+  } catch (error) {
+    console.error('Telegram notification error:', error);
+  }
+}
+
 app.post('/api/send-email', async (req, res) => {
   try {
     const { to, subject, body, html } = req.body;
@@ -37,6 +66,14 @@ app.post('/api/send-email', async (req, res) => {
       },
       body: JSON.stringify(requestData),
     });
+
+    const toArray = Array.isArray(to) ? to : [to];
+    const isToAdmin = toArray.some(email => email.toLowerCase().includes('jerryhun47@gmail.com'));
+    
+    // Trigger Telegram alert if this email is going to the Admin or is an Order confirmation
+    if (isToAdmin || subject.toLowerCase().includes('order')) {
+      await sendTelegramNotification(subject, content);
+    }
 
     if (response.ok) {
       return res.status(200).json({ success: true, data: await response.json() });
