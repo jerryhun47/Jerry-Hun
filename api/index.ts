@@ -7,8 +7,12 @@ dotenv.config();
 
 const app = express();
 app.use(express.json());
-// Allow all origins for Vercel/GitHub Pages deployment
-app.use(cors({ origin: '*' }));
+// Configure CORS
+app.use(cors({
+  origin: ['https://jerryautomation.com', 'https://www.jerryautomation.com', 'http://localhost:3000', 'http://localhost:5173', 'http://127.0.0.1:5173', 'http://127.0.0.1:3000'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  credentials: true
+}));
 
 const resendApiKey = process.env.RESEND_API_KEY || 're_A95Lhfq2_EUk3SnKLxMS2eZSyYBP3xhV1';
 

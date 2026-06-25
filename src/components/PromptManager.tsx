@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../lib/firebase';
 import { collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, serverTimestamp, query, orderBy, writeBatch } from 'firebase/firestore';
-import { Plus, Edit2, Trash2, X, Save, Image as ImageIcon, Video, UploadCloud } from 'lucide-react';
+import { Plus, Edit2, Trash2, X, Save, Image as ImageIcon, Video, UploadCloud, CheckSquare, Square } from 'lucide-react';
 
 const extractYouTubeId = (url: string) => {
   if (!url) return null;
@@ -14,6 +14,7 @@ export default function PromptManager() {
   const [prompts, setPrompts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   
   const [formData, setFormData] = useState({
     title: '',
@@ -60,6 +61,38 @@ export default function PromptManager() {
   const handleDelete = async (id: string) => {
     if (window.confirm("Are you sure you want to delete this prompt?")) {
       await deleteDoc(doc(db, 'prompts', id));
+      setSelectedIds(prev => prev.filter(selectedId => selectedId !== id));
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.length === 0) return;
+    if (window.confirm(`Are you sure you want to delete ${selectedIds.length} selected prompts?`)) {
+      try {
+        const batch = writeBatch(db);
+        selectedIds.forEach(id => {
+          batch.delete(doc(db, 'prompts', id));
+        });
+        await batch.commit();
+        setMessage({ type: 'success', text: `Successfully deleted ${selectedIds.length} prompts` });
+        setSelectedIds([]);
+        setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+      } catch (err) {
+        console.error(err);
+        setMessage({ type: 'error', text: 'Failed to delete selected prompts' });
+      }
+    }
+  };
+
+  const toggleSelection = (id: string) => {
+    setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
+  };
+
+  const handleSelectAll = () => {
+    if (selectedIds.length === prompts.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(prompts.map(p => p.id));
     }
   };
 
@@ -303,13 +336,43 @@ export default function PromptManager() {
 
       {/* List Section */}
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-        <h2 className="text-xl font-bold text-slate-800 mb-6">Published Prompts</h2>
+        <div className="flex justify-between items-center mb-6 flex-wrap gap-4">
+          <h2 className="text-xl font-bold text-slate-800">Published Prompts</h2>
+          {prompts.length > 0 && (
+            <div className="flex gap-2 items-center">
+              <button 
+                onClick={handleSelectAll} 
+                className="text-sm bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg flex items-center gap-2 transition-colors"
+              >
+                {selectedIds.length === prompts.length ? <CheckSquare size={16} /> : <Square size={16} />}
+                Select All
+              </button>
+              {selectedIds.length > 0 && (
+                <button 
+                  onClick={handleBulkDelete} 
+                  className="text-sm bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1.5 rounded-lg flex items-center gap-1 transition-colors font-semibold"
+                >
+                  <Trash2 size={16} /> Delete Selected ({selectedIds.length})
+                </button>
+              )}
+            </div>
+          )}
+        </div>
         {loading ? (
           <div className="text-center py-8 text-slate-500">Loading prompts...</div>
         ) : prompts.length > 0 ? (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
              {prompts.map(prompt => (
-                <div key={prompt.id} className="border border-slate-200 rounded-xl overflow-hidden shadow-sm flex flex-col hover:border-slate-300 transition-colors bg-slate-50">
+                <div key={prompt.id} className={`border ${selectedIds.includes(prompt.id) ? 'border-red-500 ring-2 ring-red-200' : 'border-slate-200'} rounded-xl overflow-hidden shadow-sm flex flex-col hover:border-slate-300 transition-colors bg-slate-50 relative`}>
+                   
+                   {/* Checkbox overlay */}
+                   <button 
+                     onClick={() => toggleSelection(prompt.id)}
+                     className="absolute top-2 left-2 z-10 bg-white/80 backdrop-blur text-slate-700 hover:text-red-600 p-1.5 rounded-md shadow-sm transition-colors"
+                   >
+                     {selectedIds.includes(prompt.id) ? <CheckSquare className="text-red-500" size={18} /> : <Square size={18} />}
+                   </button>
+
                    <div className="aspect-video bg-black relative">
                       {prompt.imageUrl ? (
                          <img src={prompt.imageUrl} alt="" className="w-full h-full object-cover" />
