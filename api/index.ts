@@ -41,8 +41,9 @@ async function sendTelegramNotification(subject: string, htmlContent: string) {
   }
 }
 
-app.post('/api/send-email', async (req, res) => {
+app.post(['/api/send-email', '/send-email'], async (req, res) => {
   try {
+    console.log("[/api/send-email] Request received on path:", req.path, "body:", req.body);
     const { to, subject, body, html } = req.body;
     
     const content = html || body;
@@ -70,7 +71,6 @@ app.post('/api/send-email', async (req, res) => {
     const toArray = Array.isArray(to) ? to : [to];
     const isToAdmin = toArray.some(email => email.toLowerCase().includes('jerryhun47@gmail.com'));
     
-    // Trigger Telegram alert if this email is going to the Admin or is an Order confirmation
     if (isToAdmin || subject.toLowerCase().includes('order')) {
       await sendTelegramNotification(subject, content);
     }
@@ -92,7 +92,7 @@ import path from "path";
 
 const CONFIG_PATH = process.env.VERCEL ? '/tmp/ai-config.json' : path.join(process.cwd(), 'ai-config.json');
 
-app.get('/api/ai-config', (req, res) => {
+app.get(['/api/ai-config', '/ai-config'], (req, res) => {
   try {
     if (fs.existsSync(CONFIG_PATH)) {
       const config = JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf8'));
@@ -105,7 +105,7 @@ app.get('/api/ai-config', (req, res) => {
   }
 });
 
-app.post('/api/ai-config', (req, res) => {
+app.post(['/api/ai-config', '/ai-config'], (req, res) => {
   try {
     const { key, enabled } = req.body;
     let config = { enabled, key: '' };
@@ -121,7 +121,7 @@ app.post('/api/ai-config', (req, res) => {
   }
 });
 
-app.post('/api/test-ai-key', async (req, res) => {
+app.post(['/api/test-ai-key', '/test-ai-key'], async (req, res) => {
   try {
     const { key } = req.body;
     if (!key) return res.status(400).json({ valid: false });
@@ -137,7 +137,7 @@ app.post('/api/test-ai-key', async (req, res) => {
   }
 });
 
-app.post('/api/chat', async (req, res) => {
+app.post(['/api/chat', '/chat'], async (req, res) => {
   try {
     const { GoogleGenAI } = await import('@google/genai');
     let apiKey = process.env.GEMINI_API_KEY;
@@ -183,8 +183,13 @@ app.post('/api/chat', async (req, res) => {
   }
 });
 
-app.get('/api/health', (req, res) => {
+app.get(['/api/health', '/health'], (req, res) => {
   res.json({ status: 'ok', message: 'API is running' });
+});
+
+app.use((req, res) => {
+  console.log(`[Catch-All] Unhandled request: ${req.method} ${req.path} originalUrl: ${req.originalUrl}`);
+  res.status(404).json({ error: 'Not Found', path: req.path });
 });
 
 // For Vercel Serverless Function, export the app instead of app.listen()
