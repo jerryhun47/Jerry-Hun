@@ -248,6 +248,17 @@ function CheckoutModal({ product, onClose }: any) {
   const [whatsappNumber, setWhatsappNumber] = useState('');
 
   useEffect(() => {
+    if (typeof window !== 'undefined' && (window as any).fbq) {
+      (window as any).fbq('track', 'ViewContent', {
+        content_name: product.name,
+        content_type: 'product',
+        value: product.price,
+        currency: 'PKR'
+      });
+    }
+  }, [product]);
+
+  useEffect(() => {
     const fetchMethods = async () => {
       try {
         const snap = await getDocs(collection(db, 'payment_methods'));
@@ -441,6 +452,16 @@ function CheckoutModal({ product, onClose }: any) {
           body: emailHtmlBody
         })
       }).catch(err => console.error("Failed to send order confirmation", err));
+
+      if (typeof window !== 'undefined' && (window as any).fbq) {
+        (window as any).fbq('track', 'Purchase', {
+          content_name: product.name,
+          content_type: 'product',
+          value: selectedPrice,
+          currency: 'PKR',
+          num_items: 1
+        });
+      }
  
        setStatus('success');
     } catch (err) {
@@ -536,7 +557,17 @@ function CheckoutModal({ product, onClose }: any) {
               </div>
 
               <button 
-                onClick={() => setStep('checkout')}
+                onClick={() => {
+                  if (typeof window !== 'undefined' && (window as any).fbq) {
+                    (window as any).fbq('track', 'AddToCart', {
+                      content_name: product.name,
+                      content_type: 'product',
+                      value: selectedPrice,
+                      currency: 'PKR'
+                    });
+                  }
+                  setStep('checkout');
+                }}
                 className="w-full bg-red-600 hover:bg-red-500 text-white font-bold py-4 rounded-xl transition-all shadow-lg shadow-red-500/20 active:scale-95 cursor-pointer"
               >
                  Continue to Payment

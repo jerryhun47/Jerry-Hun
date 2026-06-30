@@ -38,6 +38,19 @@ export default function Courses() {
   }, [slug, courses, loading, playingCourse]);
 
   useEffect(() => {
+    if (viewingCourse) {
+      if (typeof window !== 'undefined' && (window as any).fbq) {
+        (window as any).fbq('track', 'ViewContent', {
+          content_name: viewingCourse.title || viewingCourse.name,
+          content_type: 'course',
+          value: viewingCourse.price || 3000,
+          currency: 'PKR'
+        });
+      }
+    }
+  }, [viewingCourse]);
+
+  useEffect(() => {
     const fetchCourses = async () => {
       try {
         const q = query(collection(db, 'products'), where('category', '==', 'Course'));
@@ -87,6 +100,14 @@ export default function Courses() {
           alert('Your payment is currently pending approval. Please wait for the admin to verify your proof.');
        }
     } else {
+       if (typeof window !== 'undefined' && (window as any).fbq) {
+         (window as any).fbq('track', 'AddToCart', {
+           content_name: course.title,
+           content_type: 'course',
+           value: course.price,
+           currency: 'PKR'
+         });
+       }
        setShowPaymentModalFor(course);
     }
   };

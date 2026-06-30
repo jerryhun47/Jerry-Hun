@@ -28,6 +28,15 @@ export default function PaymentModal({ item, type, onClose }: { item: any, type:
   const [whatsappNumber, setWhatsappNumber] = useState('');
 
   useEffect(() => {
+    if (typeof window !== 'undefined' && (window as any).fbq) {
+      (window as any).fbq('track', 'ViewContent', {
+        content_name: item.title || item.name,
+        content_type: type,
+        value: item.price || 3000,
+        currency: 'PKR'
+      });
+    }
+
     const fetchMethods = async () => {
       try {
         const snap = await getDocs(collection(db, 'payment_methods'));
@@ -248,6 +257,16 @@ export default function PaymentModal({ item, type, onClose }: { item: any, type:
           body: emailHtmlBody
         })
       }).catch(err => console.error("Failed to send order confirmation", err));
+
+      if (typeof window !== 'undefined' && (window as any).fbq) {
+        (window as any).fbq('track', 'Purchase', {
+          content_name: item.title || item.name,
+          content_type: type,
+          value: item.price || 3000,
+          currency: 'PKR',
+          num_items: 1
+        });
+      }
 
       setStatus('success');
     } catch (err) {
