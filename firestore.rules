@@ -175,5 +175,11 @@ service cloud.firestore {
       allow read: if isAdmin();
       allow write: if isAdmin();
     }
+    // Duplicate Attempts
+    match /duplicate_attempts/{docId} {
+      allow create: if true;
+      allow read: if isAdmin();
+      allow write: if isAdmin();
+    }
   }
 }

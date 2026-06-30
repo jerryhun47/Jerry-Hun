@@ -110,6 +110,7 @@ export default function Dashboard() {
             { id: 'transactions', icon: ShoppingBag, label: 'Payments', badge: transactions.filter(t=>t.status==='pending').length },
             { id: 'paymentsettings', icon: LayoutDashboard, label: 'Payment Accounts' },
             { id: 'blocklist', icon: ShieldCheck, label: 'Ban & Blocklist' },
+            { id: 'ip_detected', icon: ShieldCheck, label: 'IP Detected (Duplicates)' },
             { id: 'settings', icon: LayoutDashboard, label: 'Global Settings' },
             { id: 'messages', icon: MessageSquare, label: 'Inbox', badge: stats.messages },
             { id: 'users', icon: LayoutDashboard, label: 'Users' },
@@ -203,6 +204,7 @@ export default function Dashboard() {
            {activeTab === 'transactions' && <TransactionsManager transactions={transactions} refresh={fetchData} viewProof={viewProof} setViewProof={setViewProof} />}
            {activeTab === 'paymentsettings' && <PaymentSettingsManager />}
            {activeTab === 'blocklist' && <BlocklistManager />}
+           {activeTab === 'ip_detected' && <IpDetectedManager />}
            {activeTab === 'settings' && <GlobalSettingsManager />}
            {activeTab === 'messages' && <MessagesManager contacts={contacts} refresh={fetchData} />}
            {activeTab === 'reviews' && <ReviewsManager />}
@@ -1604,6 +1606,80 @@ function PaymentSettingsManager() {
           </div>
         </div>
        )}
+    </div>
+  );
+}
+
+function IpDetectedManager() {
+  const [duplicates, setDuplicates] = React.useState<any[]>([]);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    const q = query(collection(db, 'duplicate_attempts'), orderBy('createdAt', 'desc'));
+    const unsubs = onSnapshot(q, (snap) => {
+      setDuplicates(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+      setLoading(false);
+    });
+    return () => unsubs();
+  }, []);
+
+  const handleDelete = async (id: string) => {
+    if (confirm('Are you sure you want to delete this log?')) {
+      await deleteDoc(doc(db, 'duplicate_attempts', id));
+    }
+  };
+
+  return (
+    <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+      <div className="flex justify-between items-center mb-6 flex-wrap gap-4">
+        <div>
+          <h2 className="text-xl font-bold text-slate-800">IP Detected / Duplicate Orders</h2>
+          <p className="text-slate-500">View logged duplicate order attempts.</p>
+        </div>
+      </div>
+      
+      {loading ? (
+        <div className="text-center py-8 text-slate-500">Loading duplicates...</div>
+      ) : duplicates.length > 0 ? (
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="border-b border-slate-200 bg-slate-50">
+                <th className="p-4 text-sm font-semibold text-slate-600">Date</th>
+                <th className="p-4 text-sm font-semibold text-slate-600">Name</th>
+                <th className="p-4 text-sm font-semibold text-slate-600">Email</th>
+                <th className="p-4 text-sm font-semibold text-slate-600">Phone</th>
+                <th className="p-4 text-sm font-semibold text-slate-600">Product Attempted</th>
+                <th className="p-4 text-sm font-semibold text-slate-600 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {duplicates.map(u => (
+                <tr key={u.id} className="border-b border-slate-100 hover:bg-slate-50">
+                  <td className="p-4 text-sm text-slate-600">
+                    {u.createdAt?.toDate ? u.createdAt.toDate().toLocaleDateString() : 'Just now'}
+                  </td>
+                  <td className="p-4 text-sm font-medium">{u.name || '-'}</td>
+                  <td className="p-4 text-sm text-slate-600">{u.email || '-'}</td>
+                  <td className="p-4 text-sm text-slate-600">{u.phone || '-'}</td>
+                  <td className="p-4 text-sm font-bold text-red-600">{u.productName || u.productId}</td>
+                  <td className="p-4 text-right">
+                    <button onClick={() => handleDelete(u.id)} className="text-red-500 hover:bg-red-50 p-2 rounded-lg transition-colors" title="Delete">
+                      <Trash2 size={16} />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <div className="text-center py-12 bg-slate-50 rounded-xl border border-dashed border-slate-300">
+          <ShieldCheck size={48} className="mx-auto text-slate-400 mb-4" />
+          <h3 className="text-lg font-bold text-slate-700">No duplicates detected</h3>
+          <p className="text-slate-500">Everything is clean.</p>
+        </div>
+      )}
     </div>
   );
 }

@@ -43,6 +43,52 @@ export async function checkIsBanned(phone: string, email: string, ipAddress: str
   }
 }
 
+export async function checkDuplicateOrder(phone: string, email: string, productId: string, productName: string, customerName: string): Promise<BanCheckResult> {
+  const cleanPhone = phone ? phone.trim() : '';
+  const cleanEmail = email ? email.trim().toLowerCase() : '';
+
+  try {
+    let isDuplicate = false;
+    
+    if (cleanEmail) {
+      const qEmail = query(collection(db, 'orders'), where('customer_email', '==', cleanEmail));
+      const snapEmail = await getDocs(qEmail);
+      snapEmail.forEach(doc => {
+         if (doc.data().product_id === productId) {
+             isDuplicate = true;
+         }
+      });
+    }
+
+    if (!isDuplicate && cleanPhone && cleanPhone !== 'N/A' && cleanPhone !== 'Unknown') {
+      const qPhone = query(collection(db, 'orders'), where('customer_phone', '==', cleanPhone));
+      const snapPhone = await getDocs(qPhone);
+      snapPhone.forEach(doc => {
+         if (doc.data().product_id === productId) {
+             isDuplicate = true;
+         }
+      });
+    }
+
+    if (isDuplicate) {
+      await addDoc(collection(db, 'duplicate_attempts'), {
+         name: customerName,
+         email: cleanEmail,
+         phone: cleanPhone,
+         productName: productName,
+         productId: productId,
+         createdAt: serverTimestamp()
+      });
+      return { isBanned: true, reason: 'duplicate order hy apka ap place nhe kr sakty order' };
+    }
+
+    return { isBanned: false };
+  } catch (err) {
+    console.error('Error checking duplicate order:', err);
+    return { isBanned: false };
+  }
+}
+
 export async function checkAndBanIfSpamming(phone: string, email: string, ipAddress: string): Promise<BanCheckResult> {
   const banCheck = await checkIsBanned(phone, email, ipAddress);
   if (banCheck.isBanned) {

@@ -7,7 +7,7 @@ import { db, auth } from '../lib/firebase';
 import { collection, addDoc, serverTimestamp, getDocs, doc, getDoc } from 'firebase/firestore';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 
-import { checkAndBanIfSpamming } from '../lib/blocker';
+import { checkAndBanIfSpamming, checkDuplicateOrder } from '../lib/blocker';
 
 export default function PaymentModal({ item, type, onClose }: { item: any, type: 'course' | 'tool', onClose: () => void }) {
   const { user, signInWithGoogle } = useAuth();
@@ -149,6 +149,13 @@ export default function PaymentModal({ item, type, onClose }: { item: any, type:
       const banStatus = await checkAndBanIfSpamming(userPhone, user.email || '', ipAddress);
       if (banStatus.isBanned) {
          alert(`🚨 Blocked: Your phone number or IP address (${ipAddress}) has been banned due to multiple fake or unpaid order attempts. Please contact support if you believe this is an error.`);
+         setStatus('idle');
+         return;
+      }
+
+      const dupCheck = await checkDuplicateOrder(userPhone, user.email || '', item.id, item.title || item.name, user.displayName || user.email || 'Guest');
+      if (dupCheck.isBanned) {
+         alert(`🚨 Error: duplicate order hy apka ap place nhe kr sakty order`);
          setStatus('idle');
          return;
       }

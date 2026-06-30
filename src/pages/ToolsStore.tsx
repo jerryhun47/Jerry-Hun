@@ -8,7 +8,7 @@ import { useAuth } from '../components/AuthProvider';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 
-import { checkAndBanIfSpamming } from '../lib/blocker';
+import { checkAndBanIfSpamming, checkDuplicateOrder } from '../lib/blocker';
 import ProductReviews from '../components/ProductReviews';
 
 interface Product {
@@ -346,6 +346,13 @@ function CheckoutModal({ product, onClose }: any) {
       const banStatus = await checkAndBanIfSpamming(phone, email, ipAddress);
       if (banStatus.isBanned) {
          alert(`🚨 Blocked: Your phone number or IP address (${ipAddress}) has been banned due to multiple fake or unpaid order attempts. Please contact support if you believe this is an error.`);
+         setStatus('idle');
+         return;
+      }
+
+      const dupCheck = await checkDuplicateOrder(phone, email, product.id, product.name, name);
+      if (dupCheck.isBanned) {
+         alert(`🚨 Error: duplicate order hy apka ap place nhe kr sakty order`);
          setStatus('idle');
          return;
       }

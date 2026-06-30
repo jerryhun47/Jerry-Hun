@@ -10,6 +10,7 @@ export default function Home() {
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [topProducts, setTopProducts] = useState<any[]>([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
+  const [showPromo, setShowPromo] = useState(false);
 
   // Reviews System
   const [reviewsList, setReviewsList] = useState<any[]>([]);
@@ -102,6 +103,38 @@ export default function Home() {
     return () => clearInterval(interval);
   }, [reviewsList.length]);
 
+  useEffect(() => {
+    if (sessionStorage.getItem('promo_shown')) return;
+
+    let timeoutId: any;
+    let eventTriggered = false;
+
+    const handleInteraction = () => {
+      if (eventTriggered) return;
+      eventTriggered = true;
+      setShowPromo(true);
+      sessionStorage.setItem('promo_shown', 'true');
+      cleanup();
+    };
+
+    const cleanup = () => {
+      window.removeEventListener('scroll', handleInteraction);
+      window.removeEventListener('click', handleInteraction);
+      window.removeEventListener('touchstart', handleInteraction);
+    };
+
+    timeoutId = setTimeout(() => {
+      window.addEventListener('scroll', handleInteraction, { once: true });
+      window.addEventListener('click', handleInteraction, { once: true });
+      window.addEventListener('touchstart', handleInteraction, { once: true });
+    }, 2000);
+
+    return () => {
+      clearTimeout(timeoutId);
+      cleanup();
+    };
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitStatus('loading');
@@ -180,6 +213,81 @@ export default function Home() {
 
   return (
     <div className="w-full relative overflow-x-hidden font-sans bg-black">
+      <AnimatePresence>
+        {showPromo && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              className="bg-slate-900 border border-slate-700/50 rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl relative"
+            >
+              <button 
+                onClick={() => setShowPromo(false)}
+                className="absolute top-4 right-4 text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 p-2 rounded-full transition-colors z-10"
+              >
+                <X size={20} />
+              </button>
+              
+              <div className="p-6 md:p-8 text-center">
+                <div className="inline-flex items-center justify-center gap-2 bg-red-500/10 text-red-400 border border-red-500/20 px-4 py-1.5 rounded-full text-sm font-bold tracking-widest uppercase mb-4 shadow-[0_0_20px_rgba(239,68,68,0.2)]">
+                  <Flame size={16} className="animate-pulse" />
+                  Limited Time Offer For You
+                </div>
+                <h2 className="text-3xl md:text-4xl font-black text-white mb-2 leading-tight">Grab These Top AI Tools at <span className="text-red-500">50% OFF!</span></h2>
+                <p className="text-slate-400 mb-8 max-w-2xl mx-auto text-lg">Supercharge your workflow today with our most popular premium tools before the sale ends.</p>
+                
+                <div className="grid md:grid-cols-3 gap-6">
+                  {/* Veo 3 */}
+                  <Link to="/tools/google-veo-3-ultra" className="bg-slate-800 rounded-xl p-5 border border-slate-700 hover:border-red-500/50 hover:bg-slate-800/80 transition-all group flex flex-col h-full shadow-lg relative overflow-hidden">
+                    <div className="absolute top-0 right-0 bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-bl-lg">50% OFF</div>
+                    <div className="text-4xl mb-4 group-hover:scale-110 transition-transform">🎥</div>
+                    <h3 className="text-xl font-bold text-white mb-2">Google Veo 3 Ultra</h3>
+                    <p className="text-sm text-slate-400 mb-4 flex-grow">Advanced AI video generation without limits.</p>
+                    <div className="flex flex-col items-center gap-1 mb-4">
+                      <span className="text-sm text-slate-500 line-through">PKR 6,000</span>
+                      <span className="text-2xl font-black text-white">PKR 3,000</span>
+                    </div>
+                    <span className="w-full bg-red-600 hover:bg-red-500 text-white font-bold py-2.5 rounded-lg transition-all shadow-lg shadow-red-500/20 active:scale-95 inline-block text-center mt-auto">Get Offer</span>
+                  </Link>
+                  
+                  {/* Grok */}
+                  <Link to="/tools/grok-ai-super-heavy-plan" className="bg-slate-800 rounded-xl p-5 border border-slate-700 hover:border-blue-500/50 hover:bg-slate-800/80 transition-all group flex flex-col h-full shadow-lg relative overflow-hidden">
+                    <div className="absolute top-0 right-0 bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-bl-lg">50% OFF</div>
+                    <div className="text-4xl mb-4 group-hover:scale-110 transition-transform">🧠</div>
+                    <h3 className="text-xl font-bold text-white mb-2">Grok AI Super Heavy</h3>
+                    <p className="text-sm text-slate-400 mb-4 flex-grow">Unrestricted access to the most powerful reasoning model.</p>
+                    <div className="flex flex-col items-center gap-1 mb-4">
+                      <span className="text-sm text-slate-500 line-through">PKR 4,000</span>
+                      <span className="text-2xl font-black text-white">PKR 2,000</span>
+                    </div>
+                    <span className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-2.5 rounded-lg transition-all shadow-lg shadow-blue-500/20 active:scale-95 inline-block text-center mt-auto">Get Offer</span>
+                  </Link>
+
+                  {/* HeyGen */}
+                  <Link to="/tools/heygen-ai-avatar-pro" className="bg-slate-800 rounded-xl p-5 border border-slate-700 hover:border-purple-500/50 hover:bg-slate-800/80 transition-all group flex flex-col h-full shadow-lg relative overflow-hidden">
+                    <div className="absolute top-0 right-0 bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-bl-lg">50% OFF</div>
+                    <div className="text-4xl mb-4 group-hover:scale-110 transition-transform">🤖</div>
+                    <h3 className="text-xl font-bold text-white mb-2">HeyGen AI Avatar Pro</h3>
+                    <p className="text-sm text-slate-400 mb-4 flex-grow">Create professional studio-quality avatars instantly.</p>
+                    <div className="flex flex-col items-center gap-1 mb-4">
+                      <span className="text-sm text-slate-500 line-through">PKR 5,000</span>
+                      <span className="text-2xl font-black text-white">PKR 2,500</span>
+                    </div>
+                    <span className="w-full bg-purple-600 hover:bg-purple-500 text-white font-bold py-2.5 rounded-lg transition-all shadow-lg shadow-purple-500/20 active:scale-95 inline-block text-center mt-auto">Get Offer</span>
+                  </Link>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <FlashSaleBanner topProducts={topProducts} />
       <LivePurchasePopup topProducts={topProducts} />
       
