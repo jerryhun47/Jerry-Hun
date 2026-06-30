@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { db } from '../lib/firebase';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { getCityFromIP, getDeviceDetails } from '../lib/tracking';
 
 export default function LiveTracking() {
@@ -22,7 +22,8 @@ export default function LiveTracking() {
         const city = await getCityFromIP();
         const { type, model } = getDeviceDetails();
         
-        await addDoc(collection(db, 'tracking_logs'), {
+        const newLogRef = doc(collection(db, 'tracking_logs'));
+        await setDoc(newLogRef, {
           path: location.pathname,
           sessionId,
           city,

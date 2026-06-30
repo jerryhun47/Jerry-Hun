@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Play, Flame, Rocket, Wrench, Trophy, GraduationCap, DollarSign, CheckCircle, Star, Target, Video, Settings, Send, Quote, ArrowRight, ShoppingCart, ShieldCheck, Tag, Upload, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { db } from '../lib/firebase';
@@ -11,6 +11,9 @@ export default function Home() {
   const [topProducts, setTopProducts] = useState<any[]>([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
   const [showPromo, setShowPromo] = useState(false);
+  const [promoBannerUrl, setPromoBannerUrl] = useState<string>('/premium-tools.jpg');
+  const promoTimerRef = useRef<any>(null);
+  const initialPromoShown = useRef(false);
 
   // Reviews System
   const [reviewsList, setReviewsList] = useState<any[]>([]);
@@ -24,6 +27,7 @@ export default function Home() {
     let unsubscribeProducts: any = null;
     let unsubscribeReviews: any = null;
     let unsubscribeBanners: any = null;
+    let unsubscribeSettings: any = null;
 
     const fetchTopProducts = () => {
       const q = query(collection(db, 'products'));
@@ -88,10 +92,20 @@ export default function Home() {
        setBanners(snap.docs.map(d => ({id: d.id, ...d.data()})));
     });
 
+    unsubscribeSettings = onSnapshot(collection(db, 'settings'), (snap) => {
+      if (!snap.empty) {
+        const data = snap.docs[0].data();
+        if (data.promoBannerUrl) {
+          setPromoBannerUrl(data.promoBannerUrl);
+        }
+      }
+    });
+
     return () => {
       if (unsubscribeProducts) unsubscribeProducts();
       if (unsubscribeReviews) unsubscribeReviews();
       if (unsubscribeBanners) unsubscribeBanners();
+      if (unsubscribeSettings) unsubscribeSettings();
     };
   }, []);
 
@@ -104,36 +118,20 @@ export default function Home() {
   }, [reviewsList.length]);
 
   useEffect(() => {
-    if (sessionStorage.getItem('promo_shown')) return;
-
-    let timeoutId: any;
-    let eventTriggered = false;
-
-    const handleInteraction = () => {
-      if (eventTriggered) return;
-      eventTriggered = true;
-      setShowPromo(true);
-      sessionStorage.setItem('promo_shown', 'true');
-      cleanup();
-    };
-
-    const cleanup = () => {
-      window.removeEventListener('scroll', handleInteraction);
-      window.removeEventListener('click', handleInteraction);
-      window.removeEventListener('touchstart', handleInteraction);
-    };
-
-    timeoutId = setTimeout(() => {
-      window.addEventListener('scroll', handleInteraction, { once: true });
-      window.addEventListener('click', handleInteraction, { once: true });
-      window.addEventListener('touchstart', handleInteraction, { once: true });
-    }, 2000);
+    if (!showPromo) {
+      const delay = initialPromoShown.current ? 15000 : 4000;
+      promoTimerRef.current = setTimeout(() => {
+        initialPromoShown.current = true;
+        setShowPromo(true);
+      }, delay);
+    }
 
     return () => {
-      clearTimeout(timeoutId);
-      cleanup();
+      if (promoTimerRef.current) {
+        clearTimeout(promoTimerRef.current);
+      }
     };
-  }, []);
+  }, [showPromo]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -234,52 +232,52 @@ export default function Home() {
                 <X size={20} />
               </button>
               
-              <div className="p-6 md:p-8 text-center">
-                <div className="inline-flex items-center justify-center gap-2 bg-red-500/10 text-red-400 border border-red-500/20 px-4 py-1.5 rounded-full text-sm font-bold tracking-widest uppercase mb-4 shadow-[0_0_20px_rgba(239,68,68,0.2)]">
-                  <Flame size={16} className="animate-pulse" />
+              <div className="p-3 md:p-8 text-center">
+                <div className="inline-flex items-center justify-center gap-1 md:gap-2 bg-red-500/10 text-red-400 border border-red-500/20 px-3 md:px-4 py-1 md:py-1.5 rounded-full text-[10px] md:text-sm font-bold tracking-widest uppercase mb-3 md:mb-4 shadow-[0_0_20px_rgba(239,68,68,0.2)]">
+                  <Flame size={14} className="animate-pulse md:w-4 md:h-4" />
                   Limited Time Offer For You
                 </div>
-                <h2 className="text-3xl md:text-4xl font-black text-white mb-2 leading-tight">Grab These Top AI Tools at <span className="text-red-500">50% OFF!</span></h2>
-                <p className="text-slate-400 mb-8 max-w-2xl mx-auto text-lg">Supercharge your workflow today with our most popular premium tools before the sale ends.</p>
+                <h2 className="text-xl md:text-4xl font-black text-white mb-1 md:mb-2 leading-tight">Grab These Top AI Tools at <span className="text-red-500">50% OFF!</span></h2>
+                <p className="text-slate-400 mb-4 md:mb-8 max-w-2xl mx-auto text-xs md:text-lg px-2">Supercharge your workflow today with our most popular premium tools before the sale ends.</p>
                 
-                <div className="grid md:grid-cols-3 gap-6">
+                <div className="grid grid-cols-3 gap-2 md:gap-6">
                   {/* Veo 3 */}
-                  <Link to="/tools/google-veo-3-ultra" className="bg-slate-800 rounded-xl p-5 border border-slate-700 hover:border-red-500/50 hover:bg-slate-800/80 transition-all group flex flex-col h-full shadow-lg relative overflow-hidden">
-                    <div className="absolute top-0 right-0 bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-bl-lg">50% OFF</div>
-                    <div className="text-4xl mb-4 group-hover:scale-110 transition-transform">🎥</div>
-                    <h3 className="text-xl font-bold text-white mb-2">Google Veo 3 Ultra</h3>
-                    <p className="text-sm text-slate-400 mb-4 flex-grow">Advanced AI video generation without limits.</p>
-                    <div className="flex flex-col items-center gap-1 mb-4">
-                      <span className="text-sm text-slate-500 line-through">PKR 6,000</span>
-                      <span className="text-2xl font-black text-white">PKR 3,000</span>
+                  <Link to="/tools/google-veo-3-ultra" className="bg-slate-800 rounded-lg md:rounded-xl p-2 md:p-5 border border-slate-700 hover:border-red-500/50 hover:bg-slate-800/80 transition-all group flex flex-col h-full shadow-lg relative overflow-hidden">
+                    <div className="absolute top-0 right-0 bg-red-600 text-white text-[8px] md:text-xs font-bold px-1.5 md:px-3 py-0.5 md:py-1 rounded-bl-lg">50% OFF</div>
+                    <div className="text-2xl md:text-4xl mb-1 md:mb-4 group-hover:scale-110 transition-transform">🎥</div>
+                    <h3 className="text-[10px] md:text-xl leading-tight md:leading-normal font-bold text-white mb-1 md:mb-2">Google Veo 3</h3>
+                    <p className="hidden md:block text-sm text-slate-400 mb-4 flex-grow">Advanced AI video generation without limits.</p>
+                    <div className="flex flex-col items-center gap-0.5 md:gap-1 mb-2 md:mb-4 mt-auto">
+                      <span className="text-[8px] md:text-sm text-slate-500 line-through">PKR 6,000</span>
+                      <span className="text-xs md:text-2xl font-black text-white">PKR 3,000</span>
                     </div>
-                    <span className="w-full bg-red-600 hover:bg-red-500 text-white font-bold py-2.5 rounded-lg transition-all shadow-lg shadow-red-500/20 active:scale-95 inline-block text-center mt-auto">Get Offer</span>
+                    <span className="w-full bg-red-600 hover:bg-red-500 text-white font-bold py-1.5 md:py-2.5 rounded text-[10px] md:text-base md:rounded-lg transition-all shadow-lg shadow-red-500/20 active:scale-95 inline-block text-center mt-auto">Get</span>
                   </Link>
                   
                   {/* Grok */}
-                  <Link to="/tools/grok-ai-super-heavy-plan" className="bg-slate-800 rounded-xl p-5 border border-slate-700 hover:border-blue-500/50 hover:bg-slate-800/80 transition-all group flex flex-col h-full shadow-lg relative overflow-hidden">
-                    <div className="absolute top-0 right-0 bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-bl-lg">50% OFF</div>
-                    <div className="text-4xl mb-4 group-hover:scale-110 transition-transform">🧠</div>
-                    <h3 className="text-xl font-bold text-white mb-2">Grok AI Super Heavy</h3>
-                    <p className="text-sm text-slate-400 mb-4 flex-grow">Unrestricted access to the most powerful reasoning model.</p>
-                    <div className="flex flex-col items-center gap-1 mb-4">
-                      <span className="text-sm text-slate-500 line-through">PKR 4,000</span>
-                      <span className="text-2xl font-black text-white">PKR 2,000</span>
+                  <Link to="/tools/grok-ai-super-heavy-plan" className="bg-slate-800 rounded-lg md:rounded-xl p-2 md:p-5 border border-slate-700 hover:border-blue-500/50 hover:bg-slate-800/80 transition-all group flex flex-col h-full shadow-lg relative overflow-hidden">
+                    <div className="absolute top-0 right-0 bg-red-600 text-white text-[8px] md:text-xs font-bold px-1.5 md:px-3 py-0.5 md:py-1 rounded-bl-lg">50% OFF</div>
+                    <div className="text-2xl md:text-4xl mb-1 md:mb-4 group-hover:scale-110 transition-transform">🧠</div>
+                    <h3 className="text-[10px] md:text-xl leading-tight md:leading-normal font-bold text-white mb-1 md:mb-2">Grok AI</h3>
+                    <p className="hidden md:block text-sm text-slate-400 mb-4 flex-grow">Unrestricted access to the most powerful reasoning model.</p>
+                    <div className="flex flex-col items-center gap-0.5 md:gap-1 mb-2 md:mb-4 mt-auto">
+                      <span className="text-[8px] md:text-sm text-slate-500 line-through">PKR 4,000</span>
+                      <span className="text-xs md:text-2xl font-black text-white">PKR 2,000</span>
                     </div>
-                    <span className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-2.5 rounded-lg transition-all shadow-lg shadow-blue-500/20 active:scale-95 inline-block text-center mt-auto">Get Offer</span>
+                    <span className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-1.5 md:py-2.5 rounded text-[10px] md:text-base md:rounded-lg transition-all shadow-lg shadow-blue-500/20 active:scale-95 inline-block text-center mt-auto">Get</span>
                   </Link>
 
                   {/* HeyGen */}
-                  <Link to="/tools/heygen-ai-avatar-pro" className="bg-slate-800 rounded-xl p-5 border border-slate-700 hover:border-purple-500/50 hover:bg-slate-800/80 transition-all group flex flex-col h-full shadow-lg relative overflow-hidden">
-                    <div className="absolute top-0 right-0 bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-bl-lg">50% OFF</div>
-                    <div className="text-4xl mb-4 group-hover:scale-110 transition-transform">🤖</div>
-                    <h3 className="text-xl font-bold text-white mb-2">HeyGen AI Avatar Pro</h3>
-                    <p className="text-sm text-slate-400 mb-4 flex-grow">Create professional studio-quality avatars instantly.</p>
-                    <div className="flex flex-col items-center gap-1 mb-4">
-                      <span className="text-sm text-slate-500 line-through">PKR 5,000</span>
-                      <span className="text-2xl font-black text-white">PKR 2,500</span>
+                  <Link to="/tools/heygen-ai-avatar-pro" className="bg-slate-800 rounded-lg md:rounded-xl p-2 md:p-5 border border-slate-700 hover:border-purple-500/50 hover:bg-slate-800/80 transition-all group flex flex-col h-full shadow-lg relative overflow-hidden">
+                    <div className="absolute top-0 right-0 bg-red-600 text-white text-[8px] md:text-xs font-bold px-1.5 md:px-3 py-0.5 md:py-1 rounded-bl-lg">50% OFF</div>
+                    <div className="text-2xl md:text-4xl mb-1 md:mb-4 group-hover:scale-110 transition-transform">🤖</div>
+                    <h3 className="text-[10px] md:text-xl leading-tight md:leading-normal font-bold text-white mb-1 md:mb-2">HeyGen AI</h3>
+                    <p className="hidden md:block text-sm text-slate-400 mb-4 flex-grow">Create professional studio-quality avatars instantly.</p>
+                    <div className="flex flex-col items-center gap-0.5 md:gap-1 mb-2 md:mb-4 mt-auto">
+                      <span className="text-[8px] md:text-sm text-slate-500 line-through">PKR 5,000</span>
+                      <span className="text-xs md:text-2xl font-black text-white">PKR 2,500</span>
                     </div>
-                    <span className="w-full bg-purple-600 hover:bg-purple-500 text-white font-bold py-2.5 rounded-lg transition-all shadow-lg shadow-purple-500/20 active:scale-95 inline-block text-center mt-auto">Get Offer</span>
+                    <span className="w-full bg-purple-600 hover:bg-purple-500 text-white font-bold py-1.5 md:py-2.5 rounded text-[10px] md:text-base md:rounded-lg transition-all shadow-lg shadow-purple-500/20 active:scale-95 inline-block text-center mt-auto">Get</span>
                   </Link>
                 </div>
               </div>
@@ -386,63 +384,25 @@ export default function Home() {
                <h2 className="text-2xl md:text-3xl lg:text-5xl font-black mt-2 text-white">Automate Your Work</h2>
              </div>
              <Link to="/tools" className="inline-flex items-center gap-2 text-white bg-slate-900 hover:bg-slate-800 border border-slate-800 px-6 py-3 rounded-full font-bold transition-all w-fit shrink-0 hover:scale-105">
-               View More <ArrowRight size={18} className="text-red-500" />
+               View All Tools <ArrowRight size={18} className="text-red-500" />
              </Link>
            </motion.div>
            
            <div className="relative group/slider">
-             <motion.div variants={staggerContainer} initial="hidden" whileInView="show" viewport={{ once: true, margin: "-50px" }} className="bg-slate-900 border border-slate-800 rounded-3xl p-6 lg:p-8 card-shadow w-full">
-               <div className="grid grid-cols-2 gap-4 sm:gap-6">
-               {loadingProducts ? (
-                 [1, 2, 3, 4].map(i => (
-                   <div key={i} className="w-full aspect-square shrink-0 bg-slate-900 border border-slate-700 rounded-3xl p-4 sm:p-6 shadow-xl flex flex-col animate-pulse opacity-100">
-                      <div className="w-12 h-12 md:w-16 md:h-16 bg-slate-800 rounded-xl mb-4"></div>
-                      <div className="w-16 h-3 bg-slate-800 rounded mb-2"></div>
-                      <div className="w-3/4 h-5 sm:h-6 bg-slate-800 rounded mb-4"></div>
-                      <div className="w-full h-3 bg-slate-800 rounded mb-2"></div>
-                      <div className="w-2/3 h-3 bg-slate-800 rounded mb-4 flex-1"></div>
-                      <div className="flex justify-between items-end border-t border-slate-700 pt-3">
-                         <div className="w-20 h-5 sm:h-6 bg-slate-800 rounded"></div>
-                         <div className="w-10 h-10 bg-slate-800 rounded-xl"></div>
-                      </div>
-                   </div>
-                 ))
-               ) : topProducts.length > 0 ? topProducts.slice(0, 4).map(product => (
-                  <motion.div variants={staggerItem} key={product.id} className="w-full shrink-0 bg-slate-800 border border-slate-700 rounded-3xl p-6 shadow-xl flex flex-col relative group hover:-translate-y-1 hover:scale-[1.03] hover:shadow-2xl hover:border-slate-600 transition-all duration-300 opacity-100 aspect-square md:aspect-auto md:min-h-[400px]">
-                    <div className="mb-4">
-                      <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">{product.category}</span>
-                      <h3 className="text-lg font-bold mt-1 text-white group-hover:text-red-400 transition-colors line-clamp-2 leading-snug">{product.name}</h3>
-                    </div>
-                    <p className="text-slate-300 text-sm mb-4 md:mb-2 md:flex-none flex-1 line-clamp-3 md:line-clamp-none">{product.description}</p>
-                    
-                    {product.detail && (
-                      <div className="hidden md:block mb-4 mt-2 flex-1">
-                         <ul className="space-y-1.5 text-sm text-slate-300">
-                            {product.detail.split('\n').filter((l:string)=>l.trim().length>0).map((line:string, i:number) => {
-                               const hasEmoji = line.trim().match(/^\p{Emoji}/u);
-                               return (
-                                <li key={i} className="flex items-start gap-2">
-                                   <span className="shrink-0 mt-0.5">{hasEmoji ? '' : '⭐'}</span> 
-                                   <span className="leading-snug">{hasEmoji || line.trim().startsWith('⭐') ? line.trim() : line.replace(/^[-*]\s*/, '').trim()}</span>
-                                </li>
-                              );
-                            })}
-                         </ul>
-                      </div>
-                    )}
-                    
-                    {!product.detail && <div className="hidden md:block flex-1"></div>}
-                    <div className="flex items-center justify-between mt-auto border-t border-slate-700 pt-3">
-                      <div className="font-black text-lg text-white">PKR {product.price.toLocaleString()}</div>
-                      <Link to={`/tools?product=${product.id}`} className="bg-red-600 hover:bg-red-500 text-white p-2 rounded-xl transition-all shadow-lg shadow-red-500/20 hover:scale-110">
-                         <ShoppingCart size={18} />
-                      </Link>
-                    </div>
-                  </motion.div>
-               )) : (
-                 <div className="col-span-2 text-center text-slate-500 py-12">No products available at the moment.</div>
-               )}
-               </div>
+             <motion.div variants={staggerContainer} initial="hidden" whileInView="show" viewport={{ once: true, margin: "-50px" }} className="w-full">
+                <Link to="/tools" className="block w-full overflow-hidden rounded-3xl border border-slate-800 shadow-2xl hover:shadow-red-500/10 hover:border-slate-700 transition-all duration-300 group">
+                   {/* User uploaded image goes here */}
+                   <img 
+                      src={promoBannerUrl} 
+                      alt="Premium AI Tools" 
+                      data-editor-id="promo-banner"
+                      className="w-full h-auto object-cover group-hover:scale-[1.02] transition-transform duration-500"
+                      onError={(e) => {
+                         // Fallback if the image isn't found
+                         (e.target as HTMLImageElement).src = "/premium-tools.jpg";
+                      }}
+                   />
+                </Link>
              </motion.div>
            </div>
         </div>

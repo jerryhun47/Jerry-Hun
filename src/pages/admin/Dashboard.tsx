@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { db, auth, signOut } from '../../lib/firebase';
 import { collection, getDocs, doc, deleteDoc, updateDoc, addDoc, serverTimestamp, query, orderBy, onSnapshot, getDoc } from 'firebase/firestore';
-import { LayoutDashboard, ShoppingBag, MessageSquare, Package, LogOut, Plus, Trash2, Edit, X, Menu, DollarSign as DollarSign2, ArrowUp, ArrowDown, RefreshCcw, ShieldCheck, Copy, Download } from 'lucide-react';
+import { LayoutDashboard, ShoppingBag, MessageSquare, Package, LogOut, Plus, Trash2, Edit, X, Menu, DollarSign as DollarSign2, ArrowUp, ArrowDown, RefreshCcw, ShieldCheck, Copy, Download, Upload } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import WebsiteEditor from './WebsiteEditor';
 import PromptManager from '../../components/PromptManager';
@@ -1362,7 +1362,7 @@ function AnalyticsManager() {
 
 function GlobalSettingsManager() {
   const [loading, setLoading] = useState(true);
-  const [settings, setSettings] = useState({ whatsappNumber: '' });
+  const [settings, setSettings] = useState({ whatsappNumber: '', promoBannerUrl: '' });
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -1371,7 +1371,10 @@ function GlobalSettingsManager() {
         const snap = await getDocs(collection(db, 'settings'));
         if (!snap.empty) {
           const data = snap.docs[0].data();
-          setSettings({ whatsappNumber: data.whatsappNumber || '' });
+          setSettings({ 
+            whatsappNumber: data.whatsappNumber || '',
+            promoBannerUrl: data.promoBannerUrl || ''
+          });
         }
       } catch (e) {
         console.error(e);
@@ -1423,6 +1426,67 @@ function GlobalSettingsManager() {
                 className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-red-500" 
               />
               <p className="text-xs text-slate-500 mt-2">Include country code without '+' (e.g., 923001234567). Placed on success pages and WhatsApp buttons.</p>
+           </div>
+
+           <div>
+              <label className="block text-sm font-bold text-slate-700 mb-2">Home Page Promo Banner (Automate Your Work)</label>
+              <div className="flex flex-col gap-4">
+                <input 
+                  type="text" 
+                  placeholder="Image URL (or upload below)" 
+                  value={settings.promoBannerUrl} 
+                  onChange={(e) => setSettings({...settings, promoBannerUrl: e.target.value})}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-red-500" 
+                />
+                
+                <div className="relative border-2 border-dashed border-slate-300 rounded-xl p-6 hover:bg-slate-50 transition-colors text-center cursor-pointer">
+                   <input 
+                     type="file" 
+                     accept="image/*"
+                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                     onChange={(e) => {
+                       const file = e.target.files?.[0];
+                       if (!file) return;
+                       
+                       const reader = new FileReader();
+                       reader.onload = (event) => {
+                         const img = new Image();
+                         img.onload = () => {
+                           const canvas = document.createElement('canvas');
+                           let width = img.width;
+                           let height = img.height;
+                           const MAX_WIDTH = 1200;
+                           
+                           if (width > MAX_WIDTH) {
+                             height = Math.round((height * MAX_WIDTH) / width);
+                             width = MAX_WIDTH;
+                           }
+                           
+                           canvas.width = width;
+                           canvas.height = height;
+                           const ctx = canvas.getContext('2d');
+                           if (ctx) {
+                             ctx.drawImage(img, 0, 0, width, height);
+                             const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+                             setSettings({...settings, promoBannerUrl: dataUrl});
+                           }
+                         };
+                         img.src = event.target?.result as string;
+                       };
+                       reader.readAsDataURL(file);
+                     }}
+                   />
+                   <Upload size={24} className="mx-auto text-slate-400 mb-2" />
+                   <span className="text-sm font-semibold text-slate-600">Click or drag an image here to upload (Any format, auto-resized)</span>
+                </div>
+
+                {settings.promoBannerUrl && (
+                  <div className="mt-4">
+                    <p className="text-xs font-bold text-slate-500 mb-2 uppercase">Preview:</p>
+                    <img src={settings.promoBannerUrl} alt="Preview" className="w-full max-w-md rounded-xl border border-slate-200 shadow-sm" />
+                  </div>
+                )}
+              </div>
            </div>
            
            <button 
