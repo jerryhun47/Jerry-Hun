@@ -11,9 +11,13 @@ export default function Home() {
   const [topProducts, setTopProducts] = useState<any[]>([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
   const [showPromo, setShowPromo] = useState(false);
-  const [promoBannerUrl, setPromoBannerUrl] = useState<string>('/premium-tools.jpg');
+  const [promoBannerUrl, setPromoBannerUrl] = useState<string>(() => {
+    return localStorage.getItem('cachedPromoBanner') || '/premium-tools.jpg';
+  });
   const promoTimerRef = useRef<any>(null);
   const initialPromoShown = useRef(false);
+  
+  const isEditorMode = new URLSearchParams(window.location.search).get('mode') === 'editor';
 
   // Reviews System
   const [reviewsList, setReviewsList] = useState<any[]>([]);
@@ -97,6 +101,11 @@ export default function Home() {
         const data = snap.docs[0].data();
         if (data.promoBannerUrl) {
           setPromoBannerUrl(data.promoBannerUrl);
+          try {
+            localStorage.setItem('cachedPromoBanner', data.promoBannerUrl);
+          } catch (e) {
+            // Ignore quota errors if base64 is too large
+          }
         }
       }
     });
@@ -118,6 +127,8 @@ export default function Home() {
   }, [reviewsList.length]);
 
   useEffect(() => {
+    if (isEditorMode) return;
+    
     if (!showPromo) {
       const delay = initialPromoShown.current ? 15000 : 4000;
       promoTimerRef.current = setTimeout(() => {
@@ -131,7 +142,7 @@ export default function Home() {
         clearTimeout(promoTimerRef.current);
       }
     };
-  }, [showPromo]);
+  }, [showPromo, isEditorMode]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -396,6 +407,8 @@ export default function Home() {
                       src={promoBannerUrl} 
                       alt="Premium AI Tools" 
                       data-editor-id="promo-banner"
+                      loading="eager"
+                      fetchPriority="high"
                       className="w-full h-auto object-cover group-hover:scale-[1.02] transition-transform duration-500"
                       onError={(e) => {
                          // Fallback if the image isn't found
