@@ -11,18 +11,24 @@ export default function Home() {
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [topProducts, setTopProducts] = useState<any[]>([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
-  const [showPromo, setShowPromo] = useState(false);
-  const [promoBannerUrl, setPromoBannerUrl] = useState<string>('/premium-tools.jpg');
-  
+  const [showPromo, setShowPromo] = useState(true);
+  const [promoBannerUrl, setPromoBannerUrl] = useState<string>('/premium-tools.webp');
+  const [clientReviewUrl, setClientReviewUrl] = useState<string>('https://drive.google.com/uc?export=view&id=1xbrRWRazzjYJGYkcQArPJBEVxrJOzbgc');
+
   useEffect(() => {
     get('cachedPromoBanner').then((val) => {
       if (val) {
         setPromoBannerUrl(val);
       }
     });
+    get('cachedClientReview').then((val) => {
+      if (val) {
+        setClientReviewUrl(val);
+      }
+    });
   }, []);
   const promoTimerRef = useRef<any>(null);
-  const initialPromoShown = useRef(false);
+  const initialPromoShown = useRef(true);
   
   const isEditorMode = new URLSearchParams(window.location.search).get('mode') === 'editor';
 
@@ -109,6 +115,10 @@ export default function Home() {
         if (data.promoBannerUrl) {
           setPromoBannerUrl(data.promoBannerUrl);
           set('cachedPromoBanner', data.promoBannerUrl).catch(console.error);
+        }
+        if (data.clientReviewUrl) {
+          setClientReviewUrl(data.clientReviewUrl);
+          set('cachedClientReview', data.clientReviewUrl).catch(console.error);
         }
       }
     });
@@ -241,6 +251,7 @@ export default function Home() {
             >
               <button 
                 onClick={() => setShowPromo(false)}
+                aria-label="Close Promo"
                 className="absolute top-4 right-4 text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 p-2 rounded-full transition-colors z-10"
               >
                 <X size={20} />
@@ -262,7 +273,7 @@ export default function Home() {
                     <h3 className="text-[10px] md:text-xl leading-tight md:leading-normal font-bold text-white mb-1 md:mb-2">Google Veo 3</h3>
                     <p className="hidden md:block text-sm text-slate-400 mb-4 flex-grow">Advanced AI video generation without limits.</p>
                     <div className="flex flex-col items-center gap-0.5 md:gap-1 mb-2 md:mb-4 mt-auto">
-                      <span className="text-[8px] md:text-sm text-slate-500 line-through">PKR 6,000</span>
+                      <span className="text-[8px] md:text-sm text-slate-400 line-through">PKR 6,000</span>
                       <span className="text-xs md:text-2xl font-black text-white">PKR 3,000</span>
                     </div>
                     <span className="w-full bg-red-600 hover:bg-red-500 text-white font-bold py-1.5 md:py-2.5 rounded text-[10px] md:text-base md:rounded-lg transition-all shadow-lg shadow-red-500/20 active:scale-95 inline-block text-center mt-auto">Get</span>
@@ -275,7 +286,7 @@ export default function Home() {
                     <h3 className="text-[10px] md:text-xl leading-tight md:leading-normal font-bold text-white mb-1 md:mb-2">Grok AI</h3>
                     <p className="hidden md:block text-sm text-slate-400 mb-4 flex-grow">Unrestricted access to the most powerful reasoning model.</p>
                     <div className="flex flex-col items-center gap-0.5 md:gap-1 mb-2 md:mb-4 mt-auto">
-                      <span className="text-[8px] md:text-sm text-slate-500 line-through">PKR 4,000</span>
+                      <span className="text-[8px] md:text-sm text-slate-400 line-through">PKR 4,000</span>
                       <span className="text-xs md:text-2xl font-black text-white">PKR 2,000</span>
                     </div>
                     <span className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-1.5 md:py-2.5 rounded text-[10px] md:text-base md:rounded-lg transition-all shadow-lg shadow-blue-500/20 active:scale-95 inline-block text-center mt-auto">Get</span>
@@ -288,7 +299,7 @@ export default function Home() {
                     <h3 className="text-[10px] md:text-xl leading-tight md:leading-normal font-bold text-white mb-1 md:mb-2">HeyGen AI</h3>
                     <p className="hidden md:block text-sm text-slate-400 mb-4 flex-grow">Create professional studio-quality avatars instantly.</p>
                     <div className="flex flex-col items-center gap-0.5 md:gap-1 mb-2 md:mb-4 mt-auto">
-                      <span className="text-[8px] md:text-sm text-slate-500 line-through">PKR 5,000</span>
+                      <span className="text-[8px] md:text-sm text-slate-400 line-through">PKR 5,000</span>
                       <span className="text-xs md:text-2xl font-black text-white">PKR 2,500</span>
                     </div>
                     <span className="w-full bg-purple-600 hover:bg-purple-500 text-white font-bold py-1.5 md:py-2.5 rounded text-[10px] md:text-base md:rounded-lg transition-all shadow-lg shadow-purple-500/20 active:scale-95 inline-block text-center mt-auto">Get</span>
@@ -307,7 +318,7 @@ export default function Home() {
          <div className="relative w-full overflow-x-auto hide-scrollbar shrink-0 min-h-[100px] z-10 max-w-7xl mx-auto mt-4 px-4 sm:px-6 lg:px-8">
             <div className="flex gap-4">
                {banners.map((b, i) => (
-                  <img key={i} src={b.url} alt="Promo Banner" className="h-32 w-auto sm:h-48 md:h-64 object-cover rounded-3xl shrink-0 shadow-lg border border-slate-800" />
+                  <img key={i} src={b.url} alt="Promo Banner" width="800" height="400" loading="lazy" className="h-32 w-auto sm:h-48 md:h-64 object-cover rounded-3xl shrink-0 shadow-lg border border-slate-800" />
                ))}
             </div>
          </div>
@@ -376,9 +387,9 @@ export default function Home() {
             <div className="card-shadow glass-effect rounded-3xl p-6 relative z-10 border border-white/10 max-w-sm mx-auto flex flex-col items-center text-center">
                 <div id="hero-logo-element" className="w-20 h-20 glass-effect bg-white/10 rounded-full flex items-center justify-center text-white mb-4 shadow-xl relative overflow-hidden p-3 border-white/20">
                    <div className="absolute inset-0 rounded-full border-4 border-red-500/20 animate-pulse z-10 pointer-events-none"></div>
-                   <img src="/logo.png" alt="Jerry Automation Image" width="80" height="80" className="w-full h-full object-contain drop-shadow-md relative z-20" />
+                   <img src="/logo.webp" alt="Jerry Automation Image" width="80" height="80" fetchPriority="high" className="w-full h-full object-contain drop-shadow-md relative z-20" />
                 </div>
-                <h3 className="text-xl font-bold mb-1 text-white">Jerry <span className="text-red-500 font-extrabold hidden sm:inline">Automation</span></h3>
+                <h1 className="text-xl font-bold mb-1 text-white">Jerry <span className="text-red-500 font-extrabold hidden sm:inline">Automation</span></h1>
                 <p className="text-slate-400 font-medium text-sm mb-4">Jerry – YouTube Automation Expert | Verified Seller</p>
                 <div className="flex gap-2 flex-wrap justify-center">
                   <span className="bg-slate-950/80 border border-slate-800 text-slate-300 text-[10px] font-bold px-3 py-1 rounded-full flex items-center gap-1"><CheckCircle size={12} className="text-red-500" /> Verified</span>
@@ -438,22 +449,22 @@ export default function Home() {
               <motion.div variants={staggerContainer} initial="hidden" whileInView="show" viewport={{ once: true, margin: "-50px" }} className="grid grid-cols-2 gap-4">
                  <motion.div variants={staggerItem} className="card-shadow p-6 rounded-2xl bg-slate-950 border border-slate-800 hover:-translate-y-2 transition-transform duration-300">
                     <Trophy className="text-red-500 mb-4" size={32} />
-                    <h4 className="font-bold text-white">Top Educator</h4>
+                    <h3 className="font-bold text-white">Top Educator</h3>
                     <p className="text-sm text-slate-400">YouTube Automation Niche</p>
                  </motion.div>
                  <motion.div variants={staggerItem} className="card-shadow p-6 rounded-2xl bg-slate-950 border border-slate-800 transform md:translate-y-6 hover:-translate-y-2 transition-transform duration-300">
                     <GraduationCap className="text-red-500 mb-4" size={32} />
-                    <h4 className="font-bold text-white">5000+ Students</h4>
+                    <h3 className="font-bold text-white">5000+ Students</h3>
                     <p className="text-sm text-slate-400">Successfully Trained</p>
                  </motion.div>
                  <motion.div variants={staggerItem} className="card-shadow p-6 rounded-2xl bg-slate-950 border border-slate-800 hover:-translate-y-2 transition-transform duration-300">
                     <DollarSign className="text-red-500 mb-4" size={32} />
-                    <h4 className="font-bold text-white">$10K+ Monthly</h4>
+                    <h3 className="font-bold text-white">$10K+ Monthly</h3>
                     <p className="text-sm text-slate-400">Student Earnings</p>
                  </motion.div>
                  <motion.div variants={staggerItem} className="card-shadow p-6 rounded-2xl bg-slate-950 border border-slate-800 transform md:translate-y-6 hover:-translate-y-2 transition-transform duration-300">
                     <Wrench className="text-red-500 mb-4" size={32} />
-                    <h4 className="font-bold text-white">Premium Tools</h4>
+                    <h3 className="font-bold text-white">Premium Tools</h3>
                     <p className="text-sm text-slate-400">Built for Automation</p>
                  </motion.div>
               </motion.div>
@@ -541,14 +552,15 @@ export default function Home() {
              <h2 className="text-2xl md:text-3xl lg:text-5xl font-black mt-2 mb-8 text-white">Client Reviews</h2>
 
              {/* Main Review Image Embed */}
-             <div className="max-w-4xl mx-auto mb-10 rounded-3xl overflow-hidden border border-slate-800 shadow-2xl bg-slate-900 pointer-events-none select-none">
+             <div className="max-w-4xl mx-auto mb-10 rounded-3xl overflow-hidden border border-slate-800 shadow-2xl bg-slate-900 select-none">
                 <img 
-                  src="https://drive.google.com/uc?export=view&id=1xbrRWRazzjYJGYkcQArPJBEVxrJOzbgc" 
+                  src={clientReviewUrl} 
                   alt="Client Review"
+                  data-editor-id="client-review-banner"
                   width="896"
                   height="504"
                   loading="lazy"
-                  className="w-full h-auto object-contain bg-slate-900 pointer-events-none select-none"
+                  className="w-full h-auto object-contain bg-slate-900 select-none"
                   draggable={false}
                 />
              </div>
@@ -576,7 +588,7 @@ export default function Home() {
                     
                     {reviewsList[currentReviewIndex].image && (
                        <div className="mb-4 flex justify-center">
-                          <img src={reviewsList[currentReviewIndex].image} alt="Review" className="w-auto h-32 md:h-40 object-cover rounded-xl border border-slate-800 pointer-events-none select-none" />
+                          <img src={reviewsList[currentReviewIndex].image} alt="Review" width="160" height="160" loading="lazy" className="w-auto h-32 md:h-40 object-cover rounded-xl border border-slate-800 pointer-events-none select-none" />
                        </div>
                     )}
                     
@@ -586,9 +598,9 @@ export default function Home() {
                       <div className="flex justify-between items-center text-left">
                         <div>
                           <p className="font-bold text-white text-lg">{reviewsList[currentReviewIndex].name}</p>
-                          <p className="text-xs font-medium text-slate-500">{reviewsList[currentReviewIndex].city}</p>
+                          <p className="text-xs font-medium text-slate-400">{reviewsList[currentReviewIndex].city}</p>
                         </div>
-                        <span className="text-xs font-bold text-slate-500">{reviewsList[currentReviewIndex].time || '10 mins ago'}</span>
+                        <span className="text-xs font-bold text-slate-400">{reviewsList[currentReviewIndex].time || '10 mins ago'}</span>
                       </div>
                     </div>
                  </motion.div>
@@ -609,7 +621,7 @@ export default function Home() {
                initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }}
                className="bg-slate-900 border border-slate-800 rounded-3xl p-6 md:p-8 w-full max-w-md relative card-shadow max-h-[90vh] overflow-y-auto minimal-scrollbar"
              >
-                <button onClick={() => setShowReviewModal(false)} className="absolute top-4 right-4 text-slate-500 hover:text-white p-2 bg-slate-800 rounded-full transition-colors"><X size={20}/></button>
+                <button onClick={() => setShowReviewModal(false)} aria-label="Close Modal" className="absolute top-4 right-4 text-slate-400 hover:text-white p-2 bg-slate-800 rounded-full transition-colors"><X size={20}/></button>
                 <h3 className="text-2xl font-bold text-white mb-6">Post Review</h3>
                 <form onSubmit={handleReviewSubmit} className="space-y-4">
                    <div>
@@ -631,7 +643,7 @@ export default function Home() {
                    <div>
                      <label className="block text-sm font-semibold mb-2 text-slate-300">Upload Image (Optional, max 2MB)</label>
                      <input type="file" accept="image/*" onChange={handleReviewImageUpload} className="w-full text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-red-600 file:text-white hover:file:bg-red-500 transition-colors" />
-                     {reviewForm.image && <img src={reviewForm.image} alt="Preview" className="h-16 mt-2 rounded border border-slate-800 object-cover" />}
+                     {reviewForm.image && <img src={reviewForm.image} alt="Preview" width="64" height="64" className="h-16 mt-2 rounded border border-slate-800 object-cover" />}
                    </div>
                    <button disabled={reviewSubmitStatus === 'loading'} type="submit" className="w-full mt-4 bg-red-600 hover:bg-red-500 disabled:opacity-50 text-white font-bold py-3 rounded-xl transition-colors shadow-lg shadow-red-500/20 active:scale-[0.98]">
                       {reviewSubmitStatus === 'loading' ? 'Submitting...' : 'Submit Review'}
@@ -892,7 +904,7 @@ function LivePurchasePopup({ topProducts }: { topProducts: any[] }) {
             <ShoppingCart size={18} />
           </div>
           <div>
-            <p className="text-[10px] md:text-xs text-slate-500 font-bold uppercase tracking-wide mb-0.5">Live Order</p>
+            <p className="text-[10px] md:text-xs text-slate-400 font-bold uppercase tracking-wide mb-0.5">Live Order</p>
             <p className="text-xs md:text-sm text-slate-800 font-bold tracking-tight leading-snug whitespace-nowrap">
               {popup.name} from {popup.city} purchased <span className="text-red-600">{popup.product}</span>
             </p>

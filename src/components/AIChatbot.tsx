@@ -118,7 +118,7 @@ Keep responses concise, helpful, and natural.`;
                   <p className="text-xs text-slate-400">Online & Ready to Help</p>
                </div>
              </div>
-             <button onClick={onClose} className="p-2 hover:bg-slate-800 rounded-full transition-colors"><Minimize2 size={18} /></button>
+             <button onClick={onClose} aria-label="Minimize Chat" className="p-2 hover:bg-slate-800 rounded-full transition-colors"><Minimize2 size={18} /></button>
           </div>
 
           <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50">

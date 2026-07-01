@@ -62,7 +62,7 @@ export default function Layout() {
           <div className="flex justify-between items-center h-16 relative">
             {/* Left: Hamburger menu and Logo */}
             <div className="flex flex-1 justify-start items-center gap-2 sm:gap-4 z-50">
-              <button onClick={() => setIsOpen(!isOpen)} className="text-slate-300 hover:text-white transition-colors p-2 -ml-2 rounded-lg hover:bg-white/10 shrink-0">
+              <button onClick={() => setIsOpen(!isOpen)} aria-label="Toggle Menu" className="text-slate-300 hover:text-white transition-colors p-2 -ml-2 rounded-lg hover:bg-white/10 shrink-0">
                 {isOpen ? <X size={24} /> : <Menu size={24} />}
               </button>
               

@@ -43,6 +43,8 @@ export default function WebsiteEditor() {
       
       if (selectedEditorId === 'promo-banner') {
         newSettings.promoBannerUrl = uploadedImageUrl;
+      } else if (selectedEditorId === 'client-review-banner') {
+        newSettings.clientReviewUrl = uploadedImageUrl;
       } else {
         // Generic override
         const currentData = snap.empty ? {} : snap.docs[0].data();
