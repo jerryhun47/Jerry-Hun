@@ -68,7 +68,7 @@ export default function Layout() {
               
               <Link to="/" className="flex items-center group pointer-events-auto shrink-0 ml-4">
                   <motion.div className="w-10 h-10 flex items-center justify-center overflow-hidden shrink-0">
-                    <img src="/logo.png" alt="Jerry Automation Logo" className="w-full h-full object-contain" />
+                    <img src="/logo.webp" alt="Jerry Automation Logo" width="40" height="40" className="w-full h-full object-contain" />
                   </motion.div>
                   <motion.span className="font-bold text-lg sm:text-xl tracking-tight text-white group-hover:text-slate-200 transition-colors ml-1 shrink-0 whitespace-nowrap">
                     Jerry <span className="text-red-500 font-extrabold hidden sm:inline">Automation</span>
@@ -128,7 +128,7 @@ export default function Layout() {
           <div className="col-span-1 md:col-span-2">
             <Link to="/" className="flex items-center gap-2 mb-4 group inline-flex">
               <div className="bg-white p-1 rounded-lg group-hover:bg-slate-200 transition-colors w-10 h-10 flex items-center justify-center overflow-hidden">
-                <img src="/logo.png" alt="Jerry Automation Logo" className="w-full h-full object-contain" />
+                <img src="/logo.webp" alt="Jerry Automation Logo" width="40" height="40" className="w-full h-full object-contain" />
               </div>
               <span className="font-bold text-xl text-white tracking-tight group-hover:text-slate-200 transition-colors">Jerry <span className="text-red-500 font-extrabold">Automation</span></span>
             </Link>

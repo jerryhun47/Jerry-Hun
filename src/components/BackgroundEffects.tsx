@@ -39,7 +39,7 @@ export default function BackgroundEffects() {
         className="absolute top-[30%] left-[50%] -translate-x-1/2 -translate-y-1/2 opacity-[0.03] blur-[8px] flex flex-col items-center justify-center pointer-events-none w-full"
       >
         <div className="w-[160px] h-[160px] md:w-[240px] md:h-[240px] bg-white rounded-[3rem] flex items-center justify-center mb-8 md:mb-12 rotate-12 overflow-hidden shadow-2xl">
-           <img src="/logo.png" alt="Background Logo" className="w-[80%] h-[80%] object-contain" />
+           <img src="/logo.webp" alt="Background Logo" width="200" height="200" className="w-[80%] h-[80%] object-contain" />
         </div>
         <span className="font-extrabold text-[15vw] md:text-[10vw] whitespace-nowrap text-white tracking-tighter">
           Jerry <span className="text-red-500 font-extrabold">Automation</span>

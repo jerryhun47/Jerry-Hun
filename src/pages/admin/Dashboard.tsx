@@ -1468,7 +1468,7 @@ function GlobalSettingsManager() {
                            const ctx = canvas.getContext('2d');
                            if (ctx) {
                              ctx.drawImage(img, 0, 0, width, height);
-                             const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+                             const dataUrl = canvas.toDataURL('image/webp', 0.85);
                              setSettings({...settings, promoBannerUrl: dataUrl});
                            }
                          };

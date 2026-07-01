@@ -428,7 +428,7 @@ export default function Home() {
                       className="w-full h-auto object-cover group-hover:scale-[1.02] transition-transform duration-500"
                       onError={(e) => {
                          // Fallback if the image isn't found
-                         (e.target as HTMLImageElement).src = "/premium-tools.jpg";
+                         (e.target as HTMLImageElement).src = "/premium-tools.webp";
                       }}
                    />
                 </Link>
