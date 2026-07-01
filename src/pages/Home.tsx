@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { db } from '../lib/firebase';
 import { collection, addDoc, serverTimestamp, getDocs, query, onSnapshot } from 'firebase/firestore';
 import { motion, AnimatePresence } from 'motion/react';
+import { get, set } from 'idb-keyval';
 
 export default function Home() {
   const [formData, setFormData] = useState({ name: '', email: '', phone: '', subject: '', message: '' });
@@ -11,9 +12,15 @@ export default function Home() {
   const [topProducts, setTopProducts] = useState<any[]>([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
   const [showPromo, setShowPromo] = useState(false);
-  const [promoBannerUrl, setPromoBannerUrl] = useState<string>(() => {
-    return localStorage.getItem('cachedPromoBanner') || '/premium-tools.jpg';
-  });
+  const [promoBannerUrl, setPromoBannerUrl] = useState<string>('/premium-tools.jpg');
+  
+  useEffect(() => {
+    get('cachedPromoBanner').then((val) => {
+      if (val) {
+        setPromoBannerUrl(val);
+      }
+    });
+  }, []);
   const promoTimerRef = useRef<any>(null);
   const initialPromoShown = useRef(false);
   
@@ -101,11 +108,7 @@ export default function Home() {
         const data = snap.docs[0].data();
         if (data.promoBannerUrl) {
           setPromoBannerUrl(data.promoBannerUrl);
-          try {
-            localStorage.setItem('cachedPromoBanner', data.promoBannerUrl);
-          } catch (e) {
-            // Ignore quota errors if base64 is too large
-          }
+          set('cachedPromoBanner', data.promoBannerUrl).catch(console.error);
         }
       }
     });
@@ -223,7 +226,7 @@ export default function Home() {
   return (
     <div className="w-full relative overflow-x-hidden font-sans bg-black">
       <AnimatePresence>
-        {showPromo && (
+        {!isEditorMode && showPromo && (
           <motion.div 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -373,7 +376,7 @@ export default function Home() {
             <div className="card-shadow glass-effect rounded-3xl p-6 relative z-10 border border-white/10 max-w-sm mx-auto flex flex-col items-center text-center">
                 <div id="hero-logo-element" className="w-20 h-20 glass-effect bg-white/10 rounded-full flex items-center justify-center text-white mb-4 shadow-xl relative overflow-hidden p-3 border-white/20">
                    <div className="absolute inset-0 rounded-full border-4 border-red-500/20 animate-pulse z-10 pointer-events-none"></div>
-                   <img src="/logo.png" alt="Jerry Automation Image" className="w-full h-full object-contain drop-shadow-md relative z-20" />
+                   <img src="/logo.png" alt="Jerry Automation Image" width="80" height="80" className="w-full h-full object-contain drop-shadow-md relative z-20" />
                 </div>
                 <h3 className="text-xl font-bold mb-1 text-white">Jerry <span className="text-red-500 font-extrabold hidden sm:inline">Automation</span></h3>
                 <p className="text-slate-400 font-medium text-sm mb-4">Jerry – YouTube Automation Expert | Verified Seller</p>
@@ -407,6 +410,8 @@ export default function Home() {
                       src={promoBannerUrl} 
                       alt="Premium AI Tools" 
                       data-editor-id="promo-banner"
+                      width="1200"
+                      height="675"
                       loading="eager"
                       fetchPriority="high"
                       className="w-full h-auto object-cover group-hover:scale-[1.02] transition-transform duration-500"
@@ -540,6 +545,9 @@ export default function Home() {
                 <img 
                   src="https://drive.google.com/uc?export=view&id=1xbrRWRazzjYJGYkcQArPJBEVxrJOzbgc" 
                   alt="Client Review"
+                  width="896"
+                  height="504"
+                  loading="lazy"
                   className="w-full h-auto object-contain bg-slate-900 pointer-events-none select-none"
                   draggable={false}
                 />
@@ -703,14 +711,14 @@ export default function Home() {
       <section className="py-8 bg-slate-950 border-y border-slate-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-center">
            <div className="flex items-center gap-6">
-              <a href="https://www.tiktok.com/@jerryofficial471?is_from_webapp=1&sender_device=pc" target="_blank" rel="noopener noreferrer" className="bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white p-3 rounded-full transition border border-slate-800 hover:border-slate-600 shadow-md">
-                 <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1.04-.1z" /></svg>
+              <a href="https://www.tiktok.com/@jerryofficial471?is_from_webapp=1&sender_device=pc" aria-label="TikTok" target="_blank" rel="noopener noreferrer" className="bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white p-3 rounded-full transition border border-slate-800 hover:border-slate-600 shadow-md">
+                 <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1.04-.1z" /></svg>
               </a>
-              <a href="https://www.youtube.com/@jerryofficial1121" target="_blank" rel="noopener noreferrer" className="bg-slate-900 hover:bg-slate-800 text-red-500 p-3 rounded-full transition border border-slate-800 hover:border-red-500 shadow-md">
-                 <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" /></svg>
+              <a href="https://www.youtube.com/@jerryofficial1121" aria-label="YouTube" target="_blank" rel="noopener noreferrer" className="bg-slate-900 hover:bg-slate-800 text-red-500 p-3 rounded-full transition border border-slate-800 hover:border-red-500 shadow-md">
+                 <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" /></svg>
               </a>
-              <a href="https://whatsapp.com/channel/0029Vb7nPWkCXC3Sg6n05b1i" target="_blank" rel="noopener noreferrer" className="bg-slate-900 hover:bg-slate-800 text-green-500 p-3 rounded-full transition border border-slate-800 hover:border-green-500 shadow-md">
-                 <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z" /></svg>
+              <a href="https://whatsapp.com/channel/0029Vb7nPWkCXC3Sg6n05b1i" aria-label="WhatsApp" target="_blank" rel="noopener noreferrer" className="bg-slate-900 hover:bg-slate-800 text-green-500 p-3 rounded-full transition border border-slate-800 hover:border-green-500 shadow-md">
+                 <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z" /></svg>
               </a>
            </div>
         </div>

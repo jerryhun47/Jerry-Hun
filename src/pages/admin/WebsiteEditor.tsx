@@ -196,11 +196,10 @@ export default function WebsiteEditor() {
                           doc.head.appendChild(style);
 
                           doc.body.addEventListener('click', ev => {
-                            ev.preventDefault();
-                            ev.stopPropagation();
-                            
                             const el = (ev.target as HTMLElement).closest('[data-editor-id]');
                             if (el) {
+                               ev.preventDefault();
+                               ev.stopPropagation();
                                const editorId = el.getAttribute('data-editor-id');
                                if (editorId) {
                                  window.parent.postMessage({ type: 'EDITOR_LOCATION_SELECTED', payload: { id: editorId } }, '*');
