@@ -57,15 +57,7 @@ export default function ToolsStore() {
     const fetchProducts = () => {
       const q = query(collection(db, 'products'));
       
-      timeoutId = setTimeout(() => {
-        if (!hasResolved) {
-           setProducts([
-               { id: 't1', name: 'Premium Netflix Tool', description: 'Lifetime access to Premium accounts auto-generator.', price: 5000, category: 'Entertainment', features: ['Lifetime Access', 'Auto Updates'], is_active: true, badge: 'Hot', order_index: 0 },
-               { id: 't2', name: 'Canva Pro Tool', description: 'Unlimited Canva Pro features unlocked.', price: 3000, category: 'Design', features: ['All Premium Templates', 'No Expiry'], is_active: true, order_index: 1 }
-           ]);
-           setLoading(false);
-        }
-      }, 600); // 600ms timeout for fast UI
+      
 
       unsubscribe = onSnapshot(q, { includeMetadataChanges: true }, (querySnapshot) => {
         hasResolved = true;
@@ -77,24 +69,11 @@ export default function ToolsStore() {
           }
         });
         
-        if (prods.length === 0) {
-           prods.push(
-               { id: 't1', name: 'Premium Netflix Tool', description: 'Lifetime access to Premium accounts auto-generator.', price: 5000, category: 'Entertainment', features: ['Lifetime Access', 'Auto Updates'], is_active: true, badge: 'Hot', order_index: 0 },
-               { id: 't2', name: 'Canva Pro Tool', description: 'Unlimited Canva Pro features unlocked.', price: 3000, category: 'Design', features: ['All Premium Templates', 'No Expiry'], is_active: true, order_index: 1 }
-           );
-        }
-        
         setProducts(prods);
         setLoading(false);
       }, (error) => {
         console.error(error);
-        if (!hasResolved) {
-          setProducts([
-             { id: 't1', name: 'Premium Netflix Tool', description: 'Lifetime access to Premium accounts auto-generator.', price: 5000, category: 'Entertainment', features: ['Lifetime Access', 'Auto Updates'], is_active: true, badge: 'Hot', order_index: 0 },
-             { id: 't2', name: 'Canva Pro Tool', description: 'Unlimited Canva Pro features unlocked.', price: 3000, category: 'Design', features: ['All Premium Templates', 'No Expiry'], is_active: true, order_index: 1 }
-          ]);
-          setLoading(false);
-        }
+        setLoading(false);
       });
     };
     fetchProducts();
@@ -281,35 +260,18 @@ function CheckoutModal({ product, onClose }: any) {
     let isMounted = true;
     const fetchMethods = async () => {
       try {
-        const methodsPromise = getDocs(collection(db, 'payment_methods'));
-        const timeoutPromise = new Promise((resolve) => setTimeout(() => resolve('timeout'), 800));
-        const res = await Promise.race([methodsPromise, timeoutPromise]);
-        
-        if (res === 'timeout') {
-            if (isMounted) setPaymentMethods([
-                { id: '1', name: 'JazzCash', details: '03001234567', type: 'wallet', instructions: 'Send money to this JazzCash account.', isActive: true }
-            ]);
-            return; // We fallback
-        }
-        
-        const snap = res as any;
+        const snap = await getDocs(collection(db, 'payment_methods'));
         const methods = snap.docs.map((d: any) => ({ id: d.id, ...d.data() })).filter((m: any) => m.isActive !== false);
         if (isMounted) {
-            setPaymentMethods(methods.length > 0 ? methods : [{ id: '1', name: 'JazzCash', details: '03001234567', type: 'wallet', instructions: 'Send money to this JazzCash account.', isActive: true }]);
+            setPaymentMethods(methods);
         }
       } catch (err) {
         console.error("Failed to fetch payment methods", err);
-        if (isMounted) setPaymentMethods([{ id: '1', name: 'JazzCash', details: '03001234567', type: 'wallet', instructions: 'Send money to this JazzCash account.', isActive: true }]);
       }
     };
     const fetchSettings = async () => {
       try {
-        const settingsPromise = getDocs(collection(db, 'settings'));
-        const timeoutPromise = new Promise((resolve) => setTimeout(() => resolve('timeout'), 800));
-        const res = await Promise.race([settingsPromise, timeoutPromise]);
-        
-        if (res === 'timeout') return;
-        const snap = res as any;
+        const snap = await getDocs(collection(db, 'settings'));
         if (!snap.empty && isMounted) {
             setWhatsappNumber(snap.docs[0].data().whatsappNumber || '');
             setTelegramSettings({ token: snap.docs[0].data().telegramBotToken || '', chatId: snap.docs[0].data().telegramChatId || '' });

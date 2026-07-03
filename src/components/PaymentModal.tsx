@@ -29,6 +29,7 @@ export default function PaymentModal({ item, type, onClose }: { item: any, type:
   const [telegramSettings, setTelegramSettings] = useState({ token: '', chatId: '' });
 
   useEffect(() => {
+    let isMounted = true;
     if (typeof window !== 'undefined' && (window as any).fbq) {
       (window as any).fbq('track', 'ViewContent', {
         content_name: item.title || item.name,
@@ -41,8 +42,10 @@ export default function PaymentModal({ item, type, onClose }: { item: any, type:
     const fetchMethods = async () => {
       try {
         const snap = await getDocs(collection(db, 'payment_methods'));
-        const methods = snap.docs.map(d => ({ id: d.id, ...d.data() })).filter((m: any) => m.isActive !== false);
-        setPaymentMethods(methods);
+        const methods = snap.docs.map((d: any) => ({ id: d.id, ...d.data() })).filter((m: any) => m.isActive !== false);
+        if (isMounted) {
+            setPaymentMethods(methods);
+        }
       } catch (err) {
         console.error("Failed to fetch payment methods", err);
       }
@@ -60,6 +63,7 @@ export default function PaymentModal({ item, type, onClose }: { item: any, type:
     }
     fetchMethods();
     fetchSettings();
+    return () => { isMounted = false; };
   }, []);
 
   const handleEmailAuth = async (e: React.FormEvent) => {
