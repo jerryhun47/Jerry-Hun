@@ -13,11 +13,11 @@ const PromoProducts = ({ isCopy }: { isCopy?: boolean }) => (
          <h4 className="font-bold text-white text-lg">Google Veo 3 Ultra</h4>
          <div className="flex items-center gap-2 mt-1">
            <span className="text-slate-500 line-through text-sm">PKR 6000</span>
-           <span className="text-red-400 font-bold">PKR 3000</span>
-           <span className="bg-red-500/20 text-red-500 text-xs font-bold px-2 py-0.5 rounded ml-2">🔥 50% OFF</span>
+           <span className="text-primary-400 font-bold">PKR 3000</span>
+           <span className="bg-primary-500/20 text-primary-500 text-xs font-bold px-2 py-0.5 rounded ml-2">🔥 50% OFF</span>
          </div>
        </div>
-       <Link to="/tools" className="bg-red-600 hover:bg-red-500 text-white font-bold py-2 px-6 rounded-lg whitespace-nowrap active:scale-95 transition-all shadow-lg shadow-red-500/20 w-full sm:w-auto text-center">
+       <Link to="/tools" className="bg-primary-600 hover:bg-primary-500 text-white font-bold py-2 px-6 rounded-lg whitespace-nowrap active:scale-95 transition-all shadow-lg shadow-primary-500/20 w-full sm:w-auto text-center">
          👉 Buy Now
        </Link>
     </div>
@@ -27,11 +27,11 @@ const PromoProducts = ({ isCopy }: { isCopy?: boolean }) => (
          <h4 className="font-bold text-white text-lg">Grok AI</h4>
          <div className="flex items-center gap-2 mt-1">
            <span className="text-slate-500 line-through text-sm">PKR 6000</span>
-           <span className="text-red-400 font-bold">PKR 3000</span>
-           <span className="bg-red-500/20 text-red-500 text-xs font-bold px-2 py-0.5 rounded ml-2">🔥 50% OFF</span>
+           <span className="text-primary-400 font-bold">PKR 3000</span>
+           <span className="bg-primary-500/20 text-primary-500 text-xs font-bold px-2 py-0.5 rounded ml-2">🔥 50% OFF</span>
          </div>
        </div>
-       <Link to="/tools" className="bg-red-600 hover:bg-red-500 text-white font-bold py-2 px-6 rounded-lg whitespace-nowrap active:scale-95 transition-all shadow-lg shadow-red-500/20 w-full sm:w-auto text-center">
+       <Link to="/tools" className="bg-primary-600 hover:bg-primary-500 text-white font-bold py-2 px-6 rounded-lg whitespace-nowrap active:scale-95 transition-all shadow-lg shadow-primary-500/20 w-full sm:w-auto text-center">
          👉 Buy Now
        </Link>
     </div>
@@ -110,13 +110,13 @@ export default function Prompts() {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-300 font-sans p-4 sm:p-6 lg:px-8 py-12 relative overflow-hidden">
       {/* Background Elements */}
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-red-900/20 rounded-full blur-[120px] pointer-events-none"></div>
-      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-red-800/10 rounded-full blur-[100px] pointer-events-none"></div>
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary-900/20 rounded-full blur-[120px] pointer-events-none"></div>
+      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-primary-800/10 rounded-full blur-[100px] pointer-events-none"></div>
 
       <div className="max-w-7xl mx-auto relative z-10">
         <div className="text-center mb-12">
           <motion.h1 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="text-4xl md:text-5xl font-black text-white mb-4">
-             AI <span className="text-red-500">Prompts</span> Library
+             AI <span className="text-primary-500">Prompts</span> Library
           </motion.h1>
           <motion.p initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="text-slate-400 max-w-2xl mx-auto">
              High-converting, tested, and powerful AI prompts to supercharge your YouTube automation journey.
@@ -124,7 +124,7 @@ export default function Prompts() {
           
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="mt-8 max-w-md mx-auto relative">
              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={20} />
-             <input type="text" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Search prompts..." className="w-full bg-slate-900/80 border border-slate-800 text-white rounded-full pl-12 pr-4 py-3 focus:ring-2 focus:ring-red-500 outline-none backdrop-blur-md transition-shadow" />
+             <input type="text" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Search prompts..." className="w-full bg-slate-900/80 border border-slate-800 text-white rounded-full pl-12 pr-4 py-3 focus:ring-2 focus:ring-primary-500 outline-none backdrop-blur-md transition-shadow" />
           </motion.div>
         </div>
 
@@ -147,7 +147,7 @@ export default function Prompts() {
                  whileInView={{ opacity: 1, scale: 1 }}
                  viewport={{ once: true }}
                  key={prompt.id} 
-                 className="bg-slate-900/60 backdrop-blur-md border border-slate-800 rounded-3xl overflow-hidden hover:border-slate-700 hover:shadow-2xl hover:shadow-red-500/10 transition-all duration-300 flex flex-col cursor-pointer"
+                 className="bg-slate-900/60 backdrop-blur-md border border-slate-800 rounded-3xl overflow-hidden hover:border-slate-700 hover:shadow-2xl hover:shadow-primary-500/10 transition-all duration-300 flex flex-col cursor-pointer"
                  onClick={() => navigate(`/prompts/${generateSlug(prompt.title)}`)}
                >
                  <div className="relative aspect-video overflow-hidden bg-slate-950">
@@ -158,7 +158,7 @@ export default function Prompts() {
                     )}
                     {prompt.videoId && (
                        <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
-                          <div className="bg-red-600 text-white rounded-full p-3 shadow-xl">
+                          <div className="bg-primary-600 text-white rounded-full p-3 shadow-xl">
                              <PlayCircle size={32} />
                           </div>
                        </div>
@@ -170,7 +170,7 @@ export default function Prompts() {
                     {prompt.shortDesc && <p className="text-sm text-slate-400 mb-4 line-clamp-2 md:line-clamp-3">{prompt.shortDesc}</p>}
                     
                     <div className="flex flex-wrap gap-1.5 mb-4">
-                       <span className="bg-red-500/10 text-red-400 border border-red-500/20 text-[10px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1">🔥 Viral</span>
+                       <span className="bg-primary-500/10 text-primary-400 border border-primary-500/20 text-[10px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1">🔥 Viral</span>
                        <span className="bg-green-500/10 text-green-400 border border-green-500/20 text-[10px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1">💰 High RPM</span>
                        <span className="bg-blue-500/10 text-blue-400 border border-blue-500/20 text-[10px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1">🎯 Low Comp</span>
                        <span className="bg-purple-500/10 text-purple-400 border border-purple-500/20 text-[10px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1">🎬 Faceless</span>
@@ -181,7 +181,7 @@ export default function Prompts() {
                           <Eye size={16} /> View Prompt
                        </button>
                        {prompt.videoLink && (
-                          <button onClick={(e) => { e.stopPropagation(); navigate(`/prompts/${generateSlug(prompt.title)}`); }} className="w-full bg-red-600 hover:bg-red-500 text-white font-bold py-2.5 rounded-xl transition-all shadow-[0_0_15px_rgba(220,38,38,0.4)] hover:shadow-[0_0_20px_rgba(220,38,38,0.6)] active:scale-95 flex items-center justify-center gap-2 text-sm z-10 relative">
+                          <button onClick={(e) => { e.stopPropagation(); navigate(`/prompts/${generateSlug(prompt.title)}`); }} className="w-full bg-primary-600 hover:bg-primary-500 text-white font-bold py-2.5 rounded-xl transition-all shadow-[0_0_15px_rgba(220,38,38,0.4)] hover:shadow-[0_0_20px_rgba(220,38,38,0.6)] active:scale-95 flex items-center justify-center gap-2 text-sm z-10 relative">
                              <PlayCircle size={16} /> Watch Tutorial
                           </button>
                        )}
@@ -253,7 +253,7 @@ export default function Prompts() {
                                  <a href={selectedPrompt.promptLink} target="_blank" rel="noopener noreferrer" className="w-full bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white font-bold py-4 px-6 rounded-2xl transition-all shadow-md active:scale-95 flex items-center justify-center gap-2">
                                     <ExternalLink size={20} /> Open Prompt
                                  </a>
-                                 <button onClick={(e) => handleCopy(selectedPrompt.id, selectedPrompt.promptLink || '', e)} className="w-full bg-red-600 hover:bg-red-500 text-white font-bold py-4 px-6 rounded-2xl transition-all shadow-lg shadow-red-500/20 active:scale-95 flex items-center justify-center gap-2">
+                                 <button onClick={(e) => handleCopy(selectedPrompt.id, selectedPrompt.promptLink || '', e)} className="w-full bg-primary-600 hover:bg-primary-500 text-white font-bold py-4 px-6 rounded-2xl transition-all shadow-lg shadow-primary-500/20 active:scale-95 flex items-center justify-center gap-2">
                                     {copiedId === selectedPrompt.id ? <CheckCircle size={20} /> : <Copy size={20} />}
                                     {copiedId === selectedPrompt.id ? 'Copied Successfully!' : 'Copy Prompt Link'}
                                  </button>
@@ -275,8 +275,8 @@ export default function Prompts() {
       <AnimatePresence>
         {showEntryPromo && (
           <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="fixed inset-0 bg-black/80 backdrop-blur-md z-[200] flex items-center justify-center p-4">
-            <motion.div initial={{scale:0.9, y:20}} animate={{scale:1, y:0}} exit={{scale:0.9, y:20}} className="bg-slate-950 border border-slate-800 p-6 sm:p-8 rounded-3xl max-w-lg w-full relative shadow-2xl shadow-red-900/20">
-               <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-red-600 text-white px-6 py-2 rounded-full font-black text-sm uppercase tracking-wider shadow-lg shadow-red-600/50 whitespace-nowrap">
+            <motion.div initial={{scale:0.9, y:20}} animate={{scale:1, y:0}} exit={{scale:0.9, y:20}} className="bg-slate-950 border border-slate-800 p-6 sm:p-8 rounded-3xl max-w-lg w-full relative shadow-2xl shadow-primary-900/20">
+               <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-primary-600 text-white px-6 py-2 rounded-full font-black text-sm uppercase tracking-wider shadow-lg shadow-primary-600/50 whitespace-nowrap">
                   🔥 Special Offer 🔥
                </div>
               <button onClick={() => setShowEntryPromo(false)} className="absolute top-4 right-4 text-slate-400 hover:text-white bg-slate-900 p-2 rounded-full transition-colors"><X size={20}/></button>

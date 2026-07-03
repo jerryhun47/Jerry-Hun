@@ -173,7 +173,7 @@ export default function ProductReviews({ productId, productName }: { productId: 
         </div>
         <button 
           onClick={() => setShowAdd(!showAdd)} 
-          className="bg-red-600 hover:bg-red-500 text-white px-5 py-2.5 rounded-xl font-bold transition-all shadow-lg shadow-red-500/20 active:scale-95"
+          className="bg-primary-600 hover:bg-primary-500 text-white px-5 py-2.5 rounded-xl font-bold transition-all shadow-lg shadow-primary-500/20 active:scale-95"
         >
           {showAdd ? 'Cancel Review' : 'Write a Review'}
         </button>
@@ -182,17 +182,17 @@ export default function ProductReviews({ productId, productName }: { productId: 
       {showAdd && (
         <form onSubmit={handleSubmit} className="mb-10 bg-slate-900 border border-slate-800 p-6 rounded-2xl animate-in fade-in zoom-in-95 shadow-xl">
           <h4 className="text-white font-bold text-lg mb-6 flex items-center gap-2">
-             <MessageCircle size={20} className="text-red-500"/> Submit Your Review
+             <MessageCircle size={20} className="text-primary-500"/> Submit Your Review
           </h4>
           <div className="space-y-5">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               <div>
                 <label className="text-slate-400 text-xs font-bold uppercase block mb-1">Full Name</label>
-                <input type="text" required value={newReview.name} onChange={e => setNewReview({ ...newReview, name: e.target.value })} className="w-full bg-slate-950 border border-slate-800 text-white rounded-xl px-4 py-3 focus:ring-2 focus:ring-red-500 outline-none" placeholder="e.g. Ali Khan" />
+                <input type="text" required value={newReview.name} onChange={e => setNewReview({ ...newReview, name: e.target.value })} className="w-full bg-slate-950 border border-slate-800 text-white rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary-500 outline-none" placeholder="e.g. Ali Khan" />
               </div>
               <div>
                 <label className="text-slate-400 text-xs font-bold uppercase block mb-1">City / Location</label>
-                <input type="text" value={(newReview as any).city || ''} onChange={e => setNewReview({ ...newReview, city: e.target.value } as any)} className="w-full bg-slate-950 border border-slate-800 text-white rounded-xl px-4 py-3 focus:ring-2 focus:ring-red-500 outline-none" placeholder="e.g. Lahore" />
+                <input type="text" value={(newReview as any).city || ''} onChange={e => setNewReview({ ...newReview, city: e.target.value } as any)} className="w-full bg-slate-950 border border-slate-800 text-white rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary-500 outline-none" placeholder="e.g. Lahore" />
               </div>
             </div>
             <div>
@@ -212,7 +212,7 @@ export default function ProductReviews({ productId, productName }: { productId: 
             </div>
             <div>
               <label className="text-slate-400 text-xs font-bold uppercase block mb-1">Your detailed experience</label>
-              <textarea required rows={4} value={newReview.text} onChange={e => setNewReview({ ...newReview, text: e.target.value })} className="w-full resize-none bg-slate-950 border border-slate-800 text-white rounded-xl px-4 py-3 focus:ring-2 focus:ring-red-500 outline-none" placeholder="Share your experience using this product..." />
+              <textarea required rows={4} value={newReview.text} onChange={e => setNewReview({ ...newReview, text: e.target.value })} className="w-full resize-none bg-slate-950 border border-slate-800 text-white rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary-500 outline-none" placeholder="Share your experience using this product..." />
             </div>
             <div className="pt-2">
               <button type="submit" disabled={submitting} className="bg-white text-slate-900 font-black px-8 py-3 rounded-xl hover:bg-slate-200 transition-colors disabled:opacity-50 inline-flex w-full sm:w-auto justify-center">

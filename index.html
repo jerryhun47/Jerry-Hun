@@ -54,7 +54,8 @@
     fbq('track', 'PageView');
     </script>
     <!-- End Meta Pixel Code -->
-  </head>
+    <script>const t = localStorage.getItem("app-theme"); if (t) document.body.classList.add(t);</script>
+</head>
   <body>
     <noscript><img height="1" width="1" style="display:none"
     src="https://www.facebook.com/tr?id=36362650320049699&ev=PageView&noscript=1"

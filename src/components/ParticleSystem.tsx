@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 const Particle = ({ size, defaultSpeed, xOffset, yOffset, opacity }: any) => {
   return (
     <div
-      className="absolute bg-red-600 rounded-full"
+      className="absolute bg-primary-600 rounded-full"
       style={{
         top: `${yOffset}px`,
         left: `${xOffset}%`,

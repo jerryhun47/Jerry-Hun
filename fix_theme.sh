@@ -1,0 +1,2 @@
+#!/bin/bash
+sed -i 's/--color-primary: #f00;/--color-primary: var(--primary-500);\n  --color-primary-50: var(--primary-50);\n  --color-primary-100: var(--primary-100);\n  --color-primary-200: var(--primary-200);\n  --color-primary-300: var(--primary-300);\n  --color-primary-400: var(--primary-400);\n  --color-primary-500: var(--primary-500);\n  --color-primary-600: var(--primary-600);\n  --color-primary-700: var(--primary-700);\n  --color-primary-800: var(--primary-800);\n  --color-primary-900: var(--primary-900);\n  --color-primary-950: var(--primary-950);/g' src/index.css

@@ -258,17 +258,17 @@ export default function Home() {
               </button>
               
               <div className="p-3 md:p-8 text-center">
-                <div className="inline-flex items-center justify-center gap-1 md:gap-2 bg-red-500/10 text-red-400 border border-red-500/20 px-3 md:px-4 py-1 md:py-1.5 rounded-full text-[10px] md:text-sm font-bold tracking-widest uppercase mb-3 md:mb-4 shadow-[0_0_20px_rgba(239,68,68,0.2)]">
+                <div className="inline-flex items-center justify-center gap-1 md:gap-2 bg-primary-500/10 text-primary-400 border border-primary-500/20 px-3 md:px-4 py-1 md:py-1.5 rounded-full text-[10px] md:text-sm font-bold tracking-widest uppercase mb-3 md:mb-4 shadow-[0_0_20px_rgba(239,68,68,0.2)]">
                   <Flame size={14} className="animate-pulse md:w-4 md:h-4" />
                   Limited Time Offer For You
                 </div>
-                <h2 className="text-xl md:text-4xl font-black text-white mb-1 md:mb-2 leading-tight">Grab These Top AI Tools at <span className="text-red-500">50% OFF!</span></h2>
+                <h2 className="text-xl md:text-4xl font-black text-white mb-1 md:mb-2 leading-tight">Grab These Top AI Tools at <span className="text-primary-500">50% OFF!</span></h2>
                 <p className="text-slate-400 mb-4 md:mb-8 max-w-2xl mx-auto text-xs md:text-lg px-2">Supercharge your workflow today with our most popular premium tools before the sale ends.</p>
                 
                 <div className="grid grid-cols-3 gap-2 md:gap-6">
                   {/* Veo 3 */}
-                  <Link to="/tools/google-veo-3-ultra" className="bg-slate-800 rounded-lg md:rounded-xl p-2 md:p-5 border border-slate-700 hover:border-red-500/50 hover:bg-slate-800/80 transition-all group flex flex-col h-full shadow-lg relative overflow-hidden">
-                    <div className="absolute top-0 right-0 bg-red-600 text-white text-[8px] md:text-xs font-bold px-1.5 md:px-3 py-0.5 md:py-1 rounded-bl-lg">50% OFF</div>
+                  <Link to="/tools/google-veo-3-ultra" className="bg-slate-800 rounded-lg md:rounded-xl p-2 md:p-5 border border-slate-700 hover:border-primary-500/50 hover:bg-slate-800/80 transition-all group flex flex-col h-full shadow-lg relative overflow-hidden">
+                    <div className="absolute top-0 right-0 bg-primary-600 text-white text-[8px] md:text-xs font-bold px-1.5 md:px-3 py-0.5 md:py-1 rounded-bl-lg">50% OFF</div>
                     <div className="text-2xl md:text-4xl mb-1 md:mb-4 group-hover:scale-110 transition-transform">🎥</div>
                     <h3 className="text-[10px] md:text-xl leading-tight md:leading-normal font-bold text-white mb-1 md:mb-2">Google Veo 3</h3>
                     <p className="hidden md:block text-sm text-slate-400 mb-4 flex-grow">Advanced AI video generation without limits.</p>
@@ -276,12 +276,12 @@ export default function Home() {
                       <span className="text-[8px] md:text-sm text-slate-400 line-through">PKR 6,000</span>
                       <span className="text-xs md:text-2xl font-black text-white">PKR 3,000</span>
                     </div>
-                    <span className="w-full bg-red-600 hover:bg-red-500 text-white font-bold py-1.5 md:py-2.5 rounded text-[10px] md:text-base md:rounded-lg transition-all shadow-lg shadow-red-500/20 active:scale-95 inline-block text-center mt-auto">Get</span>
+                    <span className="w-full bg-primary-600 hover:bg-primary-500 text-white font-bold py-1.5 md:py-2.5 rounded text-[10px] md:text-base md:rounded-lg transition-all shadow-lg shadow-primary-500/20 active:scale-95 inline-block text-center mt-auto">Get</span>
                   </Link>
                   
                   {/* Grok */}
                   <Link to="/tools/grok-ai-super-heavy-plan" className="bg-slate-800 rounded-lg md:rounded-xl p-2 md:p-5 border border-slate-700 hover:border-blue-500/50 hover:bg-slate-800/80 transition-all group flex flex-col h-full shadow-lg relative overflow-hidden">
-                    <div className="absolute top-0 right-0 bg-red-600 text-white text-[8px] md:text-xs font-bold px-1.5 md:px-3 py-0.5 md:py-1 rounded-bl-lg">50% OFF</div>
+                    <div className="absolute top-0 right-0 bg-primary-600 text-white text-[8px] md:text-xs font-bold px-1.5 md:px-3 py-0.5 md:py-1 rounded-bl-lg">50% OFF</div>
                     <div className="text-2xl md:text-4xl mb-1 md:mb-4 group-hover:scale-110 transition-transform">🧠</div>
                     <h3 className="text-[10px] md:text-xl leading-tight md:leading-normal font-bold text-white mb-1 md:mb-2">Grok AI</h3>
                     <p className="hidden md:block text-sm text-slate-400 mb-4 flex-grow">Unrestricted access to the most powerful reasoning model.</p>
@@ -294,7 +294,7 @@ export default function Home() {
 
                   {/* HeyGen */}
                   <Link to="/tools/heygen-ai-avatar-pro" className="bg-slate-800 rounded-lg md:rounded-xl p-2 md:p-5 border border-slate-700 hover:border-purple-500/50 hover:bg-slate-800/80 transition-all group flex flex-col h-full shadow-lg relative overflow-hidden">
-                    <div className="absolute top-0 right-0 bg-red-600 text-white text-[8px] md:text-xs font-bold px-1.5 md:px-3 py-0.5 md:py-1 rounded-bl-lg">50% OFF</div>
+                    <div className="absolute top-0 right-0 bg-primary-600 text-white text-[8px] md:text-xs font-bold px-1.5 md:px-3 py-0.5 md:py-1 rounded-bl-lg">50% OFF</div>
                     <div className="text-2xl md:text-4xl mb-1 md:mb-4 group-hover:scale-110 transition-transform">🤖</div>
                     <h3 className="text-[10px] md:text-xl leading-tight md:leading-normal font-bold text-white mb-1 md:mb-2">HeyGen AI</h3>
                     <p className="hidden md:block text-sm text-slate-400 mb-4 flex-grow">Create professional studio-quality avatars instantly.</p>
@@ -325,11 +325,11 @@ export default function Home() {
       )}
 
       <div className="absolute top-0 left-0 w-full h-[150vh] overflow-hidden pointer-events-none z-0">
-        <div className="absolute inset-0 bg-gradient-to-b from-red-900/40 via-red-950/20 to-black z-0"></div>
+        <div className="absolute inset-0 bg-gradient-to-b from-primary-900/40 via-primary-950/20 to-black z-0"></div>
         <NetworkBackground />
-        <div className="hero-orb bg-red-600 w-96 h-96 top-0 left-10 mt-10 sm:mt-0 z-0"></div>
-        <div className="hero-orb bg-red-500 w-96 h-96 top-40 right-10 animation-delay-2000 z-0"></div>
-        <div className="hero-orb bg-red-800 w-96 h-96 -bottom-20 left-1/2 animation-delay-4000 z-0"></div>
+        <div className="hero-orb bg-primary-600 w-96 h-96 top-0 left-10 mt-10 sm:mt-0 z-0"></div>
+        <div className="hero-orb bg-primary-500 w-96 h-96 top-40 right-10 animation-delay-2000 z-0"></div>
+        <div className="hero-orb bg-primary-800 w-96 h-96 -bottom-20 left-1/2 animation-delay-4000 z-0"></div>
       </div>
 
       {/* Hero Section */}
@@ -337,7 +337,7 @@ export default function Home() {
         <div className="grid lg:grid-cols-2 gap-10 lg:gap-12 items-center">
           <motion.div {...fadeUp}>
             <div className="flex items-center gap-4 mb-2">
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-900 text-red-500 border border-slate-800 text-xs md:text-sm font-semibold">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-900 text-primary-500 border border-slate-800 text-xs md:text-sm font-semibold">
                 <Flame size={16} /> Pakistan Top Tools Seller
               </div>
             </div>
@@ -365,7 +365,7 @@ export default function Home() {
               </div>
             </div>
             <div className="flex flex-col gap-3 mt-4 max-w-[240px]">
-              <Link to="/courses" className="bg-red-600 hover:bg-red-500 text-white px-5 py-3 rounded-full font-bold flex items-center justify-center gap-2 transition-all shadow-lg shadow-red-500/30 text-sm">
+              <Link to="/courses" className="bg-primary-600 hover:bg-primary-500 text-white px-5 py-3 rounded-full font-bold flex items-center justify-center gap-2 transition-all shadow-lg shadow-primary-500/30 text-sm">
                 <Rocket size={18} /> Start Learning
               </Link>
               <Link to="/tools" className="bg-slate-900 hover:bg-slate-800 text-white border border-slate-800 px-5 py-3 rounded-full font-bold flex items-center justify-center gap-2 transition-all text-sm shadow-md">
@@ -386,14 +386,14 @@ export default function Home() {
           >
             <div className="card-shadow glass-effect rounded-3xl p-6 relative z-10 border border-white/10 max-w-sm mx-auto flex flex-col items-center text-center">
                 <div id="hero-logo-element" className="w-20 h-20 glass-effect bg-white/10 rounded-full flex items-center justify-center text-white mb-4 shadow-xl relative overflow-hidden p-3 border-white/20">
-                   <div className="absolute inset-0 rounded-full border-4 border-red-500/20 animate-pulse z-10 pointer-events-none"></div>
-                   <img src="/logo.webp" alt="Jerry Automation Image" width="80" height="80" fetchPriority="high" className="w-full h-full object-contain drop-shadow-md relative z-20" />
+                   <div className="absolute inset-0 rounded-full border-4 border-primary-500/20 animate-pulse z-10 pointer-events-none"></div>
+                   <img src="/logo.png" alt="Jerry Automation Image" width="80" height="80" fetchPriority="high" className="w-full h-full object-contain drop-shadow-md relative z-20" />
                 </div>
-                <h1 className="text-xl font-bold mb-1 text-white">Jerry <span className="text-red-500 font-extrabold hidden sm:inline">Automation</span></h1>
+                <h1 className="text-xl font-bold mb-1 text-white">Jerry <span className="text-primary-500 font-extrabold hidden sm:inline">Automation</span></h1>
                 <p className="text-slate-400 font-medium text-sm mb-4">Jerry – YouTube Automation Expert | Verified Seller</p>
                 <div className="flex gap-2 flex-wrap justify-center">
-                  <span className="bg-slate-950/80 border border-slate-800 text-slate-300 text-[10px] font-bold px-3 py-1 rounded-full flex items-center gap-1"><CheckCircle size={12} className="text-red-500" /> Verified</span>
-                  <span className="bg-slate-950/80 border border-slate-800 text-slate-300 text-[10px] font-bold px-3 py-1 rounded-full flex items-center gap-1"><Star size={12} className="text-red-500" fill="currentColor" /> 5-Star</span>
+                  <span className="bg-slate-950/80 border border-slate-800 text-slate-300 text-[10px] font-bold px-3 py-1 rounded-full flex items-center gap-1"><CheckCircle size={12} className="text-primary-500" /> Verified</span>
+                  <span className="bg-slate-950/80 border border-slate-800 text-slate-300 text-[10px] font-bold px-3 py-1 rounded-full flex items-center gap-1"><Star size={12} className="text-primary-500" fill="currentColor" /> 5-Star</span>
                 </div>
             </div>
           </motion.div>
@@ -405,17 +405,17 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
            <motion.div {...fadeUp} className="mb-8 flex flex-col sm:flex-row sm:items-end justify-between gap-6">
              <div>
-               <span className="text-red-500 font-bold uppercase tracking-wider text-sm">Top Products</span>
+               <span className="text-primary-500 font-bold uppercase tracking-wider text-sm">Top Products</span>
                <h2 className="text-2xl md:text-3xl lg:text-5xl font-black mt-2 text-white">Automate Your Work</h2>
              </div>
              <Link to="/tools" className="inline-flex items-center gap-2 text-white bg-slate-900 hover:bg-slate-800 border border-slate-800 px-6 py-3 rounded-full font-bold transition-all w-fit shrink-0 hover:scale-105">
-               View All Tools <ArrowRight size={18} className="text-red-500" />
+               View All Tools <ArrowRight size={18} className="text-primary-500" />
              </Link>
            </motion.div>
            
            <div className="relative group/slider">
              <motion.div variants={staggerContainer} initial="hidden" whileInView="show" viewport={{ once: true, margin: "-50px" }} className="w-full">
-                <Link to="/tools" className="block w-full overflow-hidden rounded-3xl border border-slate-800 shadow-2xl hover:shadow-red-500/10 hover:border-slate-700 transition-all duration-300 group">
+                <Link to="/tools" className="block w-full overflow-hidden rounded-3xl border border-slate-800 shadow-2xl hover:shadow-primary-500/10 hover:border-slate-700 transition-all duration-300 group">
                    {/* User uploaded image goes here */}
                    <img 
                       src={promoBannerUrl} 
@@ -441,29 +441,29 @@ export default function Home() {
       <section id="about" className="py-12 bg-slate-900 border-y border-slate-800 relative">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
            <motion.div {...fadeUp} className="mb-8 text-center">
-             <span className="text-red-500 font-bold uppercase tracking-wider text-sm">About Me</span>
+             <span className="text-primary-500 font-bold uppercase tracking-wider text-sm">About Me</span>
              <h2 className="text-2xl md:text-3xl lg:text-5xl text-white font-black mt-2">Who Am I?</h2>
            </motion.div>
            
            <div className="grid md:grid-cols-2 gap-12 items-center">
               <motion.div variants={staggerContainer} initial="hidden" whileInView="show" viewport={{ once: true, margin: "-50px" }} className="grid grid-cols-2 gap-4">
                  <motion.div variants={staggerItem} className="card-shadow p-6 rounded-2xl bg-slate-950 border border-slate-800 hover:-translate-y-2 transition-transform duration-300">
-                    <Trophy className="text-red-500 mb-4" size={32} />
+                    <Trophy className="text-primary-500 mb-4" size={32} />
                     <h3 className="font-bold text-white">Top Educator</h3>
                     <p className="text-sm text-slate-400">YouTube Automation Niche</p>
                  </motion.div>
                  <motion.div variants={staggerItem} className="card-shadow p-6 rounded-2xl bg-slate-950 border border-slate-800 transform md:translate-y-6 hover:-translate-y-2 transition-transform duration-300">
-                    <GraduationCap className="text-red-500 mb-4" size={32} />
+                    <GraduationCap className="text-primary-500 mb-4" size={32} />
                     <h3 className="font-bold text-white">5000+ Students</h3>
                     <p className="text-sm text-slate-400">Successfully Trained</p>
                  </motion.div>
                  <motion.div variants={staggerItem} className="card-shadow p-6 rounded-2xl bg-slate-950 border border-slate-800 hover:-translate-y-2 transition-transform duration-300">
-                    <DollarSign className="text-red-500 mb-4" size={32} />
+                    <DollarSign className="text-primary-500 mb-4" size={32} />
                     <h3 className="font-bold text-white">$10K+ Monthly</h3>
                     <p className="text-sm text-slate-400">Student Earnings</p>
                  </motion.div>
                  <motion.div variants={staggerItem} className="card-shadow p-6 rounded-2xl bg-slate-950 border border-slate-800 transform md:translate-y-6 hover:-translate-y-2 transition-transform duration-300">
-                    <Wrench className="text-red-500 mb-4" size={32} />
+                    <Wrench className="text-primary-500 mb-4" size={32} />
                     <h3 className="font-bold text-white">Premium Tools</h3>
                     <p className="text-sm text-slate-400">Built for Automation</p>
                  </motion.div>
@@ -473,7 +473,7 @@ export default function Home() {
                 <div className="space-y-4 text-slate-300 mb-8 leading-relaxed">
                   <p>I started <strong className="text-white">YouTube Automation</strong> in 2023, and now (Alhamdulillah) I have reached a stage where I am running 10 YouTube channels simultaneously. I have become one of <strong className="text-white">Pakistan’s cheapest and most reliable tools sellers</strong>, offering services with a <strong className="text-white">money-back guarantee</strong>.</p>
                 </div>
-                <a href="#services" className="inline-flex items-center gap-2 text-red-500 font-bold hover:text-red-400 border-b border-transparent hover:border-red-400 transition-all">
+                <a href="#services" className="inline-flex items-center gap-2 text-primary-500 font-bold hover:text-primary-400 border-b border-transparent hover:border-primary-400 transition-all">
                   View My Services &rarr;
                 </a>
               </motion.div>
@@ -485,29 +485,29 @@ export default function Home() {
       <section id="services" className="py-12 bg-slate-950 border-y border-slate-900/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
            <motion.div {...fadeUp} className="mb-12 text-center max-w-2xl mx-auto">
-             <span className="text-red-500 font-bold uppercase tracking-wider text-sm">YouTube Automation</span>
+             <span className="text-primary-500 font-bold uppercase tracking-wider text-sm">YouTube Automation</span>
              <h2 className="text-2xl md:text-3xl lg:text-5xl font-black mt-2 mb-4 text-white">What Do I Teach?</h2>
              <p className="text-slate-400">A complete A to Z YouTube Automation system that will change your life</p>
            </motion.div>
            
            <motion.div variants={staggerContainer} initial="hidden" whileInView="show" viewport={{ once: true, margin: "-50px" }} className="grid md:grid-cols-4 gap-6">
               <motion.div variants={staggerItem} className="bg-slate-900 p-6 rounded-2xl border border-slate-800 card-shadow text-center relative pointer-events-none md:pointer-events-auto hover:-translate-y-2 transition-transform duration-300">
-                 <div className="w-12 h-12 bg-slate-950 border border-slate-800 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4"><Target /></div>
+                 <div className="w-12 h-12 bg-slate-950 border border-slate-800 text-primary-500 rounded-full flex items-center justify-center mx-auto mb-4"><Target /></div>
                  <h3 className="font-bold mb-2 text-white">01. Niche Selection</h3>
                  <p className="text-sm text-slate-400">Find profitable niches and analyze the competition effectively</p>
               </motion.div>
               <motion.div variants={staggerItem} className="bg-slate-900 p-6 rounded-2xl border border-slate-800 card-shadow text-center hover:-translate-y-2 transition-transform duration-300">
-                 <div className="w-12 h-12 bg-slate-950 border border-slate-800 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4"><Video /></div>
+                 <div className="w-12 h-12 bg-slate-950 border border-slate-800 text-primary-500 rounded-full flex items-center justify-center mx-auto mb-4"><Video /></div>
                  <h3 className="font-bold mb-2 text-white">02. Content System</h3>
                  <p className="text-sm text-slate-400">Create content using AI tools without ever showing your face</p>
               </motion.div>
               <motion.div variants={staggerItem} className="bg-slate-900 p-6 rounded-2xl border border-slate-800 card-shadow text-center hover:-translate-y-2 transition-transform duration-300">
-                 <div className="w-12 h-12 bg-slate-950 border border-slate-800 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4"><Settings /></div>
+                 <div className="w-12 h-12 bg-slate-950 border border-slate-800 text-primary-500 rounded-full flex items-center justify-center mx-auto mb-4"><Settings /></div>
                  <h3 className="font-bold mb-2 text-white">03. Full Automation</h3>
                  <p className="text-sm text-slate-400">Master upload scheduling, SEO optimization, and channel growth</p>
               </motion.div>
               <motion.div variants={staggerItem} className="bg-slate-900 p-6 rounded-2xl border border-slate-800 card-shadow text-center hover:-translate-y-2 transition-transform duration-300">
-                 <div className="w-12 h-12 bg-slate-950 border border-slate-800 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4"><DollarSign /></div>
+                 <div className="w-12 h-12 bg-slate-950 border border-slate-800 text-primary-500 rounded-full flex items-center justify-center mx-auto mb-4"><DollarSign /></div>
                  <h3 className="font-bold mb-2 text-white">04. Monetization</h3>
                  <p className="text-sm text-slate-400">Learn AdSense, sponsorships, and multiple income streams</p>
               </motion.div>
@@ -521,7 +521,7 @@ export default function Home() {
            <div className="grid md:grid-cols-2 gap-8">
               {/* Affordable */}
               <motion.div {...fadeUp} className="bg-slate-950 border border-slate-800 rounded-3xl p-8 hover:border-slate-700 transition flex flex-col items-center text-center card-shadow">
-                 <div className="w-16 h-16 bg-slate-900 border border-slate-800 text-red-500 rounded-2xl flex items-center justify-center mb-6 shadow-lg shadow-red-500/10">
+                 <div className="w-16 h-16 bg-slate-900 border border-slate-800 text-primary-500 rounded-2xl flex items-center justify-center mb-6 shadow-lg shadow-primary-500/10">
                     <Tag size={32} />
                  </div>
                  <h2 className="text-2xl font-black mb-4 text-white">Why Our Tools Are So Affordable</h2>
@@ -532,7 +532,7 @@ export default function Home() {
 
               {/* Warranty */}
               <motion.div {...fadeUp} transition={{ delay: 0.1 }} className="bg-slate-950 border border-slate-800 rounded-3xl p-8 hover:border-slate-700 transition flex flex-col items-center text-center card-shadow">
-                 <div className="w-16 h-16 bg-slate-900 border border-slate-800 text-red-500 rounded-2xl flex items-center justify-center mb-6 shadow-lg shadow-red-500/10">
+                 <div className="w-16 h-16 bg-slate-900 border border-slate-800 text-primary-500 rounded-2xl flex items-center justify-center mb-6 shadow-lg shadow-primary-500/10">
                     <ShieldCheck size={32} />
                  </div>
                  <h2 className="text-2xl font-black mb-4 text-white">Warranty Policy</h2>
@@ -548,7 +548,7 @@ export default function Home() {
       <section className="py-16 bg-slate-950 border-y border-slate-800 relative z-10 overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
            <motion.div {...fadeUp} className="mb-10 text-center">
-             <span className="text-red-500 font-bold uppercase tracking-wider text-sm">Success Stories</span>
+             <span className="text-primary-500 font-bold uppercase tracking-wider text-sm">Success Stories</span>
              <h2 className="text-2xl md:text-3xl lg:text-5xl font-black mt-2 mb-8 text-white">Client Reviews</h2>
 
              {/* Main Review Image Embed */}
@@ -565,7 +565,7 @@ export default function Home() {
                 />
              </div>
 
-             <button onClick={() => setShowReviewModal(true)} className="bg-red-600 hover:bg-red-500 text-white px-6 py-2 rounded-full font-bold transition-all shadow-md text-sm mx-auto flex items-center gap-2">
+             <button onClick={() => setShowReviewModal(true)} className="bg-primary-600 hover:bg-primary-500 text-white px-6 py-2 rounded-full font-bold transition-all shadow-md text-sm mx-auto flex items-center gap-2">
                 <Quote size={16} /> Post Review
              </button>
            </motion.div>
@@ -583,7 +583,7 @@ export default function Home() {
                  >
                     <Quote className="absolute top-6 left-6 text-slate-800 opacity-50" size={32} />
                     <div className="flex justify-center gap-1 mb-4">
-                      {[...Array(reviewsList[currentReviewIndex].rating || 5)].map((_, j) => <Star key={j} size={16} className="text-red-500" fill="currentColor" />)}
+                      {[...Array(reviewsList[currentReviewIndex].rating || 5)].map((_, j) => <Star key={j} size={16} className="text-primary-500" fill="currentColor" />)}
                     </div>
                     
                     {reviewsList[currentReviewIndex].image && (
@@ -626,30 +626,30 @@ export default function Home() {
                 <form onSubmit={handleReviewSubmit} className="space-y-4">
                    <div>
                      <label className="block text-sm font-semibold mb-2 text-slate-300">Your Name *</label>
-                     <input type="text" required value={reviewForm.name} onChange={e => setReviewForm({...reviewForm, name: e.target.value})} className="w-full bg-slate-950 border border-slate-800 text-white rounded-lg px-4 py-3 focus:outline-none focus:ring-1 focus:ring-red-500" placeholder="Ali Raza" />
+                     <input type="text" required value={reviewForm.name} onChange={e => setReviewForm({...reviewForm, name: e.target.value})} className="w-full bg-slate-950 border border-slate-800 text-white rounded-lg px-4 py-3 focus:outline-none focus:ring-1 focus:ring-primary-500" placeholder="Ali Raza" />
                    </div>
                    <div>
                      <label className="block text-sm font-semibold mb-2 text-slate-300">City</label>
-                     <input type="text" value={reviewForm.city} onChange={e => setReviewForm({...reviewForm, city: e.target.value})} className="w-full bg-slate-950 border border-slate-800 text-white rounded-lg px-4 py-3 focus:outline-none focus:ring-1 focus:ring-red-500" placeholder="Lahore" />
+                     <input type="text" value={reviewForm.city} onChange={e => setReviewForm({...reviewForm, city: e.target.value})} className="w-full bg-slate-950 border border-slate-800 text-white rounded-lg px-4 py-3 focus:outline-none focus:ring-1 focus:ring-primary-500" placeholder="Lahore" />
                    </div>
                    <div>
                      <label className="block text-sm font-semibold mb-2 text-slate-300">Review Text *</label>
-                     <textarea required value={reviewForm.text} onChange={e => setReviewForm({...reviewForm, text: e.target.value})} rows={3} className="w-full bg-slate-950 border border-slate-800 text-white rounded-lg px-4 py-3 focus:outline-none focus:ring-1 focus:ring-red-500" placeholder="Great service..."></textarea>
+                     <textarea required value={reviewForm.text} onChange={e => setReviewForm({...reviewForm, text: e.target.value})} rows={3} className="w-full bg-slate-950 border border-slate-800 text-white rounded-lg px-4 py-3 focus:outline-none focus:ring-1 focus:ring-primary-500" placeholder="Great service..."></textarea>
                    </div>
                    <div>
                      <label className="block text-sm font-semibold mb-2 text-slate-300">Rating</label>
-                     <input type="number" min="1" max="5" value={reviewForm.rating} onChange={e => setReviewForm({...reviewForm, rating: Number(e.target.value)})} className="w-full bg-slate-950 border border-slate-800 text-white rounded-lg px-4 py-3 focus:outline-none focus:ring-1 focus:ring-red-500" />
+                     <input type="number" min="1" max="5" value={reviewForm.rating} onChange={e => setReviewForm({...reviewForm, rating: Number(e.target.value)})} className="w-full bg-slate-950 border border-slate-800 text-white rounded-lg px-4 py-3 focus:outline-none focus:ring-1 focus:ring-primary-500" />
                    </div>
                    <div>
                      <label className="block text-sm font-semibold mb-2 text-slate-300">Upload Image (Optional, max 2MB)</label>
-                     <input type="file" accept="image/*" onChange={handleReviewImageUpload} className="w-full text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-red-600 file:text-white hover:file:bg-red-500 transition-colors" />
+                     <input type="file" accept="image/*" onChange={handleReviewImageUpload} className="w-full text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary-600 file:text-white hover:file:bg-primary-500 transition-colors" />
                      {reviewForm.image && <img src={reviewForm.image} alt="Preview" width="64" height="64" className="h-16 mt-2 rounded border border-slate-800 object-cover" />}
                    </div>
-                   <button disabled={reviewSubmitStatus === 'loading'} type="submit" className="w-full mt-4 bg-red-600 hover:bg-red-500 disabled:opacity-50 text-white font-bold py-3 rounded-xl transition-colors shadow-lg shadow-red-500/20 active:scale-[0.98]">
+                   <button disabled={reviewSubmitStatus === 'loading'} type="submit" className="w-full mt-4 bg-primary-600 hover:bg-primary-500 disabled:opacity-50 text-white font-bold py-3 rounded-xl transition-colors shadow-lg shadow-primary-500/20 active:scale-[0.98]">
                       {reviewSubmitStatus === 'loading' ? 'Submitting...' : 'Submit Review'}
                    </button>
                    {reviewSubmitStatus === 'success' && <p className="text-green-500 text-center font-medium mt-2 text-sm">Review submitted! Awaiting approval.</p>}
-                   {reviewSubmitStatus === 'error' && <p className="text-red-500 text-center font-medium mt-2 text-sm">Error submitting review.</p>}
+                   {reviewSubmitStatus === 'error' && <p className="text-primary-500 text-center font-medium mt-2 text-sm">Error submitting review.</p>}
                 </form>
              </motion.div>
           </motion.div>
@@ -661,13 +661,13 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
            <div className="grid lg:grid-cols-2 gap-16">
               <motion.div {...fadeUp}>
-                 <span className="text-red-500 font-bold uppercase tracking-wider text-sm">Get In Touch</span>
+                 <span className="text-primary-500 font-bold uppercase tracking-wider text-sm">Get In Touch</span>
                  <h2 className="text-2xl md:text-3xl lg:text-5xl font-black mt-2 mb-6 text-white">Talk to Me</h2>
                  <p className="text-slate-400 mb-8 max-w-md">Have any questions? I'm here to help. Fill out the form and I will reply to you shortly.</p>
                  
                  <div className="space-y-6">
                     <div className="flex items-center gap-4">
-                       <div className="w-12 h-12 bg-slate-950 border border-slate-800 rounded-full flex items-center justify-center text-red-500">
+                       <div className="w-12 h-12 bg-slate-950 border border-slate-800 rounded-full flex items-center justify-center text-primary-500">
                           <Send size={24} />
                        </div>
                        <div>
@@ -683,20 +683,20 @@ export default function Home() {
                     <div className="grid md:grid-cols-2 gap-4">
                        <div>
                           <label className="block text-sm font-semibold mb-2 text-slate-300">Your Name *</label>
-                          <input type="text" required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full bg-slate-900 border border-slate-800 text-white rounded-lg px-4 py-3 focus:outline-none focus:ring-1 focus:ring-red-500 transition-shadow" placeholder="Ali Khan" />
+                          <input type="text" required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full bg-slate-900 border border-slate-800 text-white rounded-lg px-4 py-3 focus:outline-none focus:ring-1 focus:ring-primary-500 transition-shadow" placeholder="Ali Khan" />
                        </div>
                        <div>
                           <label className="block text-sm font-semibold mb-2 text-slate-300">Email *</label>
-                          <input type="email" required value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className="w-full bg-slate-900 border border-slate-800 text-white rounded-lg px-4 py-3 focus:outline-none focus:ring-1 focus:ring-red-500 transition-shadow" placeholder="ali@email.com" />
+                          <input type="email" required value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className="w-full bg-slate-900 border border-slate-800 text-white rounded-lg px-4 py-3 focus:outline-none focus:ring-1 focus:ring-primary-500 transition-shadow" placeholder="ali@email.com" />
                        </div>
                     </div>
                     <div>
                        <label className="block text-sm font-semibold mb-2 text-slate-300">Phone Number</label>
-                       <input type="tel" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} className="w-full bg-slate-900 border border-slate-800 text-white rounded-lg px-4 py-3 focus:outline-none focus:ring-1 focus:ring-red-500 transition-shadow" placeholder="+92-3XX-XXXXXXX" />
+                       <input type="tel" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} className="w-full bg-slate-900 border border-slate-800 text-white rounded-lg px-4 py-3 focus:outline-none focus:ring-1 focus:ring-primary-500 transition-shadow" placeholder="+92-3XX-XXXXXXX" />
                     </div>
                     <div>
                        <label className="block text-sm font-semibold mb-2 text-slate-300">Subject *</label>
-                       <select required value={formData.subject} onChange={e => setFormData({...formData, subject: e.target.value})} className="w-full bg-slate-900 border border-slate-800 text-white rounded-lg px-4 py-3 focus:outline-none focus:ring-1 focus:ring-red-500 transition-shadow">
+                       <select required value={formData.subject} onChange={e => setFormData({...formData, subject: e.target.value})} className="w-full bg-slate-900 border border-slate-800 text-white rounded-lg px-4 py-3 focus:outline-none focus:ring-1 focus:ring-primary-500 transition-shadow">
                           <option value="">Select Subject</option>
                           <option value="course">Course Inquiry</option>
                           <option value="tools">Tools Purchase</option>
@@ -706,13 +706,13 @@ export default function Home() {
                     </div>
                     <div>
                        <label className="block text-sm font-semibold mb-2 text-slate-300">Message *</label>
-                       <textarea required value={formData.message} onChange={e => setFormData({...formData, message: e.target.value})} rows={4} className="w-full bg-slate-900 border border-slate-800 text-white rounded-lg px-4 py-3 focus:outline-none focus:ring-1 focus:ring-red-500 transition-shadow" placeholder="Write your question here..."></textarea>
+                       <textarea required value={formData.message} onChange={e => setFormData({...formData, message: e.target.value})} rows={4} className="w-full bg-slate-900 border border-slate-800 text-white rounded-lg px-4 py-3 focus:outline-none focus:ring-1 focus:ring-primary-500 transition-shadow" placeholder="Write your question here..."></textarea>
                     </div>
-                    <button disabled={submitStatus === 'loading'} type="submit" className="w-full bg-red-600 hover:bg-red-500 disabled:opacity-50 text-white font-bold py-4 rounded-xl transition-colors shadow-lg shadow-red-500/20 active:scale-[0.98]">
+                    <button disabled={submitStatus === 'loading'} type="submit" className="w-full bg-primary-600 hover:bg-primary-500 disabled:opacity-50 text-white font-bold py-4 rounded-xl transition-colors shadow-lg shadow-primary-500/20 active:scale-[0.98]">
                        {submitStatus === 'loading' ? 'Sending...' : 'Send Message'}
                     </button>
                     {submitStatus === 'success' && <p className="text-green-500 text-center font-medium mt-2">Message sent successfully!</p>}
-                    {submitStatus === 'error' && <p className="text-red-500 text-center font-medium mt-2">Error sending message. Please try again.</p>}
+                    {submitStatus === 'error' && <p className="text-primary-500 text-center font-medium mt-2">Error sending message. Please try again.</p>}
                  </form>
               </motion.div>
            </div>
@@ -726,7 +726,7 @@ export default function Home() {
               <a href="https://www.tiktok.com/@jerryofficial471?is_from_webapp=1&sender_device=pc" aria-label="TikTok" target="_blank" rel="noopener noreferrer" className="bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white p-3 rounded-full transition border border-slate-800 hover:border-slate-600 shadow-md">
                  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1.04-.1z" /></svg>
               </a>
-              <a href="https://www.youtube.com/@jerryofficial1121" aria-label="YouTube" target="_blank" rel="noopener noreferrer" className="bg-slate-900 hover:bg-slate-800 text-red-500 p-3 rounded-full transition border border-slate-800 hover:border-red-500 shadow-md">
+              <a href="https://www.youtube.com/@jerryofficial1121" aria-label="YouTube" target="_blank" rel="noopener noreferrer" className="bg-slate-900 hover:bg-slate-800 text-primary-500 p-3 rounded-full transition border border-slate-800 hover:border-primary-500 shadow-md">
                  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" /></svg>
               </a>
               <a href="https://whatsapp.com/channel/0029Vb7nPWkCXC3Sg6n05b1i" aria-label="WhatsApp" target="_blank" rel="noopener noreferrer" className="bg-slate-900 hover:bg-slate-800 text-green-500 p-3 rounded-full transition border border-slate-800 hover:border-green-500 shadow-md">
@@ -842,14 +842,14 @@ function FlashSaleBanner({ topProducts }: { topProducts: any[] }) {
   }, []);
 
   return (
-    <div className="bg-red-600 w-full text-white py-2 px-4 flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-6 z-40 relative shadow-md">
+    <div className="bg-primary-600 w-full text-white py-2 px-4 flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-6 z-40 relative shadow-md">
       <div className="flex items-center gap-2 text-sm font-bold">
         <Flame size={16} className="text-yellow-300 animate-pulse" /> 
         <span>Limited Offer – {String(timeLeft.hours).padStart(2,'0')}:{String(timeLeft.minutes).padStart(2,'0')}:{String(timeLeft.seconds).padStart(2,'0')} Remaining</span>
       </div>
       <div className="flex items-center gap-3">
         <span className="text-sm font-semibold truncate max-w-[150px]">{product.name}</span>
-        <span className="bg-white text-red-600 text-xs font-black px-2 py-0.5 rounded-full">{discount}</span>
+        <span className="bg-white text-primary-600 text-xs font-black px-2 py-0.5 rounded-full">{discount}</span>
         <Link to={`/tools${product.id ? `?product=${product.id}` : ''}`} className="bg-slate-900 text-white text-xs font-bold px-3 py-1 rounded-full hover:bg-slate-800 transition-colors">
           Buy Now
         </Link>
@@ -906,7 +906,7 @@ function LivePurchasePopup({ topProducts }: { topProducts: any[] }) {
           <div>
             <p className="text-[10px] md:text-xs text-slate-400 font-bold uppercase tracking-wide mb-0.5">Live Order</p>
             <p className="text-xs md:text-sm text-slate-800 font-bold tracking-tight leading-snug whitespace-nowrap">
-              {popup.name} from {popup.city} purchased <span className="text-red-600">{popup.product}</span>
+              {popup.name} from {popup.city} purchased <span className="text-primary-600">{popup.product}</span>
             </p>
           </div>
         </motion.div>

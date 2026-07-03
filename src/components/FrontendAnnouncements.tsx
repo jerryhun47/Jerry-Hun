@@ -25,14 +25,14 @@ export default function FrontendAnnouncements() {
        <div className="animate-marquee inline-block whitespace-nowrap">
           {announcements.map((a, i) => (
              <span key={i} className="mx-8 font-medium text-sm flex-inline items-center gap-2">
-                <Target size={14} className="inline text-red-500 mr-2" />
+                <Target size={14} className="inline text-primary-500 mr-2" />
                 {a.text}
              </span>
           ))}
           {/* duplicate for seamless loop */}
           {announcements.map((a, i) => (
              <span key={`dup-${i}`} className="mx-8 font-medium text-sm flex-inline items-center gap-2">
-                <Target size={14} className="inline text-red-500 mr-2" />
+                <Target size={14} className="inline text-primary-500 mr-2" />
                 {a.text}
              </span>
           ))}

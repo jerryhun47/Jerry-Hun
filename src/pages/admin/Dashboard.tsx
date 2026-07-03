@@ -93,7 +93,7 @@ export default function Dashboard() {
       <aside className={`fixed md:sticky top-0 left-0 h-screen w-64 bg-slate-900 text-slate-300 flex flex-col z-50 transform transition-transform duration-300 ease-in-out ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}>
         <div className="p-6 border-b border-slate-800 flex justify-between items-center">
            <div className="flex flex-col">
-             <span className="font-bold text-xl text-white tracking-tight">Jerry<span className="text-red-500">Automation</span></span>
+             <span className="font-bold text-xl text-white tracking-tight">Jerry<span className="text-primary-500">Automation</span></span>
              <span className="block text-xs text-slate-500 mt-1 uppercase tracking-widest font-black">Admin Panel</span>
            </div>
            <button className="md:hidden text-slate-400 hover:text-white" onClick={() => setIsMobileMenuOpen(false)}><X size={24} /></button>
@@ -126,9 +126,9 @@ export default function Dashboard() {
             { id: 'ai_settings', icon: LayoutDashboard, label: 'AI Settings' },
             { id: 'ai_logs', icon: MessageSquare, label: 'AI Chat Logs' },
           ].map(tab => (
-            <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-colors ${activeTab === tab.id ? 'bg-red-600 text-white font-semibold shadow-lg shadow-red-500/20' : 'hover:bg-slate-800 hover:text-white'}`}>
+            <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-colors ${activeTab === tab.id ? 'bg-primary-600 text-white font-semibold shadow-lg shadow-primary-500/20' : 'hover:bg-slate-800 hover:text-white'}`}>
                <div className="flex items-center gap-3"><tab.icon size={16} /> {tab.label}</div>
-               {(tab.badge && tab.badge > 0) ? <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${activeTab === tab.id ? 'bg-white text-red-600' : 'bg-red-600 text-white'}`}>{tab.badge}</span> : null}
+               {(tab.badge && tab.badge > 0) ? <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${activeTab === tab.id ? 'bg-white text-primary-600' : 'bg-primary-600 text-white'}`}>{tab.badge}</span> : null}
             </button>
           ))}
         </nav>
@@ -181,7 +181,7 @@ export default function Dashboard() {
                                <td className="py-4 text-sm text-slate-600">{o.products?.length || 0} items</td>
                                <td className="py-4 font-bold">PKR {o.total_price?.toLocaleString()}</td>
                                <td className="py-4">
-                                  <span className={`px-3 py-1 rounded-full text-xs font-bold ${o.status === 'pending' ? 'bg-yellow-100 text-yellow-700' : o.status === 'confirmed' ? 'bg-blue-100 text-blue-700' : o.status === 'delivered' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                                  <span className={`px-3 py-1 rounded-full text-xs font-bold ${o.status === 'pending' ? 'bg-yellow-100 text-yellow-700' : o.status === 'confirmed' ? 'bg-blue-100 text-blue-700' : o.status === 'delivered' ? 'bg-green-100 text-green-700' : 'bg-primary-100 text-primary-700'}`}>
                                      {o.status}
                                   </span>
                                </td>
@@ -350,11 +350,11 @@ function ProductsManager({ products, type, refresh }: { products: any[], type: s
           </div>
           <div className="flex gap-2">
             {selectedIds.size > 0 && (
-              <button onClick={handleBulkDelete} className="bg-red-100 hover:bg-red-200 text-red-600 px-5 py-2.5 rounded-xl font-bold transition-colors">
+              <button onClick={handleBulkDelete} className="bg-primary-100 hover:bg-primary-200 text-primary-600 px-5 py-2.5 rounded-xl font-bold transition-colors">
                 Delete Selected ({selectedIds.size})
               </button>
             )}
-            <button onClick={() => { setEditingId(null); setShowModal(true); }} className="bg-red-600 hover:bg-red-700 text-white px-5 py-2.5 rounded-xl font-bold flex items-center gap-2">
+            <button onClick={() => { setEditingId(null); setShowModal(true); }} className="bg-primary-600 hover:bg-primary-700 text-white px-5 py-2.5 rounded-xl font-bold flex items-center gap-2">
                <Plus size={18} /> Add Product
             </button>
           </div>
@@ -391,8 +391,8 @@ function ProductsManager({ products, type, refresh }: { products: any[], type: s
                     </td>
                     <td className="px-3 py-4">
                       <div className="flex flex-col gap-1 items-center">
-                         <button onClick={() => handleMove(index, 'up')} disabled={index === 0} className="text-slate-400 hover:text-red-600 disabled:opacity-30 disabled:hover:text-slate-400"><ArrowUp size={16}/></button>
-                         <button onClick={() => handleMove(index, 'down')} disabled={index === filteredProducts.length - 1} className="text-slate-400 hover:text-red-600 disabled:opacity-30 disabled:hover:text-slate-400"><ArrowDown size={16}/></button>
+                         <button onClick={() => handleMove(index, 'up')} disabled={index === 0} className="text-slate-400 hover:text-primary-600 disabled:opacity-30 disabled:hover:text-slate-400"><ArrowUp size={16}/></button>
+                         <button onClick={() => handleMove(index, 'down')} disabled={index === filteredProducts.length - 1} className="text-slate-400 hover:text-primary-600 disabled:opacity-30 disabled:hover:text-slate-400"><ArrowDown size={16}/></button>
                       </div>
                     </td>
                     <td className="px-6 py-4">
@@ -406,7 +406,7 @@ function ProductsManager({ products, type, refresh }: { products: any[], type: s
                     </td>
                     <td className="px-6 py-4 text-right space-x-2">
                        <button onClick={() => { setFormData({ name: '', price: '', yearlyPrice: '', category: type, description: '', is_active: true, badge: '', imageLink: '', videoLink: '', detail: '', ...p} as any); setLessons(p.lessons || []); setEditingId(p.id); setShowModal(true); }} className="text-blue-600 hover:bg-blue-50 p-2 rounded-xl transition-colors"><Edit size={16}/></button>
-                       <button onClick={() => handleDelete(p.id)} className="text-red-600 hover:bg-red-50 p-2 rounded-xl transition-colors"><Trash2 size={16}/></button>
+                       <button onClick={() => handleDelete(p.id)} className="text-primary-600 hover:bg-primary-50 p-2 rounded-xl transition-colors"><Trash2 size={16}/></button>
                     </td>
                  </tr>
                ))}
@@ -428,7 +428,7 @@ function ProductsManager({ products, type, refresh }: { products: any[], type: s
                  </div>
                )}
                {saveError && (
-                 <div className="bg-red-100 text-red-700 p-4 rounded-xl font-bold mb-4 border border-red-200">
+                 <div className="bg-primary-100 text-primary-700 p-4 rounded-xl font-bold mb-4 border border-primary-200">
                     {saveError}
                  </div>
                )}
@@ -452,7 +452,7 @@ function ProductsManager({ products, type, refresh }: { products: any[], type: s
                   <div className="grid grid-cols-2 gap-4">
                     <div className="flex items-center mt-6">
                        <label className="flex items-center gap-2 cursor-pointer">
-                         <input type="checkbox" checked={formData.is_active} onChange={e=>setFormData({...formData,is_active: e.target.checked})} className="w-5 h-5 text-red-600 rounded border-slate-300" />
+                         <input type="checkbox" checked={formData.is_active} onChange={e=>setFormData({...formData,is_active: e.target.checked})} className="w-5 h-5 text-primary-600 rounded border-slate-300" />
                          <span className="font-semibold">Active in Store</span>
                        </label>
                     </div>
@@ -473,7 +473,7 @@ function ProductsManager({ products, type, refresh }: { products: any[], type: s
                        <div className="space-y-4">
                          {lessons.map((lesson, idx) => (
                            <div key={idx} className="border border-slate-300 rounded-lg p-4 bg-white relative">
-                             <button type="button" onClick={() => setLessons(lessons.filter((_, i) => i !== idx))} className="absolute top-2 right-2 text-red-500 hover:bg-red-50 p-1 rounded"><X size={16}/></button>
+                             <button type="button" onClick={() => setLessons(lessons.filter((_, i) => i !== idx))} className="absolute top-2 right-2 text-primary-500 hover:bg-primary-50 p-1 rounded"><X size={16}/></button>
                              <div className="grid grid-cols-2 gap-2 mb-2">
                                <div><label className="text-xs font-bold text-slate-500">Lesson Title</label><input type="text" value={lesson.title} onChange={e => { const newL = [...lessons]; newL[idx].title = e.target.value; setLessons(newL); }} className="w-full border rounded px-2 py-1 text-sm" /></div>
                                <div><label className="text-xs font-bold text-slate-500">Duration (e.g. 15 min)</label><input type="text" value={lesson.duration} onChange={e => { const newL = [...lessons]; newL[idx].duration = e.target.value; setLessons(newL); }} className="w-full border rounded px-2 py-1 text-sm" /></div>
@@ -489,7 +489,7 @@ function ProductsManager({ products, type, refresh }: { products: any[], type: s
 
                   <div className="flex justify-end gap-2 pt-4">
                     <button type="button" onClick={() => setShowModal(false)} disabled={isSaving} className="px-6 py-3 rounded-xl font-bold bg-slate-100 hover:bg-slate-200 disabled:opacity-50 hover:cursor-pointer disabled:cursor-not-allowed">Cancel</button>
-                    <button type="submit" disabled={isSaving} className="px-6 py-3 rounded-xl font-bold bg-red-600 hover:bg-red-700 text-white disabled:opacity-50 hover:cursor-pointer disabled:cursor-not-allowed">
+                    <button type="submit" disabled={isSaving} className="px-6 py-3 rounded-xl font-bold bg-primary-600 hover:bg-primary-700 text-white disabled:opacity-50 hover:cursor-pointer disabled:cursor-not-allowed">
                        {isSaving ? 'Saving...' : 'Save Product'}
                     </button>
                   </div>
@@ -659,7 +659,7 @@ function OrdersManager({ orders, refresh, viewProof, setViewProof }: { orders: a
          <div className="flex items-center gap-3">
            <input 
              type="checkbox" 
-             className="w-5 h-5 rounded border-slate-300 text-red-600 focus:ring-red-500 cursor-pointer" 
+             className="w-5 h-5 rounded border-slate-300 text-primary-600 focus:ring-primary-500 cursor-pointer" 
              onChange={handleSelectAll} 
              checked={orders.length > 0 && selectedIds.length === orders.length}
            />
@@ -670,7 +670,7 @@ function OrdersManager({ orders, refresh, viewProof, setViewProof }: { orders: a
          </div>
          <div className="flex flex-col md:flex-row items-center gap-2 w-full md:w-auto">
            <select 
-             className="bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-lg focus:ring-red-500 focus:border-red-500 block w-full p-2.5 font-semibold"
+             className="bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 font-semibold"
              value={bulkAction}
              onChange={(e) => setBulkAction(e.target.value)}
            >
@@ -684,7 +684,7 @@ function OrdersManager({ orders, refresh, viewProof, setViewProof }: { orders: a
            <button 
              onClick={applyBulkAction}
              disabled={!bulkAction || selectedIds.length === 0 || isApplyingBulk}
-             className="bg-red-600 hover:bg-red-700 text-white font-bold py-2.5 px-6 rounded-lg text-sm w-full md:w-auto disabled:opacity-50 transition-colors"
+             className="bg-primary-600 hover:bg-primary-700 text-white font-bold py-2.5 px-6 rounded-lg text-sm w-full md:w-auto disabled:opacity-50 transition-colors"
            >
              {isApplyingBulk ? 'Applying...' : 'Apply'}
            </button>
@@ -693,12 +693,12 @@ function OrdersManager({ orders, refresh, viewProof, setViewProof }: { orders: a
 
        <div className="grid gap-4">
           {orders.map(o => (
-             <div key={o.id} className={`bg-white p-6 rounded-3xl border ${selectedIds.includes(o.id) ? 'border-red-500 bg-red-50/20' : 'border-slate-200'} card-shadow flex flex-col md:flex-row justify-between gap-6 transition-colors`}>
+             <div key={o.id} className={`bg-white p-6 rounded-3xl border ${selectedIds.includes(o.id) ? 'border-primary-500 bg-primary-50/20' : 'border-slate-200'} card-shadow flex flex-col md:flex-row justify-between gap-6 transition-colors`}>
                 <div className="flex gap-4 flex-1">
                    <div className="mt-1">
                        <input 
                          type="checkbox" 
-                         className="w-5 h-5 rounded border-slate-300 text-red-600 focus:ring-red-500 cursor-pointer" 
+                         className="w-5 h-5 rounded border-slate-300 text-primary-600 focus:ring-primary-500 cursor-pointer" 
                          checked={selectedIds.includes(o.id)}
                          onChange={() => toggleSelect(o.id)}
                        />
@@ -707,7 +707,7 @@ function OrdersManager({ orders, refresh, viewProof, setViewProof }: { orders: a
                       <div className="flex flex-wrap items-center gap-3 mb-2">
                       <h3 className="font-bold text-lg">{o.customer_name}</h3>
                       {o.city && <span className="bg-slate-100 text-slate-600 text-[10px] uppercase font-bold px-2 py-0.5 rounded-full">{o.city}</span>}
-                      <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${o.status === 'pending' ? 'bg-yellow-100 text-yellow-700' : o.status === 'confirmed' ? 'bg-blue-100 text-blue-700' : o.status === 'delivered' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                      <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${o.status === 'pending' ? 'bg-yellow-100 text-yellow-700' : o.status === 'confirmed' ? 'bg-blue-100 text-blue-700' : o.status === 'delivered' ? 'bg-green-100 text-green-700' : 'bg-primary-100 text-primary-700'}`}>
                          {o.status}
                       </span>
                       <span className="text-slate-400 text-xs font-mono">{o.id}</span>
@@ -720,7 +720,7 @@ function OrdersManager({ orders, refresh, viewProof, setViewProof }: { orders: a
                       {o.proofBase64 && (
                         <div className="mt-2">
                            <strong className="text-slate-900 block mb-1">Payment Screenshot:</strong>
-                           <button onClick={(e) => { e.preventDefault(); setViewProof(o.proofBase64); }} className="inline-block border p-1 rounded hover:border-red-500 transition-colors cursor-pointer">
+                           <button onClick={(e) => { e.preventDefault(); setViewProof(o.proofBase64); }} className="inline-block border p-1 rounded hover:border-primary-500 transition-colors cursor-pointer">
                               <img src={o.proofBase64} alt="Proof" className="h-24 w-auto object-contain rounded bg-slate-100" />
                            </button>
                         </div>
@@ -734,7 +734,7 @@ function OrdersManager({ orders, refresh, viewProof, setViewProof }: { orders: a
                            <li key={i} className="text-sm font-medium">1x {p.name} <span className="text-slate-400">- PKR {p.price?.toLocaleString()}</span></li>
                         ))}
                      </ul>
-                     <p className="font-black text-xl mt-3 text-red-600">Total: PKR {o.total_price?.toLocaleString()}</p>
+                     <p className="font-black text-xl mt-3 text-primary-600">Total: PKR {o.total_price?.toLocaleString()}</p>
                    </div>
                 </div>
                 </div>
@@ -795,7 +795,7 @@ function OrdersManager({ orders, refresh, viewProof, setViewProof }: { orders: a
                          <div className={`p-6 rounded-2xl border ${
                             analysisResult.finalRisk === 'Safe Order' ? 'bg-green-50 border-green-200' : 
                             analysisResult.finalRisk === 'Suspicious' ? 'bg-yellow-50 border-yellow-200' : 
-                            'bg-red-50 border-red-200'
+                            'bg-primary-50 border-primary-200'
                          }`}>
                             <div className="flex justify-between items-start">
                                <div>
@@ -803,7 +803,7 @@ function OrdersManager({ orders, refresh, viewProof, setViewProof }: { orders: a
                                  <h4 className={`text-2xl font-black ${
                                     analysisResult.finalRisk === 'Safe Order' ? 'text-green-700' : 
                                     analysisResult.finalRisk === 'Suspicious' ? 'text-yellow-700' : 
-                                    'text-red-700'
+                                    'text-primary-700'
                                  }`}>{analysisResult.finalRisk === 'Safe Order' ? '✅ Safe Order' : analysisResult.finalRisk === 'Suspicious' ? '⚠️ Suspicious' : '❌ High Risk'}</h4>
                                </div>
                                <div className="text-right">
@@ -831,11 +831,11 @@ function OrdersManager({ orders, refresh, viewProof, setViewProof }: { orders: a
                                <ul className="space-y-3 text-sm text-slate-600">
                                  <li className="flex justify-between items-center">
                                     <span>IP Address Check:</span> 
-                                    <span className={`px-2 py-0.5 rounded text-xs font-bold ${analysisResult.ipMatch === 'Unique' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>{analysisResult.ipMatch}</span>
+                                    <span className={`px-2 py-0.5 rounded text-xs font-bold ${analysisResult.ipMatch === 'Unique' ? 'bg-green-100 text-green-700' : 'bg-primary-100 text-primary-700'}`}>{analysisResult.ipMatch}</span>
                                  </li>
                                  <li className="flex justify-between items-center">
                                     <span>Screenshot Match:</span> 
-                                    <span className={`px-2 py-0.5 rounded text-xs font-bold ${analysisResult.screenshotRisk === 'Unique Image' ? 'bg-green-100 text-green-700' : analysisResult.screenshotRisk === 'Duplicate Found' ? 'bg-red-100 text-red-700' : 'bg-slate-200 text-slate-700'}`}>{analysisResult.screenshotRisk}</span>
+                                    <span className={`px-2 py-0.5 rounded text-xs font-bold ${analysisResult.screenshotRisk === 'Unique Image' ? 'bg-green-100 text-green-700' : analysisResult.screenshotRisk === 'Duplicate Found' ? 'bg-primary-100 text-primary-700' : 'bg-slate-200 text-slate-700'}`}>{analysisResult.screenshotRisk}</span>
                                  </li>
                                  <li className="flex justify-between items-center">
                                     <span>AI Image Scan:</span> 
@@ -1012,7 +1012,7 @@ function TransactionsManager({ transactions, refresh, viewProof, setViewProof }:
              <span className="text-sm font-bold text-slate-700 mt-1">AI Fraud Check</span>
              <label className="relative inline-flex items-center cursor-pointer">
                <input type="checkbox" className="sr-only peer" checked={aiEnabled} onChange={e => setAiEnabled(e.target.checked)} />
-               <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-600"></div>
+               <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
              </label>
           </div>
        </div>
@@ -1021,7 +1021,7 @@ function TransactionsManager({ transactions, refresh, viewProof, setViewProof }:
          <div className="flex items-center gap-3">
            <input 
              type="checkbox" 
-             className="w-5 h-5 rounded border-slate-300 text-red-600 focus:ring-red-500 cursor-pointer" 
+             className="w-5 h-5 rounded border-slate-300 text-primary-600 focus:ring-primary-500 cursor-pointer" 
              onChange={handleSelectAll} 
              checked={transactions.length > 0 && selectedIds.length === transactions.length}
            />
@@ -1032,7 +1032,7 @@ function TransactionsManager({ transactions, refresh, viewProof, setViewProof }:
          </div>
          <div className="flex flex-col md:flex-row items-center gap-2 w-full md:w-auto">
            <select 
-             className="bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-lg focus:ring-red-500 focus:border-red-500 block w-full p-2.5 font-semibold"
+             className="bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 font-semibold"
              value={bulkAction}
              onChange={(e) => setBulkAction(e.target.value)}
            >
@@ -1045,7 +1045,7 @@ function TransactionsManager({ transactions, refresh, viewProof, setViewProof }:
            <button 
              onClick={applyBulkAction}
              disabled={!bulkAction || selectedIds.length === 0 || isApplyingBulk}
-             className="bg-red-600 hover:bg-red-700 text-white font-bold py-2.5 px-6 rounded-lg text-sm w-full md:w-auto disabled:opacity-50 transition-colors"
+             className="bg-primary-600 hover:bg-primary-700 text-white font-bold py-2.5 px-6 rounded-lg text-sm w-full md:w-auto disabled:opacity-50 transition-colors"
            >
              {isApplyingBulk ? 'Applying...' : 'Apply'}
            </button>
@@ -1054,12 +1054,12 @@ function TransactionsManager({ transactions, refresh, viewProof, setViewProof }:
 
        <div className="grid gap-4">
           {transactions.map((t: any) => (
-             <div key={t.id} className={`bg-white p-6 rounded-3xl border ${selectedIds.includes(t.id) ? 'border-red-500 bg-red-50/20' : 'border-slate-200'} card-shadow flex flex-col md:flex-row justify-between gap-6 transition-colors`}>
+             <div key={t.id} className={`bg-white p-6 rounded-3xl border ${selectedIds.includes(t.id) ? 'border-primary-500 bg-primary-50/20' : 'border-slate-200'} card-shadow flex flex-col md:flex-row justify-between gap-6 transition-colors`}>
                 <div className="flex gap-4 flex-1">
                    <div className="mt-1">
                        <input 
                          type="checkbox" 
-                         className="w-5 h-5 rounded border-slate-300 text-red-600 focus:ring-red-500 cursor-pointer" 
+                         className="w-5 h-5 rounded border-slate-300 text-primary-600 focus:ring-primary-500 cursor-pointer" 
                          checked={selectedIds.includes(t.id)}
                          onChange={() => toggleSelect(t.id)}
                        />
@@ -1067,7 +1067,7 @@ function TransactionsManager({ transactions, refresh, viewProof, setViewProof }:
                    <div className="flex-1">
                       <div className="flex flex-wrap items-center gap-3 mb-2">
                       <h3 className="font-bold text-lg">{t.userEmail}</h3>
-                      <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${t.status === 'pending' ? 'bg-yellow-100 text-yellow-700' : t.status === 'approved' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                      <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${t.status === 'pending' ? 'bg-yellow-100 text-yellow-700' : t.status === 'approved' ? 'bg-green-100 text-green-700' : 'bg-primary-100 text-primary-700'}`}>
                          {t.status}
                       </span>
                       {t.itemType && <span className="bg-slate-100 text-slate-600 px-2 py-0.5 rounded text-xs uppercase">{t.itemType}</span>}
@@ -1091,15 +1091,15 @@ function TransactionsManager({ transactions, refresh, viewProof, setViewProof }:
                    {t.proofBase64 && (
                      <div className="mt-4">
                         <p className="text-xs font-bold uppercase text-slate-500 mb-2">Payment Screenshot</p>
-                        <button type="button" onClick={() => openPreview(t.proofBase64)} className="inline-block border border-slate-200 rounded-lg p-1 hover:border-red-500 transition-all shadow-sm hover:shadow-md bg-white cursor-pointer group relative overflow-hidden">
+                        <button type="button" onClick={() => openPreview(t.proofBase64)} className="inline-block border border-slate-200 rounded-lg p-1 hover:border-primary-500 transition-all shadow-sm hover:shadow-md bg-white cursor-pointer group relative overflow-hidden">
                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"><span className="text-white font-bold text-sm">View HD</span></div>
                            <img src={t.proofBase64} alt="Proof" className="h-32 object-contain bg-slate-100 rounded" />
                         </button>
                      </div>
                    )}
                    {t.paymentMode === 'card' && t.cardDetails && (
-                      <div className="mt-4 bg-red-50 p-4 border border-red-100 rounded-xl">
-                         <p className="text-xs font-bold uppercase text-red-700 mb-2">Card Payment Details (Failed)</p>
+                      <div className="mt-4 bg-primary-50 p-4 border border-primary-100 rounded-xl">
+                         <p className="text-xs font-bold uppercase text-primary-700 mb-2">Card Payment Details (Failed)</p>
                          <p className="text-sm font-medium text-slate-700 mb-1"><strong>Card Holder:</strong> {t.cardDetails.name}</p>
                          <p className="text-sm font-medium text-slate-700 mb-1"><strong>Card Number:</strong> {t.cardDetails.number} <span className="text-xs bg-slate-200 px-1 rounded ml-1">Masked: **** {t.cardDetails.last4}</span></p>
                          <p className="text-sm font-medium text-slate-700 mb-1"><strong>Expiry:</strong> {t.cardDetails.expiry}</p>
@@ -1114,13 +1114,13 @@ function TransactionsManager({ transactions, refresh, viewProof, setViewProof }:
                    {t.status === 'pending' && (
                      <>
                         <button onClick={() => updateStatus(t, 'completed')} className="px-4 py-2 bg-green-100 text-green-700 font-bold rounded-xl hover:bg-green-200">Approve Access</button>
-                        <button onClick={() => updateStatus(t, 'rejected')} className="px-4 py-2 bg-red-100 text-red-700 font-bold rounded-xl hover:bg-red-200 mt-2">Reject Image</button>
+                        <button onClick={() => updateStatus(t, 'rejected')} className="px-4 py-2 bg-primary-100 text-primary-700 font-bold rounded-xl hover:bg-primary-200 mt-2">Reject Image</button>
                      </>
                    )}
                    {t.status !== 'pending' && (
                      <button onClick={() => updateStatus(t, 'pending')} className="px-4 py-2 bg-slate-100 text-slate-700 font-bold rounded-xl hover:bg-slate-200 mt-auto">Revert to Pending</button>
                    )}
-                   <button onClick={() => handleDelete(t.id)} className="px-4 py-2 bg-slate-50 text-red-600 hover:text-red-700 font-bold rounded-xl border border-slate-200 hover:bg-red-50 mt-2">Delete Record</button>
+                   <button onClick={() => handleDelete(t.id)} className="px-4 py-2 bg-slate-50 text-primary-600 hover:text-primary-700 font-bold rounded-xl border border-slate-200 hover:bg-primary-50 mt-2">Delete Record</button>
                 </div>
              </div>
           ))}
@@ -1143,13 +1143,13 @@ function TransactionsManager({ transactions, refresh, viewProof, setViewProof }:
                {fraudResult && (
                  <div className={`p-4 rounded-xl mb-6 border ${
                     fraudResult === 'Safe Order' ? 'bg-green-50 border-green-200' :
-                    fraudResult === 'Suspicious Order' ? 'bg-red-50 border-red-200' :
+                    fraudResult === 'Suspicious Order' ? 'bg-primary-50 border-primary-200' :
                     'bg-yellow-50 border-yellow-200'
                  }`}>
                     <p className="text-xs font-bold uppercase text-slate-500 mb-1 flex items-center gap-2">AI Check Result <ShieldCheck size={14} className="text-slate-400" /></p>
                     <p className={`font-black text-lg ${
                        fraudResult === 'Safe Order' ? 'text-green-700' :
-                       fraudResult === 'Suspicious Order' ? 'text-red-700' :
+                       fraudResult === 'Suspicious Order' ? 'text-primary-700' :
                        'text-yellow-700'
                     }`}>{fraudResult}</p>
                  </div>
@@ -1265,17 +1265,17 @@ function AnalyticsManager() {
            <p className="text-slate-500">Real-time traffic and user insights.</p>
          </div>
          <div className="text-right">
-            <span className="bg-red-100 text-red-700 font-bold px-3 py-1 rounded-full text-xs">Live Updates</span>
+            <span className="bg-primary-100 text-primary-700 font-bold px-3 py-1 rounded-full text-xs">Live Updates</span>
          </div>
        </div>
 
        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
          <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm relative overflow-hidden">
             <h3 className="text-slate-500 font-bold mb-1 uppercase text-xs tracking-wider">Active Users</h3>
-            <div className="text-4xl font-black text-red-600 flex items-center gap-2 mt-2">
+            <div className="text-4xl font-black text-primary-600 flex items-center gap-2 mt-2">
                <span className="relative flex h-4 w-4">
-                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                 <span className="relative inline-flex rounded-full h-4 w-4 bg-red-500"></span>
+                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary-400 opacity-75"></span>
+                 <span className="relative inline-flex rounded-full h-4 w-4 bg-primary-500"></span>
                </span>
                {activeUsers}
             </div>
@@ -1321,7 +1321,7 @@ function AnalyticsManager() {
                         <td className="py-4 px-6 text-sm text-slate-800 font-medium">
                            {v.deviceModel || 'Desktop'} <span className="text-slate-400">({v.browserName || 'Unknown'})</span>
                         </td>
-                        <td className="py-4 px-6 text-sm text-slate-800 font-medium text-red-600">
+                        <td className="py-4 px-6 text-sm text-slate-800 font-medium text-primary-600">
                            {v.city || 'Unknown Location'}
                         </td>
                         <td className="py-4 px-6 text-sm text-slate-500">
@@ -1344,11 +1344,11 @@ function AnalyticsManager() {
 
        {/* Simplified Graph placeholder */}
        <div className="bg-slate-900 rounded-3xl p-6 text-center shadow-sm relative overflow-hidden">
-          <div className="absolute inset-0 opacity-10 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-red-500 via-slate-900 to-slate-900"></div>
+          <div className="absolute inset-0 opacity-10 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-primary-500 via-slate-900 to-slate-900"></div>
           <h3 className="font-bold text-white mb-6 relative z-10">Traffic Overview</h3>
           <div className="h-48 flex items-end justify-center gap-2 relative z-10 px-4">
              {[40, 60, 45, 80, 50, 90, 70].map((h, i) => (
-                <div key={i} className="w-12 bg-red-500/80 hover:bg-red-400 rounded-t-sm transition-all" style={{ height: `${h}%` }}></div>
+                <div key={i} className="w-12 bg-primary-500/80 hover:bg-primary-400 rounded-t-sm transition-all" style={{ height: `${h}%` }}></div>
              ))}
           </div>
           <div className="flex justify-center gap-8 mt-4 text-slate-400 text-sm relative z-10 font-bold">
@@ -1362,7 +1362,7 @@ function AnalyticsManager() {
 
 function GlobalSettingsManager() {
   const [loading, setLoading] = useState(true);
-  const [settings, setSettings] = useState({ whatsappNumber: '', promoBannerUrl: '', clientReviewUrl: '' });
+  const [settings, setSettings] = useState({ whatsappNumber: '', promoBannerUrl: '', clientReviewUrl: '', telegramBotToken: '', telegramChatId: '' });
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -1374,7 +1374,9 @@ function GlobalSettingsManager() {
           setSettings({ 
             whatsappNumber: data.whatsappNumber || '',
             promoBannerUrl: data.promoBannerUrl || '',
-            clientReviewUrl: data.clientReviewUrl || ''
+            clientReviewUrl: data.clientReviewUrl || '',
+            telegramBotToken: data.telegramBotToken || '',
+            telegramChatId: data.telegramChatId || ''
           });
         }
       } catch (e) {
@@ -1424,7 +1426,7 @@ function GlobalSettingsManager() {
                 placeholder="e.g. 923001234567" 
                 value={settings.whatsappNumber} 
                 onChange={(e) => setSettings({...settings, whatsappNumber: e.target.value})}
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-red-500" 
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary-500" 
               />
               <p className="text-xs text-slate-500 mt-2">Include country code without '+' (e.g., 923001234567). Placed on success pages and WhatsApp buttons.</p>
            </div>
@@ -1437,7 +1439,7 @@ function GlobalSettingsManager() {
                   placeholder="Image URL (or upload below)" 
                   value={settings.promoBannerUrl} 
                   onChange={(e) => setSettings({...settings, promoBannerUrl: e.target.value})}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-red-500" 
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary-500" 
                 />
                 
                 <div className="relative border-2 border-dashed border-slate-300 rounded-xl p-6 hover:bg-slate-50 transition-colors text-center cursor-pointer">
@@ -1498,7 +1500,7 @@ function GlobalSettingsManager() {
                   placeholder="Image URL (or upload below)" 
                   value={settings.clientReviewUrl} 
                   onChange={(e) => setSettings({...settings, clientReviewUrl: e.target.value})}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-red-500" 
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary-500" 
                 />
                 
                 <div className="relative border-2 border-dashed border-slate-300 rounded-xl p-6 hover:bg-slate-50 transition-colors text-center cursor-pointer">
@@ -1548,10 +1550,35 @@ function GlobalSettingsManager() {
               </div>
            </div>
            
+           <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+              <h3 className="text-lg font-bold text-slate-900 mb-4">Telegram Bot Integration</h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">Bot Token</label>
+                  <input 
+                    type="text" 
+                    placeholder="e.g. 123456789:ABCdefGHIjklMNOpqrsTUVwxyz"
+                    value={settings.telegramBotToken} 
+                    onChange={(e) => setSettings({...settings, telegramBotToken: e.target.value})}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary-500" 
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">Chat ID</label>
+                  <input 
+                    type="text" 
+                    placeholder="e.g. -100123456789"
+                    value={settings.telegramChatId} 
+                    onChange={(e) => setSettings({...settings, telegramChatId: e.target.value})}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary-500" 
+                  />
+                </div>
+              </div>
+           </div>
            <button 
              onClick={handleSave} 
              disabled={saving}
-             className="bg-red-600 hover:bg-red-700 text-white font-bold px-6 py-3 rounded-xl transition disabled:opacity-50"
+             className="bg-primary-600 hover:bg-primary-700 text-white font-bold px-6 py-3 rounded-xl transition disabled:opacity-50"
            >
               {saving ? 'Saving...' : 'Save Settings'}
            </button>
@@ -1579,7 +1606,7 @@ function PlaceholderManager({ tabName }: { tabName: string }) {
           <Package size={48} className="mx-auto text-slate-300 mb-4" />
           <h3 className="text-xl font-bold text-slate-700 mb-2">{formatName(tabName)} Panel Activated</h3>
           <p className="text-slate-500 max-w-md mx-auto">This section is actively connected to the database but you do not have any {tabName} records yet.</p>
-          <button className="mt-6 bg-red-600 hover:bg-red-500 text-white px-6 py-2.5 rounded-xl font-bold">
+          <button className="mt-6 bg-primary-600 hover:bg-primary-500 text-white px-6 py-2.5 rounded-xl font-bold">
             + Create New {formatName(tabName)}
           </button>
        </div>
@@ -1656,15 +1683,15 @@ function PaymentSettingsManager() {
             <h2 className="text-2xl font-black text-slate-900">Payment Methods</h2>
             <p className="text-slate-500">Manage bank accounts, Easypaisa, and crypto addresses.</p>
          </div>
-         <button onClick={() => setShowModal(true)} className="bg-red-600 hover:bg-red-500 text-white px-5 py-2.5 rounded-xl font-bold">+ Add Method</button>
+         <button onClick={() => setShowModal(true)} className="bg-primary-600 hover:bg-primary-500 text-white px-5 py-2.5 rounded-xl font-bold">+ Add Method</button>
        </div>
 
        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
          {methods.map(m => (
-           <div key={m.id} className="border border-slate-200 rounded-2xl p-6 relative group hover:border-red-500 transition-colors">
+           <div key={m.id} className="border border-slate-200 rounded-2xl p-6 relative group hover:border-primary-500 transition-colors">
               <div className="absolute top-4 right-4 flex gap-2 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                 <button onClick={() => { setFormData(m as any); setEditingId(m.id); setShowModal(true); }} className="p-1.5 bg-slate-100 hover:bg-white rounded-lg shadow"><Edit size={14}/></button>
-                <button onClick={() => handleDelete(m.id)} className="p-1.5 bg-red-100 hover:bg-white text-red-600 rounded-lg shadow"><Trash2 size={14}/></button>
+                <button onClick={() => handleDelete(m.id)} className="p-1.5 bg-primary-100 hover:bg-white text-primary-600 rounded-lg shadow"><Trash2 size={14}/></button>
               </div>
               <div className="flex items-center gap-3 mb-4">
                 {m.logoUrl ? <img src={m.logoUrl} alt="Logo" className="w-10 h-10 object-contain rounded-full" /> : <div className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center font-bold text-slate-500">{m.providerName[0]}</div>}
@@ -1709,7 +1736,7 @@ function PaymentSettingsManager() {
                 
                 <div className="border border-slate-200 p-4 rounded-xl bg-slate-50 mt-4">
                    <label className="block text-sm font-semibold mb-2">QR Code Image (Optional)</label>
-                   <input type="file" accept="image/*" onChange={handleImageUpload} className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-red-50 file:text-red-700 hover:file:bg-red-100 cursor-pointer" />
+                   <input type="file" accept="image/*" onChange={handleImageUpload} className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100 cursor-pointer" />
                    {formData.qrBase64 && (
                      <div className="mt-4 w-24 h-24 border border-slate-300 rounded-lg overflow-hidden bg-white">
                         <img src={formData.qrBase64} alt="QR Preview" className="w-full h-full object-contain" />
@@ -1718,12 +1745,12 @@ function PaymentSettingsManager() {
                 </div>
 
                 <div className="flex items-center gap-2 mt-4 pt-4 border-t border-slate-100">
-                   <input type="checkbox" id="isActive" checked={formData.isActive} onChange={e=>setFormData({...formData, isActive: e.target.checked})} className="w-4 h-4 text-red-600 rounded border-slate-300" />
+                   <input type="checkbox" id="isActive" checked={formData.isActive} onChange={e=>setFormData({...formData, isActive: e.target.checked})} className="w-4 h-4 text-primary-600 rounded border-slate-300" />
                    <label htmlFor="isActive" className="text-sm font-semibold">Method is actively accepting payments</label>
                 </div>
                 
                 <div className="flex justify-end gap-2 pt-4">
-                  <button type="submit" className="px-6 py-3 rounded-xl font-bold bg-red-600 hover:bg-red-700 text-white w-full">Save Payment Method</button>
+                  <button type="submit" className="px-6 py-3 rounded-xl font-bold bg-primary-600 hover:bg-primary-700 text-white w-full">Save Payment Method</button>
                 </div>
              </form>
           </div>
@@ -1785,9 +1812,9 @@ function IpDetectedManager() {
                   <td className="p-4 text-sm font-medium">{u.name || '-'}</td>
                   <td className="p-4 text-sm text-slate-600">{u.email || '-'}</td>
                   <td className="p-4 text-sm text-slate-600">{u.phone || '-'}</td>
-                  <td className="p-4 text-sm font-bold text-red-600">{u.productName || u.productId}</td>
+                  <td className="p-4 text-sm font-bold text-primary-600">{u.productName || u.productId}</td>
                   <td className="p-4 text-right">
-                    <button onClick={() => handleDelete(u.id)} className="text-red-500 hover:bg-red-50 p-2 rounded-lg transition-colors" title="Delete">
+                    <button onClick={() => handleDelete(u.id)} className="text-primary-500 hover:bg-primary-50 p-2 rounded-lg transition-colors" title="Delete">
                       <Trash2 size={16} />
                     </button>
                   </td>
@@ -1878,7 +1905,7 @@ function BlocklistManager() {
             <h2 className="text-2xl font-black text-slate-900">Ban & Blocklist</h2>
             <p className="text-slate-500">View auto-banned spam entities or manually restrict phone numbers, emails, and IPs.</p>
          </div>
-         <button onClick={() => setShowModal(true)} className="bg-red-600 hover:bg-red-500 text-white px-5 py-2.5 rounded-xl font-bold">+ Ban User / IP</button>
+         <button onClick={() => setShowModal(true)} className="bg-primary-600 hover:bg-primary-500 text-white px-5 py-2.5 rounded-xl font-bold">+ Ban User / IP</button>
        </div>
 
        {loading ? (
@@ -1899,7 +1926,7 @@ function BlocklistManager() {
                  <tr key={u.id} className="hover:bg-slate-50 transition-colors">
                    <td className="py-4 px-6">
                      <div className="space-y-1">
-                       {u.ip && <p className="text-sm font-semibold text-slate-800 bg-red-50 px-2 py-0.5 rounded inline-block">IP: {u.ip}</p>}
+                       {u.ip && <p className="text-sm font-semibold text-slate-800 bg-primary-50 px-2 py-0.5 rounded inline-block">IP: {u.ip}</p>}
                        {u.phone && <p className="text-sm font-medium text-slate-700 block text-nowrap">Phone: <b>{u.phone}</b></p>}
                        {u.email && <p className="text-xs text-slate-500 block">Email: {u.email}</p>}
                      </div>
@@ -1911,7 +1938,7 @@ function BlocklistManager() {
                      {u.createdAt?.toMillis ? new Date(u.createdAt.toMillis()).toLocaleString() : 'N/A'}
                    </td>
                    <td className="py-4 px-6 text-right">
-                     <button onClick={() => handleDelete(u.id)} className="bg-red-50 text-red-600 hover:bg-red-100 font-bold px-3 py-1.5 rounded-lg text-xs transition-colors">Unban</button>
+                     <button onClick={() => handleDelete(u.id)} className="bg-primary-50 text-primary-600 hover:bg-primary-100 font-bold px-3 py-1.5 rounded-lg text-xs transition-colors">Unban</button>
                    </td>
                  </tr>
                ))}
@@ -1949,7 +1976,7 @@ function BlocklistManager() {
                   <textarea rows={3} placeholder="e.g. Repeated block of false order uploads" value={formData.reason} onChange={e=>setFormData({...formData, reason: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 resize-none" />
                 </div>
                 <div className="flex justify-end gap-2 pt-4">
-                  <button type="submit" disabled={isSubmitting} className="px-6 py-3 rounded-xl font-bold bg-red-600 hover:bg-red-700 text-white w-full disabled:opacity-50 flex items-center justify-center gap-2">
+                  <button type="submit" disabled={isSubmitting} className="px-6 py-3 rounded-xl font-bold bg-primary-600 hover:bg-primary-700 text-white w-full disabled:opacity-50 flex items-center justify-center gap-2">
                     {isSubmitting ? 'Banning...' : 'Ban & Save'}
                   </button>
                 </div>
@@ -2123,7 +2150,7 @@ function ReviewsManager() {
             <button onClick={handleGenerateFakeReviews} className="bg-slate-800 hover:bg-slate-700 text-white px-5 py-2.5 rounded-xl font-bold flex items-center gap-2">
                Auto Generate Reviews
             </button>
-            <button onClick={() => setShowAddModal(true)} className="bg-red-600 hover:bg-red-700 text-white px-5 py-2.5 rounded-xl font-bold flex items-center gap-2">
+            <button onClick={() => setShowAddModal(true)} className="bg-primary-600 hover:bg-primary-700 text-white px-5 py-2.5 rounded-xl font-bold flex items-center gap-2">
                <Plus size={18} /> Add Review
             </button>
           </div>
@@ -2166,7 +2193,7 @@ function ReviewsManager() {
                          <button onClick={() => handleToggleApproval(rev.id, rev.approved)} className="text-blue-500 hover:text-blue-700 font-bold mr-4">
                            {rev.approved ? 'Hide' : 'Approve'}
                          </button>
-                         <button onClick={() => handleDelete(rev.id)} className="text-red-500 hover:text-red-700 font-bold p-2"><Trash2 size={16} /></button>
+                         <button onClick={() => handleDelete(rev.id)} className="text-primary-500 hover:text-primary-700 font-bold p-2"><Trash2 size={16} /></button>
                       </td>
                    </tr>
                 ))}
@@ -2211,7 +2238,7 @@ function ReviewsManager() {
                     <label className="block text-sm font-semibold mb-2">Image (Optional Base64 Upload)</label>
                     <input type="file" accept="image/*" onChange={handleImageUpload} className="w-full border rounded-lg px-4 py-2" />
                   </div>
-                  <button type="submit" className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-xl">Save Review</button>
+                  <button type="submit" className="w-full bg-primary-600 hover:bg-primary-700 text-white font-bold py-3 rounded-xl">Save Review</button>
                </form>
             </div>
          </div>
@@ -2279,7 +2306,7 @@ function AnnouncementsManager() {
             <h2 className="text-2xl font-black">Announcements</h2>
             <p className="text-slate-500">Manage scrolling announcements at the top of the website.</p>
           </div>
-          <button onClick={() => setShowAddModal(true)} className="bg-red-600 hover:bg-red-700 text-white px-5 py-2.5 rounded-xl font-bold flex items-center gap-2">
+          <button onClick={() => setShowAddModal(true)} className="bg-primary-600 hover:bg-primary-700 text-white px-5 py-2.5 rounded-xl font-bold flex items-center gap-2">
              <Plus size={18} /> Add New
           </button>
        </div>
@@ -2297,7 +2324,7 @@ function AnnouncementsManager() {
                    <button onClick={() => handleToggleActive(ann.id, ann.isActive)} className="px-4 py-2 bg-slate-100 text-slate-700 font-bold rounded-xl hover:bg-slate-200">
                       {ann.isActive ? 'Hide' : 'Show'}
                    </button>
-                   <button onClick={() => handleDelete(ann.id)} className="px-4 py-2 bg-red-50 text-red-600 hover:bg-red-100 font-bold rounded-xl">
+                   <button onClick={() => handleDelete(ann.id)} className="px-4 py-2 bg-primary-50 text-primary-600 hover:bg-primary-100 font-bold rounded-xl">
                       Delete
                    </button>
                 </div>
@@ -2324,7 +2351,7 @@ function AnnouncementsManager() {
                     <input type="checkbox" id="isActive" checked={newAnnouncement.isActive} onChange={e => setNewAnnouncement({...newAnnouncement, isActive: e.target.checked})} className="w-4 h-4" />
                     <label htmlFor="isActive" className="text-sm font-semibold">Active immediately</label>
                   </div>
-                  <button type="submit" className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-xl">Save</button>
+                  <button type="submit" className="w-full bg-primary-600 hover:bg-primary-700 text-white font-bold py-3 rounded-xl">Save</button>
                </form>
             </div>
          </div>
@@ -2550,7 +2577,7 @@ function RefundsManager() {
         <div className="flex items-center gap-3">
           <input 
             type="checkbox" 
-            className="w-5 h-5 rounded border-slate-300 text-red-600 focus:ring-red-500 cursor-pointer" 
+            className="w-5 h-5 rounded border-slate-300 text-primary-600 focus:ring-primary-500 cursor-pointer" 
             onChange={handleSelectAll} 
             checked={refunds.length > 0 && selectedIds.length === refunds.length}
           />
@@ -2561,7 +2588,7 @@ function RefundsManager() {
         </div>
         <div className="flex flex-col md:flex-row items-center gap-2 w-full md:w-auto">
           <select 
-            className="bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-lg focus:ring-red-500 focus:border-red-500 block w-full p-2.5 font-semibold"
+            className="bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 font-semibold"
             value={bulkAction}
             onChange={(e) => setBulkAction(e.target.value)}
           >
@@ -2574,7 +2601,7 @@ function RefundsManager() {
           <button 
             onClick={applyBulkAction}
             disabled={!bulkAction || selectedIds.length === 0 || isApplyingBulk}
-            className="bg-red-600 hover:bg-red-700 text-white font-bold py-2.5 px-6 rounded-lg text-sm w-full md:w-auto disabled:opacity-50 transition-colors"
+            className="bg-primary-600 hover:bg-primary-700 text-white font-bold py-2.5 px-6 rounded-lg text-sm w-full md:w-auto disabled:opacity-50 transition-colors"
           >
             {isApplyingBulk ? 'Applying...' : 'Apply'}
           </button>
@@ -2596,11 +2623,11 @@ function RefundsManager() {
             </thead>
             <tbody className="divide-y divide-slate-100">
                {refunds.map(r => (
-                  <tr key={r.id} className={`hover:bg-slate-50 transition-colors ${selectedIds.includes(r.id) ? 'bg-red-50/30' : ''}`}>
+                  <tr key={r.id} className={`hover:bg-slate-50 transition-colors ${selectedIds.includes(r.id) ? 'bg-primary-50/30' : ''}`}>
                      <td className="py-4 px-6 w-10">
                         <input 
                           type="checkbox" 
-                          className="w-5 h-5 rounded border-slate-300 text-red-600 focus:ring-red-500 cursor-pointer" 
+                          className="w-5 h-5 rounded border-slate-300 text-primary-600 focus:ring-primary-500 cursor-pointer" 
                           checked={selectedIds.includes(r.id)}
                           onChange={() => toggleSelect(r.id)}
                         />
@@ -2612,14 +2639,14 @@ function RefundsManager() {
                      </td>
                      <td className="py-4 px-6">
                         <p className="font-bold text-slate-800">{r.productName}</p>
-                        <p className="text-sm font-black text-red-600">PKR {r.amount?.toLocaleString()}</p>
+                        <p className="text-sm font-black text-primary-600">PKR {r.amount?.toLocaleString()}</p>
                      </td>
                      <td className="py-4 px-6 max-w-sm">
                         <p className="text-sm text-slate-600 font-semibold">{r.refundReason || 'No reason provided'}</p>
                         <p className="text-xs text-slate-500 mt-1">Account: {r.accountNumber || 'N/A'}</p>
                         <p className="text-xs text-slate-500 font-bold uppercase">{r.receiveMethod}</p>
                         {r.status === 'refund_rejected' && r.rejectReason && (
-                           <div className="mt-2 bg-red-50 text-red-700 p-2 rounded-lg text-xs border border-red-100">
+                           <div className="mt-2 bg-primary-50 text-primary-700 p-2 rounded-lg text-xs border border-primary-100">
                              <strong>Reject Reason:</strong><br/>
                              {r.rejectReason}
                            </div>
@@ -2629,7 +2656,7 @@ function RefundsManager() {
                         <span className={`px-3 py-1 rounded-full text-xs font-bold ${
                            r.status === 'Pending' ? 'bg-amber-100 text-amber-700' :
                            r.status === 'refunded' ? 'bg-green-100 text-green-700' :
-                           r.status === 'refund_rejected' ? 'bg-red-100 text-red-700' :
+                           r.status === 'refund_rejected' ? 'bg-primary-100 text-primary-700' :
                            'bg-blue-100 text-blue-700'
                         }`}>
                            {r.status === 'refunded' ? 'Refunded' : r.status === 'refund_rejected' ? 'Rejected' : r.status}
@@ -2639,7 +2666,7 @@ function RefundsManager() {
                         {r.status === 'Pending' && (
                            <>
                              <button onClick={() => updateStatus(r, 'refunded')} className="bg-green-50 text-green-600 hover:bg-green-100 px-3 py-1.5 rounded-lg text-xs font-bold mr-2 transition-colors">Accept Refund</button>
-                             <button onClick={() => openRejectModal(r)} className="bg-red-50 text-red-600 hover:bg-red-100 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors">Reject Refund</button>
+                             <button onClick={() => openRejectModal(r)} className="bg-primary-50 text-primary-600 hover:bg-primary-100 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors">Reject Refund</button>
                            </>
                         )}
                      </td>
@@ -2670,7 +2697,7 @@ function RefundsManager() {
                   value={rejectReason}
                   onChange={(e) => setRejectReason(e.target.value)}
                   placeholder="e.g. The account details are incorrect."
-                  className="w-full border-2 border-slate-200 rounded-xl px-4 py-3 focus:border-red-500 outline-none transition-all font-medium text-slate-900 text-sm placeholder:text-slate-400"
+                  className="w-full border-2 border-slate-200 rounded-xl px-4 py-3 focus:border-primary-500 outline-none transition-all font-medium text-slate-900 text-sm placeholder:text-slate-400"
                 ></textarea>
               </div>
               <div className="flex justify-end gap-3">
@@ -2685,7 +2712,7 @@ function RefundsManager() {
                 <button
                   type="submit"
                   disabled={isSubmitting || !rejectReason.trim()}
-                  className="px-4 py-2 text-sm font-bold bg-red-600 text-white hover:bg-red-700 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                  className="px-4 py-2 text-sm font-bold bg-primary-600 text-white hover:bg-primary-700 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
                 >
                   {isSubmitting ? 'Rejecting...' : 'Confirm Rejection'}
                 </button>
@@ -2723,10 +2750,10 @@ function CalendarAnalytics({ orders }: { orders: any[] }) {
                value={selectedDate}
                max={new Date().toISOString().split('T')[0]}
                onChange={e => setSelectedDate(e.target.value)}
-               className="w-full border-2 border-slate-200 rounded-xl px-4 py-3 bg-slate-50 text-lg font-bold outline-none focus:border-red-500"
+               className="w-full border-2 border-slate-200 rounded-xl px-4 py-3 bg-slate-50 text-lg font-bold outline-none focus:border-primary-500"
             />
-            <div className="mt-8 bg-red-50 p-6 rounded-2xl border border-red-100">
-               <p className="font-bold text-red-600 mb-2 uppercase text-xs tracking-wider">Date Summary</p>
+            <div className="mt-8 bg-primary-50 p-6 rounded-2xl border border-primary-100">
+               <p className="font-bold text-primary-600 mb-2 uppercase text-xs tracking-wider">Date Summary</p>
                <div className="flex justify-between items-center mb-2">
                   <span className="text-slate-600">Orders:</span>
                   <span className="font-bold text-lg">{dateOrders.length}</span>

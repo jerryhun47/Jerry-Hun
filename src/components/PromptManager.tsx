@@ -252,7 +252,7 @@ export default function PromptManager() {
         </div>
 
         {message.text && (
-          <div className={`p-4 rounded-lg mb-6 ${message.type === 'error' ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-green-50 text-green-700 border border-green-200'}`}>
+          <div className={`p-4 rounded-lg mb-6 ${message.type === 'error' ? 'bg-primary-50 text-primary-700 border border-primary-200' : 'bg-green-50 text-green-700 border border-green-200'}`}>
             {message.text}
           </div>
         )}
@@ -281,11 +281,11 @@ export default function PromptManager() {
               <div className="grid md:grid-cols-2 gap-6">
                  <div>
                     <label className="block text-sm font-semibold text-slate-700 mb-2">Title (Optional)</label>
-                    <input type="text" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} className="w-full border border-slate-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-red-500 outline-none" placeholder="e.g. 10x Your Views with this Hook" />
+                    <input type="text" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} className="w-full border border-slate-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-primary-500 outline-none" placeholder="e.g. 10x Your Views with this Hook" />
                  </div>
                  <div>
                     <label className="block text-sm font-semibold text-slate-700 mb-2">Prompt Link *</label>
-                    <input type="text" required value={formData.promptLink} onChange={e => setFormData({...formData, promptLink: e.target.value})} className="w-full border border-slate-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-red-500 outline-none" placeholder="https://docs.google.com/..." />
+                    <input type="text" required value={formData.promptLink} onChange={e => setFormData({...formData, promptLink: e.target.value})} className="w-full border border-slate-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-primary-500 outline-none" placeholder="https://docs.google.com/..." />
                  </div>
               </div>
 
@@ -293,13 +293,13 @@ export default function PromptManager() {
                  <label className="block text-sm font-semibold text-slate-700 mb-2">YouTube Video Link (Optional)</label>
                  <div className="relative">
                     <Video className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                    <input type="text" value={formData.videoLink} onChange={e => setFormData({...formData, videoLink: e.target.value})} className="w-full border border-slate-300 rounded-lg pl-10 pr-4 py-2.5 focus:ring-2 focus:ring-red-500 outline-none" placeholder="https://youtube.com/watch?v=..." />
+                    <input type="text" value={formData.videoLink} onChange={e => setFormData({...formData, videoLink: e.target.value})} className="w-full border border-slate-300 rounded-lg pl-10 pr-4 py-2.5 focus:ring-2 focus:ring-primary-500 outline-none" placeholder="https://youtube.com/watch?v=..." />
                  </div>
               </div>
 
               <div>
                  <label className="block text-sm font-semibold text-slate-700 mb-2">Short Description (Optional)</label>
-                 <textarea value={formData.shortDesc} onChange={e => setFormData({...formData, shortDesc: e.target.value})} rows={2} className="w-full border border-slate-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-red-500 outline-none" placeholder="1-2 lines summarizing the prompt"></textarea>
+                 <textarea value={formData.shortDesc} onChange={e => setFormData({...formData, shortDesc: e.target.value})} rows={2} className="w-full border border-slate-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-primary-500 outline-none" placeholder="1-2 lines summarizing the prompt"></textarea>
               </div>
 
               {/* Image Upload */}
@@ -310,7 +310,7 @@ export default function PromptManager() {
                     {formData.imageUrl ? (
                        <div className="relative inline-block">
                           <img src={formData.imageUrl} alt="Preview" className="h-40 rounded-lg object-cover shadow-sm border border-slate-200" />
-                          <button type="button" onClick={() => setFormData({...formData, imageUrl: ''})} className="absolute -top-3 -right-3 bg-red-100 text-red-600 hover:bg-red-200 p-1.5 rounded-full shadow-sm"><X size={16}/></button>
+                          <button type="button" onClick={() => setFormData({...formData, imageUrl: ''})} className="absolute -top-3 -right-3 bg-primary-100 text-primary-600 hover:bg-primary-200 p-1.5 rounded-full shadow-sm"><X size={16}/></button>
                        </div>
                     ) : (
                        <div className="w-24 h-24 bg-slate-100 rounded-full flex items-center justify-center text-slate-400">
@@ -326,7 +326,7 @@ export default function PromptManager() {
                  </div>
               </div>
 
-              <button type="submit" className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3.5 rounded-xl transition-all shadow-lg active:scale-95 flex items-center justify-center gap-2">
+              <button type="submit" className="w-full bg-primary-600 hover:bg-primary-700 text-white font-bold py-3.5 rounded-xl transition-all shadow-lg active:scale-95 flex items-center justify-center gap-2">
                  {editingId ? <Save size={20} /> : <Plus size={20} />}
                  {editingId ? 'Save Changes' : 'Publish Prompt'}
               </button>
@@ -350,7 +350,7 @@ export default function PromptManager() {
               {selectedIds.length > 0 && (
                 <button 
                   onClick={handleBulkDelete} 
-                  className="text-sm bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1.5 rounded-lg flex items-center gap-1 transition-colors font-semibold"
+                  className="text-sm bg-primary-100 hover:bg-primary-200 text-primary-700 px-3 py-1.5 rounded-lg flex items-center gap-1 transition-colors font-semibold"
                 >
                   <Trash2 size={16} /> Delete Selected ({selectedIds.length})
                 </button>
@@ -363,14 +363,14 @@ export default function PromptManager() {
         ) : prompts.length > 0 ? (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
              {prompts.map(prompt => (
-                <div key={prompt.id} className={`border ${selectedIds.includes(prompt.id) ? 'border-red-500 ring-2 ring-red-200' : 'border-slate-200'} rounded-xl overflow-hidden shadow-sm flex flex-col hover:border-slate-300 transition-colors bg-slate-50 relative`}>
+                <div key={prompt.id} className={`border ${selectedIds.includes(prompt.id) ? 'border-primary-500 ring-2 ring-primary-200' : 'border-slate-200'} rounded-xl overflow-hidden shadow-sm flex flex-col hover:border-slate-300 transition-colors bg-slate-50 relative`}>
                    
                    {/* Checkbox overlay */}
                    <button 
                      onClick={() => toggleSelection(prompt.id)}
-                     className="absolute top-2 left-2 z-10 bg-white/80 backdrop-blur text-slate-700 hover:text-red-600 p-1.5 rounded-md shadow-sm transition-colors"
+                     className="absolute top-2 left-2 z-10 bg-white/80 backdrop-blur text-slate-700 hover:text-primary-600 p-1.5 rounded-md shadow-sm transition-colors"
                    >
-                     {selectedIds.includes(prompt.id) ? <CheckSquare className="text-red-500" size={18} /> : <Square size={18} />}
+                     {selectedIds.includes(prompt.id) ? <CheckSquare className="text-primary-500" size={18} /> : <Square size={18} />}
                    </button>
 
                    <div className="aspect-video bg-black relative">
@@ -389,7 +389,7 @@ export default function PromptManager() {
                          <button onClick={() => handleEdit(prompt)} className="flex-1 flex justify-center items-center gap-1.5 p-2 bg-blue-100 text-blue-700 hover:bg-blue-200 rounded-lg text-sm font-semibold transition-colors">
                             <Edit2 size={16} /> Edit
                          </button>
-                         <button onClick={() => handleDelete(prompt.id)} className="flex-1 flex justify-center items-center gap-1.5 p-2 bg-red-100 text-red-700 hover:bg-red-200 rounded-lg text-sm font-semibold transition-colors">
+                         <button onClick={() => handleDelete(prompt.id)} className="flex-1 flex justify-center items-center gap-1.5 p-2 bg-primary-100 text-primary-700 hover:bg-primary-200 rounded-lg text-sm font-semibold transition-colors">
                             <Trash2 size={16} /> Delete
                          </button>
                       </div>

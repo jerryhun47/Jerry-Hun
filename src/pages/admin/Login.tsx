@@ -75,14 +75,14 @@ export default function Login() {
     <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
       <div className="bg-white rounded-3xl p-8 w-full max-w-md shadow-2xl">
         <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-red-100 text-red-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+          <div className="w-16 h-16 bg-primary-100 text-primary-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
              <Lock size={32} />
           </div>
           <h1 className="text-2xl font-black text-slate-900">Status Logs</h1>
           <p className="text-slate-500 mt-2">Secure access for Jerry Automation</p>
         </div>
 
-        {error && <div className="bg-red-50 text-red-600 p-4 rounded-xl text-sm mb-6 font-medium">{error}</div>}
+        {error && <div className="bg-primary-50 text-primary-600 p-4 rounded-xl text-sm mb-6 font-medium">{error}</div>}
         {msg && <div className="bg-green-50 text-green-600 p-4 rounded-xl text-sm mb-6 font-medium">{msg}</div>}
 
         <form onSubmit={handleAuth} className="space-y-4">
@@ -95,7 +95,7 @@ export default function Login() {
                  required 
                  value={email} 
                  onChange={e => setEmail(e.target.value)}
-                 className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-red-500" 
+                 className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary-500" 
                  placeholder="your-admin@email.com"
                />
             </div>
@@ -103,7 +103,7 @@ export default function Login() {
           <div>
             <div className="flex justify-between items-center mb-2">
                <label className="block text-sm font-semibold text-slate-700">Password</label>
-               <button type="button" onClick={resetPassword} className="text-xs text-red-600 hover:text-red-700 font-medium">Reset Password</button>
+               <button type="button" onClick={resetPassword} className="text-xs text-primary-600 hover:text-primary-700 font-medium">Reset Password</button>
             </div>
             <div className="relative">
                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
@@ -112,7 +112,7 @@ export default function Login() {
                  required 
                  value={password} 
                  onChange={e => setPassword(e.target.value)}
-                 className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-red-500" 
+                 className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary-500" 
                  placeholder="••••••••"
                />
             </div>

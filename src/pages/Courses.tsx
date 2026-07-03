@@ -138,7 +138,7 @@ export default function Courses() {
                    )
                  ) : (
                    <div className="w-full h-full flex flex-col items-center justify-center text-slate-500 bg-slate-950">
-                     <AlertCircle size={48} className="mb-4 opacity-50 text-red-500" />
+                     <AlertCircle size={48} className="mb-4 opacity-50 text-primary-500" />
                      <p>Course content not formatted correctly or video missing.</p>
                    </div>
                  )}
@@ -154,7 +154,7 @@ export default function Courses() {
 
            <div className="w-full lg:w-1/4">
               <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 sticky top-24 card-shadow">
-                 <h3 className="text-xl font-black text-white mb-6 flex items-center gap-2"><BookOpen size={20} className="text-red-500" /> Curriculum</h3>
+                 <h3 className="text-xl font-black text-white mb-6 flex items-center gap-2"><BookOpen size={20} className="text-primary-500" /> Curriculum</h3>
                  <div className="space-y-3">
                    {(playingCourse.lessons || []).map((lesson: any, i: number) => (
                       <button 
@@ -162,16 +162,16 @@ export default function Courses() {
                          onClick={() => setActiveLessonIndex(i)}
                          className={`w-full text-left p-4 rounded-2xl transition-all flex items-start gap-4 ${
                             activeLessonIndex === i 
-                            ? 'bg-red-600 border border-red-500 text-white shadow-lg shadow-red-500/20' 
+                            ? 'bg-primary-600 border border-primary-500 text-white shadow-lg shadow-primary-500/20' 
                             : 'bg-slate-950 border border-slate-800 text-slate-400 hover:border-slate-700 hover:text-white'
                          }`}
                       >
-                         <div className={`w-8 h-8 rounded-full flex shrink-0 items-center justify-center font-black ${activeLessonIndex === i ? 'bg-white text-red-600' : 'bg-slate-900 text-slate-500'}`}>
+                         <div className={`w-8 h-8 rounded-full flex shrink-0 items-center justify-center font-black ${activeLessonIndex === i ? 'bg-white text-primary-600' : 'bg-slate-900 text-slate-500'}`}>
                             {i + 1}
                          </div>
                          <div>
                             <div className="font-bold mb-1">{lesson.title}</div>
-                            <div className={`text-xs ${activeLessonIndex === i ? 'text-red-100' : 'text-slate-600 font-medium'}`}>{lesson.duration}</div>
+                            <div className={`text-xs ${activeLessonIndex === i ? 'text-primary-100' : 'text-slate-600 font-medium'}`}>{lesson.duration}</div>
                          </div>
                       </button>
                    ))}
@@ -189,7 +189,7 @@ export default function Courses() {
             animate={{ opacity: 1, y: 0 }}
             className="text-center mb-16"
           >
-            <span className="text-red-500 font-bold uppercase tracking-wider text-sm">Premium Knowledge</span>
+            <span className="text-primary-500 font-bold uppercase tracking-wider text-sm">Premium Knowledge</span>
             <h1 className="text-4xl md:text-5xl font-black mt-2 mb-4 text-white">
               YouTube Automation <span className="gradient-text">Courses</span>
             </h1>
@@ -201,7 +201,7 @@ export default function Courses() {
 
           {loading ? (
             <div className="flex justify-center my-32">
-              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-red-600"></div>
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-600"></div>
             </div>
           ) : courses.length === 0 ? (
             <div className="bg-slate-900 border border-slate-800 rounded-3xl p-12 text-center card-shadow">
@@ -225,7 +225,7 @@ export default function Courses() {
                   >
                     <div className="mb-4">
                       <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1">Course</span>
-                      <h3 className="text-xl font-bold text-white group-hover:text-red-400 transition-colors">{course.name}</h3>
+                      <h3 className="text-xl font-bold text-white group-hover:text-primary-400 transition-colors">{course.name}</h3>
                     </div>
                     <p className="text-slate-400 text-sm flex-1 mb-6 line-clamp-3">{course.description}</p>
                     
@@ -264,7 +264,7 @@ export default function Courses() {
                <h2 className="text-3xl font-black text-white mb-2">{viewingCourse.name}</h2>
                
                <div className="flex items-center gap-4 mt-6">
-                 <button onClick={() => handleEnrollClick(viewingCourse)} className="bg-red-600 hover:bg-red-500 text-white px-8 py-3 rounded-xl font-bold transition shadow-lg shadow-red-500/20 active:scale-[0.98]">
+                 <button onClick={() => handleEnrollClick(viewingCourse)} className="bg-primary-600 hover:bg-primary-500 text-white px-8 py-3 rounded-xl font-bold transition shadow-lg shadow-primary-500/20 active:scale-[0.98]">
                     {enrollments.find(e => e.itemId === viewingCourse.id)?.status === 'approved' ? 'Access Course Content' : 'Enroll Now'}
                  </button>
                  <div className="text-2xl font-black text-white">PKR {(viewingCourse.price || 3000).toLocaleString()}</div>

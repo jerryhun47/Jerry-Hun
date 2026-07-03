@@ -37,7 +37,7 @@ export function LiveTrackingManager() {
           <h2 className="text-2xl font-black text-slate-900 mb-1">Live Tracking</h2>
           <p className="text-slate-500 font-medium text-sm">Real-time visitor activity and sessions</p>
         </div>
-        <div className="bg-red-50 text-red-600 px-4 py-2 rounded-xl flex items-center gap-2 font-bold animate-pulse">
+        <div className="bg-primary-50 text-primary-600 px-4 py-2 rounded-xl flex items-center gap-2 font-bold animate-pulse">
            <Activity size={18} /> Live
         </div>
       </div>
@@ -142,8 +142,8 @@ export function AIChatLogsManager() {
                    <span className="bg-indigo-50 border border-indigo-100 p-2 rounded-xl block font-medium text-slate-800">{log.userMsg}</span>
                 </p>
                 <p className="text-sm mt-3">
-                   <strong className="text-red-600 block mb-1 text-xs uppercase tracking-wider">AI Responded:</strong>
-                   <span className="bg-white border border-red-100 p-2 rounded-xl block text-slate-700">{log.aiMsg}</span>
+                   <strong className="text-primary-600 block mb-1 text-xs uppercase tracking-wider">AI Responded:</strong>
+                   <span className="bg-white border border-primary-100 p-2 rounded-xl block text-slate-700">{log.aiMsg}</span>
                 </p>
              </div>
           </div>
@@ -188,7 +188,7 @@ export function UsersManager({ users }: { users: any[] }) {
                       <td className="p-4">{u.name || 'No Name'}</td>
                       <td className="p-4">{u.email}</td>
                       <td className="p-4 flex justify-end">
-                         <button onClick={() => handleDelete(u.id)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg"><Trash2 size={16} /></button>
+                         <button onClick={() => handleDelete(u.id)} className="p-2 text-primary-500 hover:bg-primary-50 rounded-lg"><Trash2 size={16} /></button>
                       </td>
                    </tr>
                 ))}
@@ -260,7 +260,7 @@ export function SEOSettingsManager() {
             <label className="block text-sm font-bold text-slate-700 mb-1">Logo URL (for schema/socials)</label>
             <input type="text" value={settings.logoUrl} onChange={e => setSettings({...settings, logoUrl: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2" placeholder="https://..." />
           </div>
-          <button onClick={handleSave} className="bg-red-600 text-white font-bold px-6 py-3 rounded-xl">Save SEO</button>
+          <button onClick={handleSave} className="bg-primary-600 text-white font-bold px-6 py-3 rounded-xl">Save SEO</button>
        </div>
     </div>
   );
@@ -284,13 +284,13 @@ export function BannersManager() {
     <div className="bg-white rounded-3xl border border-slate-200 p-6">
        <div className="flex justify-between items-center mb-6">
          <h2 className="text-2xl font-bold">Homepage Banners</h2>
-         <button onClick={handleAdd} className="bg-red-600 text-white px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2"><Plus size={16}/> Add Banner</button>
+         <button onClick={handleAdd} className="bg-primary-600 text-white px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2"><Plus size={16}/> Add Banner</button>
        </div>
        <div className="grid md:grid-cols-2 gap-4">
          {banners.map(b => (
             <div key={b.id} className="relative rounded-xl overflow-hidden group">
                <img src={b.url} className="w-full h-40 object-cover" alt="Banner" />
-               <button onClick={() => deleteDoc(doc(db, 'banners', b.id))} className="absolute top-2 right-2 bg-red-600 text-white p-2 rounded-lg opacity-0 group-hover:opacity-100 transition"><Trash2 size={16}/></button>
+               <button onClick={() => deleteDoc(doc(db, 'banners', b.id))} className="absolute top-2 right-2 bg-primary-600 text-white p-2 rounded-lg opacity-0 group-hover:opacity-100 transition"><Trash2 size={16}/></button>
             </div>
          ))}
          {banners.length === 0 && <p className="text-slate-500">No banners.</p>}
@@ -317,7 +317,7 @@ export function MediaManager() {
     <div className="bg-white border border-slate-200 rounded-3xl p-6">
       <div className="flex justify-between mb-6">
          <h2 className="text-2xl font-bold">Media Library</h2>
-         <button onClick={handleAdd} className="bg-red-600 text-white px-4 py-2 font-bold rounded-xl flex items-center gap-2"><Plus size={16} /> Add Media URL</button>
+         <button onClick={handleAdd} className="bg-primary-600 text-white px-4 py-2 font-bold rounded-xl flex items-center gap-2"><Plus size={16} /> Add Media URL</button>
       </div>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
          {media.map(m => (
@@ -329,7 +329,7 @@ export function MediaManager() {
                )}
                <div className="absolute inset-x-0 bottom-0 p-2 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition flex justify-between items-end">
                   <span className="text-[10px] text-white truncate max-w-[100px]">{m.url}</span>
-                  <button onClick={() => deleteDoc(doc(db, 'media', m.id))} className="text-red-500 bg-black/50 p-1 rounded hover:bg-black"><Trash2 size={14} /></button>
+                  <button onClick={() => deleteDoc(doc(db, 'media', m.id))} className="text-primary-500 bg-black/50 p-1 rounded hover:bg-black"><Trash2 size={14} /></button>
                </div>
             </div>
          ))}
@@ -350,7 +350,7 @@ export function NotificationsManager() {
       <h2 className="text-2xl font-bold mb-6">Real-Time Notifications</h2>
       <div className="space-y-3">
          {notifications.map(n => (
-            <div key={n.id} className="p-4 bg-slate-50 border-l-4 border-red-500 rounded-lg">
+            <div key={n.id} className="p-4 bg-slate-50 border-l-4 border-primary-500 rounded-lg">
                <p className="font-medium">{n.message}</p>
                <span className="text-xs text-slate-500">{new Date(n.createdAt?.toMillis() || Date.now()).toLocaleString()}</span>
             </div>
@@ -408,7 +408,7 @@ export function AISettingsManager() {
            </div>
            <label className="relative inline-flex items-center cursor-pointer">
              <input type="checkbox" className="sr-only peer" checked={aiEnabled} onChange={e => setAiEnabled(e.target.checked)} />
-             <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-600"></div>
+             <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
            </label>
         </div>
 
@@ -424,7 +424,7 @@ export function AISettingsManager() {
              value={apiKey} 
              onChange={e => setApiKey(e.target.value)} 
              placeholder={keyPreview ? "Enter new API key to replace the current one" : "Enter Gemini API Key"} 
-             className="w-full text-slate-900 bg-white border-2 border-slate-200 rounded-xl px-4 py-3 placeholder:text-slate-400 font-bold focus:border-red-500 outline-none" 
+             className="w-full text-slate-900 bg-white border-2 border-slate-200 rounded-xl px-4 py-3 placeholder:text-slate-400 font-bold focus:border-primary-500 outline-none" 
           />
         </div>
         
@@ -446,7 +446,7 @@ export function AISettingsManager() {
            }} className="bg-slate-200 text-slate-800 px-6 py-3 rounded-xl font-bold transition-transform active:scale-95 hover:bg-slate-300">
              Test API Key
            </button>
-           {status && <span className={`font-bold text-sm ${status.includes('❌') ? 'text-red-600' : 'text-green-600'}`}>{status}</span>}
+           {status && <span className={`font-bold text-sm ${status.includes('❌') ? 'text-primary-600' : 'text-green-600'}`}>{status}</span>}
         </div>
       </div>
     </div>

@@ -338,19 +338,19 @@ export default function PaymentModal({ item, type, onClose }: { item: any, type:
 
             <form onSubmit={handleEmailAuth} className="space-y-4">
                <div>
-                  <input type="email" required placeholder="Email Address" value={email} onChange={e => setEmail(e.target.value)} className="w-full bg-slate-950 border border-slate-800 text-white rounded-lg px-4 py-3 focus:ring-2 focus:ring-red-500" />
+                  <input type="email" required placeholder="Email Address" value={email} onChange={e => setEmail(e.target.value)} className="w-full bg-slate-950 border border-slate-800 text-white rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary-500" />
                </div>
                <div>
-                  <input type="password" required placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} className="w-full bg-slate-950 border border-slate-800 text-white rounded-lg px-4 py-3 focus:ring-2 focus:ring-red-500" />
+                  <input type="password" required placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} className="w-full bg-slate-950 border border-slate-800 text-white rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary-500" />
                </div>
-               {authError && <p className="text-red-500 text-sm">{authError}</p>}
-               <button type="submit" className="w-full bg-red-600 hover:bg-red-500 text-white font-bold py-3 rounded-xl transition shadow-lg shadow-red-500/20">
+               {authError && <p className="text-primary-500 text-sm">{authError}</p>}
+               <button type="submit" className="w-full bg-primary-600 hover:bg-primary-500 text-white font-bold py-3 rounded-xl transition shadow-lg shadow-primary-500/20">
                  {isLogin ? 'Sign In' : 'Sign Up'}
                </button>
             </form>
             <p className="text-center mt-4 text-slate-400 text-sm">
                {isLogin ? "Don't have an account? " : "Already have an account? "}
-               <button onClick={() => setIsLogin(!isLogin)} className="text-red-400 hover:text-red-300 font-bold">{isLogin ? 'Sign Up' : 'Sign In'}</button>
+               <button onClick={() => setIsLogin(!isLogin)} className="text-primary-400 hover:text-primary-300 font-bold">{isLogin ? 'Sign Up' : 'Sign In'}</button>
             </p>
           </div>
         ) : (
@@ -365,21 +365,21 @@ export default function PaymentModal({ item, type, onClose }: { item: any, type:
               </div>
               <div className="flex justify-between items-center">
                  <span className="text-slate-400">Total Amount</span>
-                 <span className="text-red-400 font-black text-xl">PKR {item.price || 3000}</span>
+                 <span className="text-primary-400 font-black text-xl">PKR {item.price || 3000}</span>
               </div>
             </div>
 
             <div className="space-y-4 mb-6">
                  <div>
-                    <label className="text-xs uppercase font-bold text-slate-400 ml-1">WhatsApp / Phone (Mandatory) <span className="text-red-500">*</span></label>
-                    <input type="tel" required placeholder="+923000000000" value={userPhone} onChange={e => setUserPhone(e.target.value)} className="w-full bg-slate-950 border border-slate-800 text-white rounded-lg px-4 py-3 mt-1 focus:ring-2 focus:ring-red-500" />
+                    <label className="text-xs uppercase font-bold text-slate-400 ml-1">WhatsApp / Phone (Mandatory) <span className="text-primary-500">*</span></label>
+                    <input type="tel" required placeholder="+923000000000" value={userPhone} onChange={e => setUserPhone(e.target.value)} className="w-full bg-slate-950 border border-slate-800 text-white rounded-lg px-4 py-3 mt-1 focus:ring-2 focus:ring-primary-500" />
                  </div>
             </div>
 
             <div className="flex gap-2 mb-6 p-1 bg-slate-950 rounded-xl overflow-x-auto hide-scrollbar">
-              <button onClick={() => setPaymentMode('wallet')} className={`flex-1 py-2 px-3 text-sm font-bold rounded-lg transition-colors whitespace-nowrap focus:outline-none ${paymentMode === 'wallet' ? 'bg-red-600 text-white' : 'text-slate-400 hover:text-white'}`}>Bank / Wallets</button>
-              <button onClick={() => setPaymentMode('card')} className={`flex-1 py-2 px-3 text-sm font-bold rounded-lg transition-colors whitespace-nowrap focus:outline-none ${paymentMode === 'card' ? 'bg-red-600 text-white' : 'text-slate-400 hover:text-white'}`}>Card Payment</button>
-              <button onClick={() => setPaymentMode('binance')} className={`flex-1 py-2 px-3 text-sm font-bold rounded-lg transition-colors whitespace-nowrap focus:outline-none ${paymentMode === 'binance' ? 'bg-red-600 text-white' : 'text-slate-400 hover:text-white'}`}>Binance</button>
+              <button onClick={() => setPaymentMode('wallet')} className={`flex-1 py-2 px-3 text-sm font-bold rounded-lg transition-colors whitespace-nowrap focus:outline-none ${paymentMode === 'wallet' ? 'bg-primary-600 text-white' : 'text-slate-400 hover:text-white'}`}>Bank / Wallets</button>
+              <button onClick={() => setPaymentMode('card')} className={`flex-1 py-2 px-3 text-sm font-bold rounded-lg transition-colors whitespace-nowrap focus:outline-none ${paymentMode === 'card' ? 'bg-primary-600 text-white' : 'text-slate-400 hover:text-white'}`}>Card Payment</button>
+              <button onClick={() => setPaymentMode('binance')} className={`flex-1 py-2 px-3 text-sm font-bold rounded-lg transition-colors whitespace-nowrap focus:outline-none ${paymentMode === 'binance' ? 'bg-primary-600 text-white' : 'text-slate-400 hover:text-white'}`}>Binance</button>
             </div>
 
             {paymentMode === 'wallet' && (
@@ -417,7 +417,7 @@ export default function PaymentModal({ item, type, onClose }: { item: any, type:
 
                 <div className="mb-6">
                   <label className="block text-sm font-semibold mb-2 text-slate-300">Upload Payment Screenshot</label>
-                  <label className={`w-full border-2 border-dashed ${proofBase64 ? 'border-green-500 bg-green-500/10' : status === 'processing' ? 'border-blue-500 bg-blue-500/10' : 'border-slate-700 hover:border-red-500 hover:bg-slate-800/50'} rounded-2xl p-6 flex flex-col items-center justify-center cursor-pointer transition-colors min-h-[120px]`}>
+                  <label className={`w-full border-2 border-dashed ${proofBase64 ? 'border-green-500 bg-green-500/10' : status === 'processing' ? 'border-blue-500 bg-blue-500/10' : 'border-slate-700 hover:border-primary-500 hover:bg-slate-800/50'} rounded-2xl p-6 flex flex-col items-center justify-center cursor-pointer transition-colors min-h-[120px]`}>
                      {status === 'processing' ? (
                        <div className="flex flex-col items-center text-blue-500">
                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mb-2"></div>
@@ -429,7 +429,7 @@ export default function PaymentModal({ item, type, onClose }: { item: any, type:
                          <span className="font-medium text-sm">Image Uploaded</span>
                        </div>
                      ) : (
-                       <div className="flex flex-col items-center text-slate-400 group-hover:text-red-400">
+                       <div className="flex flex-col items-center text-slate-400 group-hover:text-primary-400">
                          <Upload size={32} className="mb-2" />
                          <span className="font-medium text-sm mb-1">Click to upload screenshot</span>
                          <span className="text-xs text-slate-500">JPG, PNG (Max 5MB)</span>
@@ -445,20 +445,20 @@ export default function PaymentModal({ item, type, onClose }: { item: any, type:
               <div className="space-y-4 mb-6">
                  <div>
                     <label className="block text-sm font-semibold mb-1 text-slate-400">Cardholder Name</label>
-                    <input type="text" placeholder="Name on Card" value={cardDetails.name} onChange={e => setCardDetails(prev => ({...prev, name: e.target.value}))} className="w-full bg-slate-950 border border-slate-800 text-white rounded-lg px-4 py-3 focus:ring-2 focus:ring-red-500" />
+                    <input type="text" placeholder="Name on Card" value={cardDetails.name} onChange={e => setCardDetails(prev => ({...prev, name: e.target.value}))} className="w-full bg-slate-950 border border-slate-800 text-white rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary-500" />
                  </div>
                  <div>
                     <label className="block text-sm font-semibold mb-1 text-slate-400">Card Number</label>
-                    <input type="text" placeholder="0000 0000 0000 0000" value={cardDetails.number} onChange={e => setCardDetails(prev => ({...prev, number: e.target.value}))} className="w-full bg-slate-950 border border-slate-800 text-white rounded-lg px-4 py-3 focus:ring-2 focus:ring-red-500 font-mono tracking-widest" />
+                    <input type="text" placeholder="0000 0000 0000 0000" value={cardDetails.number} onChange={e => setCardDetails(prev => ({...prev, number: e.target.value}))} className="w-full bg-slate-950 border border-slate-800 text-white rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary-500 font-mono tracking-widest" />
                  </div>
                  <div className="grid grid-cols-2 gap-4">
                     <div>
                        <label className="block text-sm font-semibold mb-1 text-slate-400">Expiry (MM/YY)</label>
-                       <input type="text" placeholder="MM/YY" value={cardDetails.expiry} onChange={e => setCardDetails(prev => ({...prev, expiry: e.target.value}))} className="w-full bg-slate-950 border border-slate-800 text-white rounded-lg px-4 py-3 focus:ring-2 focus:ring-red-500 font-mono" />
+                       <input type="text" placeholder="MM/YY" value={cardDetails.expiry} onChange={e => setCardDetails(prev => ({...prev, expiry: e.target.value}))} className="w-full bg-slate-950 border border-slate-800 text-white rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary-500 font-mono" />
                     </div>
                     <div>
                        <label className="block text-sm font-semibold mb-1 text-slate-400">CVV</label>
-                       <input type="password" placeholder="•••" value={cardDetails.cvv} onChange={e => setCardDetails(prev => ({...prev, cvv: e.target.value}))} className="w-full bg-slate-950 border border-slate-800 text-white rounded-lg px-4 py-3 focus:ring-2 focus:ring-red-500 font-mono tracking-widest" />
+                       <input type="password" placeholder="•••" value={cardDetails.cvv} onChange={e => setCardDetails(prev => ({...prev, cvv: e.target.value}))} className="w-full bg-slate-950 border border-slate-800 text-white rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary-500 font-mono tracking-widest" />
                     </div>
                  </div>
               </div>
@@ -473,13 +473,13 @@ export default function PaymentModal({ item, type, onClose }: { item: any, type:
             )}
 
             {status === 'error' && (
-              <div className="bg-red-500/10 border border-red-500/30 text-red-500 rounded-lg p-3 text-sm mb-4 flex items-center gap-2">
+              <div className="bg-primary-500/10 border border-primary-500/30 text-primary-500 rounded-lg p-3 text-sm mb-4 flex items-center gap-2">
                 <AlertCircle size={16} /> Error submitting proof. Please try again.
               </div>
             )}
 
             {status === 'card_error' && (
-              <div className="bg-red-500/10 border border-red-500/30 text-red-500 rounded-lg p-3 text-sm mb-4 text-center font-bold">
+              <div className="bg-primary-500/10 border border-primary-500/30 text-primary-500 rounded-lg p-3 text-sm mb-4 text-center font-bold">
                  Card service currently unavailable. Please use Easypaisa or JazzCash.
               </div>
             )}
@@ -487,7 +487,7 @@ export default function PaymentModal({ item, type, onClose }: { item: any, type:
             <button 
               disabled={paymentMode === 'binance' || (paymentMode === 'wallet' && !proofBase64) || (paymentMode === 'card' && (!cardDetails.number || !cardDetails.expiry || !cardDetails.cvv || !cardDetails.name)) || (!userPhone) || status === 'uploading' || status === 'processing'} 
               onClick={handleSubmitProof}
-              className="w-full bg-red-600 hover:bg-red-500 disabled:opacity-50 disabled:hover:bg-red-600 text-white font-bold py-4 rounded-xl transition shadow-lg shadow-red-500/20 active:scale-[0.98]"
+              className="w-full bg-primary-600 hover:bg-primary-500 disabled:opacity-50 disabled:hover:bg-primary-600 text-white font-bold py-4 rounded-xl transition shadow-lg shadow-primary-500/20 active:scale-[0.98]"
             >
                {status === 'uploading' ? 'Submitting...' : paymentMode === 'card' ? 'Pay Securely' : paymentMode === 'wallet' ? 'Submit Payment Proof' : 'Unavailable'}
             </button>

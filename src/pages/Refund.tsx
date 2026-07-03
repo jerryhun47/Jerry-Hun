@@ -129,7 +129,7 @@ export default function Refund() {
                  A confirmation email has just been sent to your email address.<br/>
                  Please check your inbox or spam folder.
                </p>
-               <p><strong className="text-red-600 font-bold inline-block">Please do not contact support repeatedly.</strong></p>
+               <p><strong className="text-primary-600 font-bold inline-block">Please do not contact support repeatedly.</strong></p>
              </div>
           </motion.div>
         ) : (
@@ -140,7 +140,7 @@ export default function Refund() {
             </div>
 
             {status === 'error' && (
-               <div className="bg-red-50 text-red-600 p-3 rounded-xl flex items-center gap-2 font-semibold text-sm">
+               <div className="bg-primary-50 text-primary-600 p-3 rounded-xl flex items-center gap-2 font-semibold text-sm">
                   <AlertCircle size={18} />
                   {errorMsg}
                </div>
@@ -154,7 +154,7 @@ export default function Refund() {
                   value={formData.fullName}
                   onChange={e => setFormData({...formData, fullName: e.target.value})}
                   placeholder="Your Full Name"
-                  className="w-full border-2 border-slate-200 rounded-xl px-4 py-2 focus:border-red-500 outline-none transition-all font-bold text-slate-900 text-sm placeholder:text-slate-400 placeholder:font-medium opacity-100"
+                  className="w-full border-2 border-slate-200 rounded-xl px-4 py-2 focus:border-primary-500 outline-none transition-all font-bold text-slate-900 text-sm placeholder:text-slate-400 placeholder:font-medium opacity-100"
                />
             </div>
 
@@ -166,7 +166,7 @@ export default function Refund() {
                   value={formData.email}
                   onChange={e => setFormData({...formData, email: e.target.value})}
                   placeholder="Your Email"
-                  className="w-full border-2 border-slate-200 rounded-xl px-4 py-2 focus:border-red-500 outline-none transition-all font-bold text-slate-900 text-sm placeholder:text-slate-400 placeholder:font-medium opacity-100"
+                  className="w-full border-2 border-slate-200 rounded-xl px-4 py-2 focus:border-primary-500 outline-none transition-all font-bold text-slate-900 text-sm placeholder:text-slate-400 placeholder:font-medium opacity-100"
                />
             </div>
 
@@ -177,7 +177,7 @@ export default function Refund() {
                   value={reason}
                   onChange={e => setReason(e.target.value)}
                   placeholder="Write your reason (optional)"
-                  className="w-full border-2 border-slate-200 rounded-xl px-4 py-2 focus:border-red-500 outline-none transition-all font-bold text-slate-900 text-sm placeholder:text-slate-400 placeholder:font-medium opacity-100"
+                  className="w-full border-2 border-slate-200 rounded-xl px-4 py-2 focus:border-primary-500 outline-none transition-all font-bold text-slate-900 text-sm placeholder:text-slate-400 placeholder:font-medium opacity-100"
                />
             </div>
 
@@ -187,7 +187,7 @@ export default function Refund() {
                   required
                   value={selectedProductId}
                   onChange={e => setSelectedProductId(e.target.value)}
-                  className="w-full border-2 border-slate-200 rounded-xl px-4 py-2 focus:border-red-500 outline-none transition-all font-bold text-slate-900 text-sm bg-white opacity-100"
+                  className="w-full border-2 border-slate-200 rounded-xl px-4 py-2 focus:border-primary-500 outline-none transition-all font-bold text-slate-900 text-sm bg-white opacity-100"
                >
                   <option value="" disabled>-- Select a product --</option>
                   {products.map(p => (
@@ -200,7 +200,7 @@ export default function Refund() {
               {selectedProduct && (
                  <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="overflow-hidden">
                     <div className="bg-slate-50 border border-slate-200 p-4 rounded-xl mb-4">
-                       <p className="text-sm font-bold text-slate-600">Selected Product Price: <span className="text-red-600">{selectedProduct.price?.toLocaleString()} PKR</span></p>
+                       <p className="text-sm font-bold text-slate-600">Selected Product Price: <span className="text-primary-600">{selectedProduct.price?.toLocaleString()} PKR</span></p>
                     </div>
                  </motion.div>
               )}
@@ -212,7 +212,7 @@ export default function Refund() {
                   <select 
                      required
                      value={formData.receiveMethod} onChange={e => setFormData({...formData, receiveMethod: e.target.value})}
-                     className="w-full border-2 border-slate-200 rounded-xl px-4 py-2 focus:border-red-500 outline-none transition-all font-bold text-slate-900 text-sm bg-white opacity-100"
+                     className="w-full border-2 border-slate-200 rounded-xl px-4 py-2 focus:border-primary-500 outline-none transition-all font-bold text-slate-900 text-sm bg-white opacity-100"
                   >
                      <option value="Easypaisa">Easypaisa</option>
                      <option value="JazzCash">JazzCash</option>
@@ -222,12 +222,12 @@ export default function Refund() {
                   
                   <input 
                      type="text" required value={formData.accountNumber} onChange={e => setFormData({...formData, accountNumber: e.target.value})}
-                     className="w-full border-2 border-slate-200 rounded-xl px-4 py-2 focus:border-red-500 outline-none transition-all font-bold text-slate-900 text-sm placeholder:text-slate-500 placeholder:font-medium opacity-100"
+                     className="w-full border-2 border-slate-200 rounded-xl px-4 py-2 focus:border-primary-500 outline-none transition-all font-bold text-slate-900 text-sm placeholder:text-slate-500 placeholder:font-medium opacity-100"
                      placeholder="Account Number *"
                   />
                   <input 
                      type="text" required value={formData.accountName} onChange={e => setFormData({...formData, accountName: e.target.value})}
-                     className="w-full border-2 border-slate-200 rounded-xl px-4 py-2 focus:border-red-500 outline-none transition-all font-bold text-slate-900 text-sm placeholder:text-slate-500 placeholder:font-medium opacity-100"
+                     className="w-full border-2 border-slate-200 rounded-xl px-4 py-2 focus:border-primary-500 outline-none transition-all font-bold text-slate-900 text-sm placeholder:text-slate-500 placeholder:font-medium opacity-100"
                      placeholder="Account Holder Name *"
                   />
                </div>

@@ -1,3 +1,5 @@
+#!/bin/bash
+cat << 'CSS_EOF' > temp_css.css
 :root {
   --primary-50: #fef2f2;
   --primary-100: #fee2e2;
@@ -63,48 +65,7 @@
   --primary-900: #7c2d12;
   --primary-950: #431407;
 }
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
-@import "tailwindcss";
-@plugin "@tailwindcss/typography";
-
-@theme {
-  --color-primary: var(--primary-500);
-  --color-primary-50: var(--primary-50);
-  --color-primary-100: var(--primary-100);
-  --color-primary-200: var(--primary-200);
-  --color-primary-300: var(--primary-300);
-  --color-primary-400: var(--primary-400);
-  --color-primary-500: var(--primary-500);
-  --color-primary-600: var(--primary-600);
-  --color-primary-700: var(--primary-700);
-  --color-primary-800: var(--primary-800);
-  --color-primary-900: var(--primary-900);
-  --color-primary-950: var(--primary-950);
-  --color-secondary: #ff4040;
-  --font-sans: 'Inter', sans-serif;
-}
-
-@layer base {
-  html {
-    scroll-behavior: smooth;
-  }
-  body {
-    @apply bg-slate-950 text-slate-300 font-sans antialiased;
-  }
-}
-
-.gradient-text {
-  @apply bg-clip-text text-transparent bg-gradient-to-r from-primary-600 to-primary-400;
-}
-
-.card-shadow {
-  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.5), 0 5px 15px -10px rgba(0, 0, 0, 0.3);
-}
-
-.hero-orb {
-  @apply absolute rounded-full mix-blend-screen filter blur-[140px] opacity-[0.08] animate-pulse bg-gradient-to-r from-primary-600/50 to-primary-900/50;
-}
-
-.glass-effect {
-  @apply bg-white/5 backdrop-blur-md border border-white/10;
-}
+CSS_EOF
+cat temp_css.css src/index.css > src/index_new.css
+mv src/index_new.css src/index.css
+rm temp_css.css

@@ -68,17 +68,17 @@ export default function Layout() {
               
               <Link to="/" className="flex items-center group pointer-events-auto shrink-0 ml-4">
                   <motion.div className="w-10 h-10 flex items-center justify-center overflow-hidden shrink-0">
-                    <img src="/logo.png" alt="Jerry Automation Logo" className="w-full h-full object-contain" />
+                    <img src="/logo.png" alt="Jerry Automation Logo" width="40" height="40" className="w-full h-full object-contain" />
                   </motion.div>
                   <motion.span className="font-bold text-lg sm:text-xl tracking-tight text-white group-hover:text-slate-200 transition-colors ml-1 shrink-0 whitespace-nowrap">
-                    Jerry <span className="text-red-500 font-extrabold hidden sm:inline">Automation</span>
+                    Jerry <span className="text-primary-500 font-extrabold hidden sm:inline">Automation</span>
                   </motion.span>
               </Link>
             </div>
 
             {/* Right: Buy Tools Button */}
             <div className="flex-1 flex justify-end z-50">
-              <Link to="/tools" className="bg-red-600 hover:bg-red-500 text-white px-4 py-2 text-sm rounded-full font-medium transition-all shadow-lg shadow-red-500/30 shrink-0">
+              <Link to="/tools" className="bg-primary-600 hover:bg-primary-500 text-white px-4 py-2 text-sm rounded-full font-medium transition-all shadow-lg shadow-primary-500/30 shrink-0">
                 Buy Tools
               </Link>
             </div>
@@ -94,7 +94,7 @@ export default function Layout() {
                 to={link.path}
                 onClick={() => setIsOpen(false)}
                 className={`block font-medium px-4 py-3 rounded-lg transition-colors ${
-                  location.pathname === link.path ? 'bg-red-500/10 text-red-500' : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                  location.pathname === link.path ? 'bg-primary-500/10 text-primary-500' : 'text-slate-300 hover:bg-slate-800 hover:text-white'
                 }`}
               >
                 {link.name}
@@ -128,33 +128,33 @@ export default function Layout() {
           <div className="col-span-1 md:col-span-2">
             <Link to="/" className="flex items-center gap-2 mb-4 group inline-flex">
               <div className="bg-white p-1 rounded-lg group-hover:bg-slate-200 transition-colors w-10 h-10 flex items-center justify-center overflow-hidden">
-                <img src="/logo.webp" alt="Jerry Automation Logo" width="40" height="40" className="w-full h-full object-contain" />
+                <img src="/logo.png" alt="Jerry Automation Logo" width="40" height="40" className="w-full h-full object-contain" />
               </div>
-              <span className="font-bold text-xl text-white tracking-tight group-hover:text-slate-200 transition-colors">Jerry <span className="text-red-500 font-extrabold">Automation</span></span>
+              <span className="font-bold text-xl text-white tracking-tight group-hover:text-slate-200 transition-colors">Jerry <span className="text-primary-500 font-extrabold">Automation</span></span>
             </Link>
             <p className="mb-4">Pakistan's #1 YouTube Automation platform. Start your passive income journey today.</p>
           </div>
           <div>
             <h4 className="text-white font-semibold mb-4">Quick Links</h4>
             <ul className="space-y-2">
-              <li><Link to="/" className="hover:text-red-400 transition-colors">Home</Link></li>
-              <li><Link to="/tools" className="hover:text-red-400 transition-colors">Tools Store</Link></li>
-              <li><Link to="/courses" className="hover:text-red-400 transition-colors">Courses</Link></li>
-              <li><Link to="/prompts" className="hover:text-red-400 transition-colors">Prompts</Link></li>
-              <li><Link to="/refund" className="hover:text-red-400 transition-colors">Refund</Link></li>
+              <li><Link to="/" className="hover:text-primary-400 transition-colors">Home</Link></li>
+              <li><Link to="/tools" className="hover:text-primary-400 transition-colors">Tools Store</Link></li>
+              <li><Link to="/courses" className="hover:text-primary-400 transition-colors">Courses</Link></li>
+              <li><Link to="/prompts" className="hover:text-primary-400 transition-colors">Prompts</Link></li>
+              <li><Link to="/refund" className="hover:text-primary-400 transition-colors">Refund</Link></li>
             </ul>
           </div>
           <div>
             <h4 className="text-white font-semibold mb-4">Legal</h4>
             <ul className="space-y-2">
-              <li><Link to="/privacy-policy" className="hover:text-red-400 transition-colors">Privacy Policy</Link></li>
-              <li><Link to="/terms-conditions" className="hover:text-red-400 transition-colors">Terms & Conditions</Link></li>
+              <li><Link to="/privacy-policy" className="hover:text-primary-400 transition-colors">Privacy Policy</Link></li>
+              <li><Link to="/terms-conditions" className="hover:text-primary-400 transition-colors">Terms & Conditions</Link></li>
             </ul>
           </div>
         </div>
         <div className="max-w-7xl mx-auto px-4 pb-4 sm:px-6 lg:px-8 mt-12 pt-8 border-t border-slate-900 text-center text-sm flex flex-col md:flex-row justify-between items-center text-slate-500">
             <p>&copy; {new Date().getFullYear()} Jerry Automation. All rights reserved.</p>
-            <Link to="/admin/login" className="hover:text-red-400 mt-4 md:mt-0 transition-colors">Status Logs</Link>
+            <Link to="/admin/login" className="hover:text-primary-400 mt-4 md:mt-0 transition-colors">Status Logs</Link>
         </div>
       </footer>
       

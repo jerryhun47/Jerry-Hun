@@ -106,7 +106,7 @@ export default function WebsiteEditor() {
       {/* Editor Header */}
       <div className="h-16 border-b border-slate-800 bg-slate-950 flex items-center justify-between px-6 shrink-0 z-10">
         <div className="flex items-center gap-4 text-white">
-           <Globe className="text-red-500" />
+           <Globe className="text-primary-500" />
            <span className="font-black text-lg">Visual Image Placer</span>
         </div>
         
@@ -117,7 +117,7 @@ export default function WebsiteEditor() {
         </div>
 
         <div className="flex items-center gap-2">
-           <button onClick={handlePublish} disabled={isPublishing || !selectedEditorId || !uploadedImageUrl} className="bg-red-600 hover:bg-red-500 text-white px-5 py-2 rounded-xl text-sm font-bold transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+           <button onClick={handlePublish} disabled={isPublishing || !selectedEditorId || !uploadedImageUrl} className="bg-primary-600 hover:bg-primary-500 text-white px-5 py-2 rounded-xl text-sm font-bold transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
              <Save size={16} /> {isPublishing ? 'Publishing...' : 'Publish Live'}
            </button>
         </div>
@@ -128,8 +128,8 @@ export default function WebsiteEditor() {
          <div className="w-80 bg-slate-950 border-r border-slate-800 flex flex-col shrink-0">
             <div className="flex-1 overflow-y-auto p-5 minimal-scrollbar space-y-6">
                 <div>
-                   <h3 className="text-sm font-bold text-white mb-2 flex items-center gap-2"><Upload size={16} className="text-red-500"/> Step 1: Upload Photo</h3>
-                   <div className="bg-slate-900 border-2 border-dashed border-slate-700 rounded-xl p-4 text-center relative hover:border-red-500/50 transition-colors">
+                   <h3 className="text-sm font-bold text-white mb-2 flex items-center gap-2"><Upload size={16} className="text-primary-500"/> Step 1: Upload Photo</h3>
+                   <div className="bg-slate-900 border-2 border-dashed border-slate-700 rounded-xl p-4 text-center relative hover:border-primary-500/50 transition-colors">
                       <input 
                         type="file" 
                         accept="image/*"
@@ -167,7 +167,7 @@ export default function WebsiteEditor() {
                 
                 <div className={`transition-opacity ${uploadedImageUrl && selectedEditorId ? 'opacity-100' : 'opacity-50 pointer-events-none'}`}>
                    <h3 className="text-sm font-bold text-white mb-2 flex items-center gap-2"><Save size={16} className="text-green-500"/> Step 3: Publish</h3>
-                   <button onClick={handlePublish} disabled={isPublishing} className="w-full bg-red-600 hover:bg-red-500 text-white px-5 py-3 rounded-xl text-sm font-bold transition-all flex justify-center items-center gap-2">
+                   <button onClick={handlePublish} disabled={isPublishing} className="w-full bg-primary-600 hover:bg-primary-500 text-white px-5 py-3 rounded-xl text-sm font-bold transition-all flex justify-center items-center gap-2">
                      {isPublishing ? 'Publishing...' : 'Publish to Live Website'}
                    </button>
                 </div>
