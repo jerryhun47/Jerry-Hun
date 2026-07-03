@@ -449,22 +449,22 @@ function CheckoutModal({ product, onClose }: any) {
 
         // Send to Telegram in background
         if (telegramSettings.token && telegramSettings.chatId) {
-           const message = `🔔 *New Order Received*
+           const message = `🔔 <b>New Order Received</b>
 
-*Product:* ${product.name}
-*Plan:* ${selectedPlan}
-*Price:* Rs ${selectedPrice}
-*Customer:* ${name}
-*Phone:* ${phone}
-*Email:* ${email}
-*Payment Mode:* ${paymentMode}`;
+<b>Product:</b> ${product.name}
+<b>Plan:</b> ${selectedPlan}
+<b>Price:</b> Rs ${selectedPrice}
+<b>Customer:</b> ${name}
+<b>Phone:</b> ${phone}
+<b>Email:</b> ${email}
+<b>Payment Mode:</b> ${paymentMode}`;
            fetch(`https://api.telegram.org/bot${telegramSettings.token}/sendMessage`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                  chat_id: telegramSettings.chatId,
                  text: message,
-                 parse_mode: 'Markdown'
+                 parse_mode: 'HTML'
               })
            }).catch(e => console.error("Telegram notification failed", e));
         }
@@ -510,22 +510,22 @@ function CheckoutModal({ product, onClose }: any) {
       
         // Send to Telegram in background
         if (telegramSettings.token && telegramSettings.chatId) {
-           const message = `🔔 *New Order Received*
+           const message = `🔔 <b>New Order Received</b>
 
-*Product:* ${product.name}
-*Plan:* ${selectedPlan}
-*Price:* Rs ${selectedPrice}
-*Customer:* ${name}
-*Phone:* ${phone}
-*Email:* ${email}
-*Payment Mode:* ${paymentMode}`;
+<b>Product:</b> ${product.name}
+<b>Plan:</b> ${selectedPlan}
+<b>Price:</b> Rs ${selectedPrice}
+<b>Customer:</b> ${name}
+<b>Phone:</b> ${phone}
+<b>Email:</b> ${email}
+<b>Payment Mode:</b> ${paymentMode}`;
            fetch(`https://api.telegram.org/bot${telegramSettings.token}/sendMessage`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                  chat_id: telegramSettings.chatId,
                  text: message,
-                 parse_mode: 'Markdown'
+                 parse_mode: 'HTML'
               })
            }).catch(e => console.error("Telegram notification failed", e));
         }

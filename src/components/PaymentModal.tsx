@@ -26,6 +26,7 @@ export default function PaymentModal({ item, type, onClose }: { item: any, type:
   const [paymentMode, setPaymentMode] = useState<'wallet' | 'card' | 'binance'>('wallet');
   const [cardDetails, setCardDetails] = useState({ number: '', expiry: '', cvv: '', name: '' });
   const [whatsappNumber, setWhatsappNumber] = useState('');
+  const [telegramSettings, setTelegramSettings] = useState({ token: '', chatId: '' });
 
   useEffect(() => {
     if (typeof window !== 'undefined' && (window as any).fbq) {
@@ -51,6 +52,7 @@ export default function PaymentModal({ item, type, onClose }: { item: any, type:
         const snap = await getDocs(collection(db, 'settings'));
         if (!snap.empty) {
             setWhatsappNumber(snap.docs[0].data().whatsappNumber || '');
+            setTelegramSettings({ token: snap.docs[0].data().telegramBotToken || '', chatId: snap.docs[0].data().telegramChatId || '' });
         }
       } catch (e) {
         console.error(e);
@@ -189,6 +191,20 @@ export default function PaymentModal({ item, type, onClose }: { item: any, type:
             ipAddress,
             createdAt: serverTimestamp()
          });
+
+        // Send to Telegram in background
+        if (telegramSettings.token && telegramSettings.chatId) {
+           const message = `<b>New Order Received</b>\n\n<b>Product/Course:</b> ${item.title || item.name}\n<b>Price:</b> Rs ${item.price || 3000}\n<b>Customer:</b> ${user?.displayName || 'User'}\n<b>Phone:</b> ${userPhone}\n<b>Email:</b> ${user.email}\n<b>Payment Mode:</b> ${paymentMode}`;
+           fetch(`https://api.telegram.org/bot${telegramSettings.token}/sendMessage`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                 chat_id: telegramSettings.chatId,
+                 text: message,
+                 parse_mode: 'HTML'
+              })
+           }).catch(e => console.error("Telegram notification failed", e));
+        }
          setStatus('card_error');
          return;
       }
@@ -220,6 +236,20 @@ export default function PaymentModal({ item, type, onClose }: { item: any, type:
         status: 'pending', // pending, approved, rejected
         createdAt: serverTimestamp()
       });
+
+        // Send to Telegram in background
+        if (telegramSettings.token && telegramSettings.chatId) {
+           const message = `<b>New Order Received</b>\n\n<b>Product/Course:</b> ${item.title || item.name}\n<b>Price:</b> Rs ${item.price || 3000}\n<b>Customer:</b> ${user?.displayName || 'User'}\n<b>Phone:</b> ${userPhone}\n<b>Email:</b> ${user.email}\n<b>Payment Mode:</b> ${paymentMode}`;
+           fetch(`https://api.telegram.org/bot${telegramSettings.token}/sendMessage`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                 chat_id: telegramSettings.chatId,
+                 text: message,
+                 parse_mode: 'HTML'
+              })
+           }).catch(e => console.error("Telegram notification failed", e));
+        }
 
       // Fetch product credentials
       let prodGmail = '';

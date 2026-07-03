@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { Menu, X, MessageCircle } from 'lucide-react';
+import { Menu, X, MessageCircle, Palette } from 'lucide-react';
+import ThemeSelector from './ThemeSelector';
 import { motion, useScroll, useTransform } from 'motion/react';
 import BackgroundEffects from './BackgroundEffects';
 import ParticleSystem from './ParticleSystem';
@@ -107,6 +108,7 @@ export default function Layout() {
               <MessageCircle size={18} className="mr-2 text-indigo-400" />
                Chat with AI
             </button>
+            <ThemeSelector />
           </div>
         )}
       </nav>
