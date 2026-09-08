@@ -95,7 +95,7 @@ export default function Home() {
     if (isEditorMode) return;
     
     if (promoSettings && promoSettings.enabled && !initialPromoShown.current) {
-      const delay = promoSettings.delaySeconds ? promoSettings.delaySeconds * 1000 : 4000;
+      const delay = 15000; // Hardcoded to 15 seconds based on user request
       promoTimerRef.current = setTimeout(() => {
         initialPromoShown.current = true;
         setShowPromo(true);
@@ -297,7 +297,7 @@ export default function Home() {
               initial={{ scale: 0.9, opacity: 0, y: 20 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.9, opacity: 0, y: 20 }}
-              className="bg-slate-900 border border-slate-700/50 rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl relative"
+              className="bg-slate-900 border border-slate-700/50 rounded-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto shadow-2xl relative"
             >
               <button 
                 onClick={() => setShowPromo(false)}
@@ -307,7 +307,7 @@ export default function Home() {
                 <X size={20} />
               </button>
               
-              <div className="p-3 md:p-8 text-center">
+              <div className="p-3 md:p-6 text-center">
                 {promoSettings.badge && (
                   <div className="inline-flex items-center justify-center gap-1 md:gap-2 bg-primary-500/10 text-primary-400 border border-primary-500/20 px-3 md:px-4 py-1 md:py-1.5 rounded-full text-[10px] md:text-sm font-bold tracking-widest uppercase mb-3 md:mb-4 shadow-[0_0_20px_rgba(239,68,68,0.2)]">
                     <Flame size={14} className="animate-pulse md:w-4 md:h-4" />
@@ -315,7 +315,7 @@ export default function Home() {
                   </div>
                 )}
                 {promoSettings.title && (
-                  <h2 className="text-xl md:text-4xl font-black text-white mb-1 md:mb-2 leading-tight">
+                  <h2 className="text-xl md:text-lg font-black text-white mb-1 md:mb-2 leading-tight">
                     {promoSettings.title}
                   </h2>
                 )}
@@ -325,7 +325,11 @@ export default function Home() {
                   </p>
                 )}
                 
-                <div className={`grid grid-cols-1 sm:grid-cols-${Math.min(promoSettings.items?.length || 3, 3)} gap-2 md:gap-6`}>
+                <div className={`grid grid-cols-1 ${
+                  (promoSettings.items?.length || 3) === 1 ? 'sm:grid-cols-1' :
+                  (promoSettings.items?.length || 3) === 2 ? 'sm:grid-cols-2' :
+                  'sm:grid-cols-3'
+                } gap-2 md:gap-6`}>
                                     {promoSettings.items?.map((item: any, i: number) => {
                     const isBlue = item.theme === 'blue';
                     const isPurple = item.theme === 'purple';
@@ -335,18 +339,18 @@ export default function Home() {
                     const btnBg = isBlue ? 'bg-blue-600 hover:bg-blue-500 shadow-blue-500/20' : isPurple ? 'bg-purple-600 hover:bg-purple-500 shadow-purple-500/20' : 'bg-primary-600 hover:bg-primary-500 shadow-primary-500/20';
                     
                     return (
-                      <Link key={i} to={item.link || '#'} className={`bg-slate-800 rounded-lg md:rounded-xl p-2 md:p-5 border border-slate-700 ${borderHover} hover:bg-slate-800/80 transition-all group flex flex-col h-full shadow-lg relative overflow-hidden`}>
+                      <Link key={i} to={item.link || '#'} className={`bg-slate-800 rounded-lg md:rounded-xl p-2 md:p-4 border border-slate-700 ${borderHover} hover:bg-slate-800/80 transition-all group flex flex-col h-full shadow-lg relative overflow-hidden`}>
                         {item.discountBadge && (
                           <div className={`absolute top-0 right-0 ${badgeBg} text-white text-[8px] md:text-xs font-bold px-1.5 md:px-3 py-0.5 md:py-1 rounded-bl-lg`}>{item.discountBadge}</div>
                         )}
-                        <div className="text-2xl md:text-4xl mb-1 md:mb-4 group-hover:scale-110 transition-transform">{item.emoji}</div>
-                        <h3 className="text-[10px] md:text-xl leading-tight md:leading-normal font-bold text-white mb-1 md:mb-2">{item.name}</h3>
+                        <div className="text-2xl md:text-2xl mb-1 md:mb-4 group-hover:scale-110 transition-transform">{item.emoji}</div>
+                        <h3 className="text-[10px] md:text-lg leading-tight md:leading-normal font-bold text-white mb-1 md:mb-2">{item.name}</h3>
                         <p className="hidden md:block text-sm text-slate-400 mb-4 flex-grow">{item.description}</p>
                         <div className="flex flex-col items-center gap-0.5 md:gap-1 mb-2 md:mb-4 mt-auto">
                           <span className="text-[8px] md:text-sm text-slate-400 line-through">PKR {item.originalPrice}</span>
-                          <span className="text-xs md:text-2xl font-black text-white">PKR {item.discountedPrice}</span>
+                          <span className="text-xs md:text-lg font-black text-white">PKR {item.discountedPrice}</span>
                         </div>
-                        <span className={`w-full ${btnBg} text-white font-bold py-1.5 md:py-2.5 rounded text-[10px] md:text-base md:rounded-lg transition-all shadow-lg active:scale-95 inline-block text-center mt-auto`}>Get</span>
+                        <span className={`w-full ${btnBg} text-white font-bold py-1.5 md:py-1.5 rounded text-[10px] md:text-base md:rounded-lg transition-all shadow-lg active:scale-95 inline-block text-center mt-auto`}>Get</span>
                       </Link>
                     )
                   })}
@@ -598,7 +602,7 @@ export default function Home() {
              <h2 className="text-2xl md:text-3xl lg:text-5xl font-black mt-2 mb-8 text-white">Client Reviews</h2>
 
              {/* Main Review Image Embed */}
-             <div className="max-w-4xl mx-auto mb-10 rounded-3xl overflow-hidden border border-slate-800 shadow-2xl bg-slate-900 select-none">
+             <div className="max-w-3xl mx-auto mb-10 rounded-3xl overflow-hidden border border-slate-800 shadow-2xl bg-slate-900 select-none">
                 <img 
                   src={clientReviewUrl} 
                   alt="Client Review"
@@ -625,7 +629,7 @@ export default function Home() {
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -50 }}
                     transition={{ duration: 0.5 }}
-                    className="bg-slate-900 p-6 md:p-8 rounded-3xl border border-slate-800 card-shadow text-center w-full relative"
+                    className="bg-slate-900 p-6 md:p-6 rounded-3xl border border-slate-800 card-shadow text-center w-full relative"
                  >
                     <Quote className="absolute top-6 left-6 text-slate-800 opacity-50" size={32} />
                     <div className="flex justify-center gap-1 mb-4">
@@ -665,7 +669,7 @@ export default function Home() {
           >
              <motion.div 
                initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }}
-               className="bg-slate-900 border border-slate-800 rounded-3xl p-6 md:p-8 w-full max-w-md relative card-shadow max-h-[90vh] overflow-y-auto minimal-scrollbar"
+               className="bg-slate-900 border border-slate-800 rounded-3xl p-6 md:p-6 w-full max-w-md relative card-shadow max-h-[90vh] overflow-y-auto minimal-scrollbar"
              >
                 <button onClick={() => setShowReviewModal(false)} aria-label="Close Modal" className="absolute top-4 right-4 text-slate-400 hover:text-white p-2 bg-slate-800 rounded-full transition-colors"><X size={20}/></button>
                 <h3 className="text-2xl font-bold text-white mb-6">Post Review</h3>
