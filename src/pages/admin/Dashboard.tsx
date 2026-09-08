@@ -7,6 +7,7 @@ import { LayoutDashboard, ShoppingBag, MessageSquare, Package, LogOut, Plus, Tra
 import { useNavigate } from 'react-router-dom';
 import WebsiteEditor from './WebsiteEditor';
 import PromptManager from '../../components/PromptManager';
+import PromoPopupManager from './PromoPopupManager';
 import MessagesManager from '../../components/MessagesManager';
 import { UsersManager, DiscountsManager, SEOSettingsManager, BannersManager, MediaManager, NotificationsManager, AISettingsManager, AIChatLogsManager } from '../../components/AdminFeatures';
 
@@ -112,6 +113,7 @@ export default function Dashboard() {
             { id: 'blocklist', icon: ShieldCheck, label: 'Ban & Blocklist' },
             { id: 'ip_detected', icon: ShieldCheck, label: 'IP Detected (Duplicates)' },
             { id: 'settings', icon: LayoutDashboard, label: 'Global Settings' },
+            { id: 'promo_popup', icon: LayoutDashboard, label: 'Promo Popup' },
             { id: 'messages', icon: MessageSquare, label: 'Inbox', badge: stats.messages },
             { id: 'users', icon: LayoutDashboard, label: 'Users' },
             { id: 'announcements', icon: MessageSquare, label: 'Announcements' },
@@ -206,6 +208,7 @@ export default function Dashboard() {
            {activeTab === 'blocklist' && <BlocklistManager />}
            {activeTab === 'ip_detected' && <IpDetectedManager />}
            {activeTab === 'settings' && <GlobalSettingsManager />}
+           {activeTab === 'promo_popup' && <PromoPopupManager />}
            {activeTab === 'messages' && <MessagesManager contacts={contacts} refresh={fetchData} />}
            {activeTab === 'reviews' && <ReviewsManager />}
            {activeTab === 'announcements' && <AnnouncementsManager />}

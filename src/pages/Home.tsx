@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Play, Flame, Rocket, Wrench, Trophy, GraduationCap, DollarSign, CheckCircle, Star, Target, Video, Settings, Send, Quote, ArrowRight, ShoppingCart, ShieldCheck, Tag, Upload, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { db } from '../lib/firebase';
-import { collection, addDoc, serverTimestamp, getDocs, query, onSnapshot } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, getDocs, query, onSnapshot, doc, getDoc } from 'firebase/firestore';
 import { motion, AnimatePresence } from 'motion/react';
 import { get, set } from 'idb-keyval';
 
@@ -11,7 +11,46 @@ export default function Home() {
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [topProducts, setTopProducts] = useState<any[]>([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
-  const [showPromo, setShowPromo] = useState(true);
+  const [showPromo, setShowPromo] = useState(false);
+  const [promoSettings, setPromoSettings] = useState<any>({
+    enabled: true,
+    delaySeconds: 4,
+    title: 'Grab These Top AI Tools at 50% OFF!',
+    subtitle: 'Supercharge your workflow today with our most popular premium tools before the sale ends.',
+    badge: 'Limited Time Offer For You',
+    items: [
+      {
+        name: 'Google Veo 3',
+        description: 'Advanced AI video generation without limits.',
+        originalPrice: 6000,
+        discountedPrice: 3000,
+        emoji: '🎥',
+        link: '/tools/google-veo-3-ultra',
+        discountBadge: '50% OFF',
+        theme: 'primary'
+      },
+      {
+        name: 'Grok AI',
+        description: 'Unrestricted access to the most powerful reasoning model.',
+        originalPrice: 4000,
+        discountedPrice: 2000,
+        emoji: '🧠',
+        link: '/tools/grok-ai-super-heavy-plan',
+        discountBadge: '50% OFF',
+        theme: 'blue'
+      },
+      {
+        name: 'Midjourney V6',
+        description: 'Create photorealistic images with exact camera settings.',
+        originalPrice: 3000,
+        discountedPrice: 1500,
+        emoji: '🎨',
+        link: '/tools/midjourney-v6-pro',
+        discountBadge: '50% OFF',
+        theme: 'purple'
+      }
+    ]
+  });
   const [promoBannerUrl, setPromoBannerUrl] = useState<string>('/premium-tools.webp');
   const [clientReviewUrl, setClientReviewUrl] = useState<string>('https://drive.google.com/uc?export=view&id=1xbrRWRazzjYJGYkcQArPJBEVxrJOzbgc');
 
@@ -26,9 +65,21 @@ export default function Home() {
         setClientReviewUrl(val);
       }
     });
+
+    const fetchPromoSettings = async () => {
+      try {
+        const d = await getDoc(doc(db, 'settings', 'promo_popup'));
+        if (d.exists()) {
+          setPromoSettings(d.data());
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    fetchPromoSettings();
   }, []);
   const promoTimerRef = useRef<any>(null);
-  const initialPromoShown = useRef(true);
+  const initialPromoShown = useRef(false);
   
   const isEditorMode = new URLSearchParams(window.location.search).get('mode') === 'editor';
 
@@ -41,14 +92,27 @@ export default function Home() {
   const [banners, setBanners] = useState<any[]>([]);
 
   useEffect(() => {
-    let unsubscribeProducts: any = null;
-    let unsubscribeReviews: any = null;
-    let unsubscribeBanners: any = null;
-    let unsubscribeSettings: any = null;
+    if (isEditorMode) return;
+    
+    if (promoSettings && promoSettings.enabled && !initialPromoShown.current) {
+      const delay = promoSettings.delaySeconds ? promoSettings.delaySeconds * 1000 : 4000;
+      promoTimerRef.current = setTimeout(() => {
+        initialPromoShown.current = true;
+        setShowPromo(true);
+      }, delay);
+    }
 
+    return () => {
+      if (promoTimerRef.current) {
+        clearTimeout(promoTimerRef.current);
+      }
+    };
+  }, [promoSettings, isEditorMode]);
+
+  useEffect(() => {
     const fetchTopProducts = () => {
       const q = query(collection(db, 'products'));
-      unsubscribeProducts = onSnapshot(q, { includeMetadataChanges: true }, (querySnapshot) => {
+      getDocs(q).then((querySnapshot) => {
         const prods: any[] = [];
         querySnapshot.forEach((doc) => prods.push({ id: doc.id, ...doc.data() }));
         let activeProds = prods.filter((p: any) => p.is_active !== false && p.category !== 'Course');
@@ -61,13 +125,14 @@ export default function Home() {
         }
 
         activeProds.sort((a, b) => (a.order_index ?? 999) - (b.order_index ?? 999));
-        setTopProducts(activeProds.slice(0, 4));
+        setTopProducts(activeProds.slice(0, 3));
         setLoadingProducts(false);
-      }, (err) => {
+      }).catch((err) => {
         console.error("Error fetching top products", err);
         setTopProducts([
-           { id: 't1', name: 'Premium Netflix Tool', description: 'Lifetime access to Premium accounts auto-generator.', price: 5000, category: 'Entertainment', is_active: true, badge: 'Hot' },
-           { id: 't2', name: 'Canva Pro Tool', description: 'Unlimited Canva Pro features unlocked.', price: 3000, category: 'Design', is_active: true }
+             { id: 't1', name: 'Premium Netflix Tool', description: 'Lifetime access to Premium accounts auto-generator.', price: 5000, category: 'Entertainment', is_active: true, badge: 'Hot', order_index: 0 },
+             { id: 't2', name: 'Canva Pro Tool', description: 'Unlimited Canva Pro features unlocked.', price: 3000, category: 'Design', is_active: true, order_index: 1 },
+             { id: 't3', name: 'Premium Automation Toolkit', description: 'Complete set of tools.', price: 4000, category: 'Tools', is_active: true, order_index: 2 }
         ]);
         setLoadingProducts(false);
       });
@@ -75,7 +140,7 @@ export default function Home() {
 
     const fetchReviews = () => {
       const q = query(collection(db, 'reviews'));
-      unsubscribeReviews = onSnapshot(q, { includeMetadataChanges: true }, (querySnapshot) => {
+      getDocs(q).then((querySnapshot) => {
         const fetchedReviews: any[] = [];
         querySnapshot.forEach(doc => {
           if (doc.data().approved !== false) {
@@ -97,19 +162,26 @@ export default function Home() {
              { name: 'Iqra Noor', city: 'Lahore', text: 'support team ne bht help ki. highly recommended.', rating: 5, time: '12 hrs ago'}
         ];
         setReviewsList([...fetchedReviews, ...defaultReviews]);
-      }, (err) => {
+      }).catch((err) => {
         console.error("Error fetching reviews", err);
+        const defaultReviews = [
+             { name: 'Ali Raza', city: 'Lahore', text: 'bhai zabardast tool hai, highly recommended 💯', rating: 5, time: '1 min ago' },
+             { name: 'Usman Tariq', city: 'Karachi', text: 'service bht fast thi, great experience.', rating: 5, time: '2 mins ago' },
+             { name: 'Zainab Bibi', city: 'Islamabad', text: 'meri automation bilkul set chal rahi hai ab.', rating: 5, time: '5 mins ago' },
+             { name: 'Hamza Khan', city: 'Peshawar', text: 'best investment mene apni life me ki hai!', rating: 5, time: '15 mins ago' }
+        ];
+        setReviewsList(defaultReviews);
       });
     };
 
     fetchTopProducts();
     fetchReviews();
     
-    unsubscribeBanners = onSnapshot(collection(db, 'banners'), (snap) => {
+    getDocs(collection(db, 'banners')).then((snap) => {
        setBanners(snap.docs.map(d => ({id: d.id, ...d.data()})));
-    });
+    }).catch(console.error);
 
-    unsubscribeSettings = onSnapshot(collection(db, 'settings'), (snap) => {
+    getDocs(collection(db, 'settings')).then((snap) => {
       if (!snap.empty) {
         const data = snap.docs[0].data();
         if (data.promoBannerUrl) {
@@ -121,14 +193,8 @@ export default function Home() {
           set('cachedClientReview', data.clientReviewUrl).catch(console.error);
         }
       }
-    });
+    }).catch(console.error);
 
-    return () => {
-      if (unsubscribeProducts) unsubscribeProducts();
-      if (unsubscribeReviews) unsubscribeReviews();
-      if (unsubscribeBanners) unsubscribeBanners();
-      if (unsubscribeSettings) unsubscribeSettings();
-    };
   }, []);
 
   useEffect(() => {
@@ -139,23 +205,7 @@ export default function Home() {
     return () => clearInterval(interval);
   }, [reviewsList.length]);
 
-  useEffect(() => {
-    if (isEditorMode) return;
-    
-    if (!showPromo) {
-      const delay = initialPromoShown.current ? 15000 : 4000;
-      promoTimerRef.current = setTimeout(() => {
-        initialPromoShown.current = true;
-        setShowPromo(true);
-      }, delay);
-    }
 
-    return () => {
-      if (promoTimerRef.current) {
-        clearTimeout(promoTimerRef.current);
-      }
-    };
-  }, [showPromo, isEditorMode]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -236,7 +286,7 @@ export default function Home() {
   return (
     <div className="w-full relative overflow-x-hidden font-sans bg-black">
       <AnimatePresence>
-        {!isEditorMode && showPromo && (
+        {!isEditorMode && showPromo && promoSettings && promoSettings.enabled && (
           <motion.div 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -258,52 +308,48 @@ export default function Home() {
               </button>
               
               <div className="p-3 md:p-8 text-center">
-                <div className="inline-flex items-center justify-center gap-1 md:gap-2 bg-primary-500/10 text-primary-400 border border-primary-500/20 px-3 md:px-4 py-1 md:py-1.5 rounded-full text-[10px] md:text-sm font-bold tracking-widest uppercase mb-3 md:mb-4 shadow-[0_0_20px_rgba(239,68,68,0.2)]">
-                  <Flame size={14} className="animate-pulse md:w-4 md:h-4" />
-                  Limited Time Offer For You
-                </div>
-                <h2 className="text-xl md:text-4xl font-black text-white mb-1 md:mb-2 leading-tight">Grab These Top AI Tools at <span className="text-primary-500">50% OFF!</span></h2>
-                <p className="text-slate-400 mb-4 md:mb-8 max-w-2xl mx-auto text-xs md:text-lg px-2">Supercharge your workflow today with our most popular premium tools before the sale ends.</p>
+                {promoSettings.badge && (
+                  <div className="inline-flex items-center justify-center gap-1 md:gap-2 bg-primary-500/10 text-primary-400 border border-primary-500/20 px-3 md:px-4 py-1 md:py-1.5 rounded-full text-[10px] md:text-sm font-bold tracking-widest uppercase mb-3 md:mb-4 shadow-[0_0_20px_rgba(239,68,68,0.2)]">
+                    <Flame size={14} className="animate-pulse md:w-4 md:h-4" />
+                    {promoSettings.badge}
+                  </div>
+                )}
+                {promoSettings.title && (
+                  <h2 className="text-xl md:text-4xl font-black text-white mb-1 md:mb-2 leading-tight">
+                    {promoSettings.title}
+                  </h2>
+                )}
+                {promoSettings.subtitle && (
+                  <p className="text-slate-400 mb-4 md:mb-8 max-w-2xl mx-auto text-xs md:text-lg px-2">
+                    {promoSettings.subtitle}
+                  </p>
+                )}
                 
-                <div className="grid grid-cols-3 gap-2 md:gap-6">
-                  {/* Veo 3 */}
-                  <Link to="/tools/google-veo-3-ultra" className="bg-slate-800 rounded-lg md:rounded-xl p-2 md:p-5 border border-slate-700 hover:border-primary-500/50 hover:bg-slate-800/80 transition-all group flex flex-col h-full shadow-lg relative overflow-hidden">
-                    <div className="absolute top-0 right-0 bg-primary-600 text-white text-[8px] md:text-xs font-bold px-1.5 md:px-3 py-0.5 md:py-1 rounded-bl-lg">50% OFF</div>
-                    <div className="text-2xl md:text-4xl mb-1 md:mb-4 group-hover:scale-110 transition-transform">🎥</div>
-                    <h3 className="text-[10px] md:text-xl leading-tight md:leading-normal font-bold text-white mb-1 md:mb-2">Google Veo 3</h3>
-                    <p className="hidden md:block text-sm text-slate-400 mb-4 flex-grow">Advanced AI video generation without limits.</p>
-                    <div className="flex flex-col items-center gap-0.5 md:gap-1 mb-2 md:mb-4 mt-auto">
-                      <span className="text-[8px] md:text-sm text-slate-400 line-through">PKR 6,000</span>
-                      <span className="text-xs md:text-2xl font-black text-white">PKR 3,000</span>
-                    </div>
-                    <span className="w-full bg-primary-600 hover:bg-primary-500 text-white font-bold py-1.5 md:py-2.5 rounded text-[10px] md:text-base md:rounded-lg transition-all shadow-lg shadow-primary-500/20 active:scale-95 inline-block text-center mt-auto">Get</span>
-                  </Link>
-                  
-                  {/* Grok */}
-                  <Link to="/tools/grok-ai-super-heavy-plan" className="bg-slate-800 rounded-lg md:rounded-xl p-2 md:p-5 border border-slate-700 hover:border-blue-500/50 hover:bg-slate-800/80 transition-all group flex flex-col h-full shadow-lg relative overflow-hidden">
-                    <div className="absolute top-0 right-0 bg-primary-600 text-white text-[8px] md:text-xs font-bold px-1.5 md:px-3 py-0.5 md:py-1 rounded-bl-lg">50% OFF</div>
-                    <div className="text-2xl md:text-4xl mb-1 md:mb-4 group-hover:scale-110 transition-transform">🧠</div>
-                    <h3 className="text-[10px] md:text-xl leading-tight md:leading-normal font-bold text-white mb-1 md:mb-2">Grok AI</h3>
-                    <p className="hidden md:block text-sm text-slate-400 mb-4 flex-grow">Unrestricted access to the most powerful reasoning model.</p>
-                    <div className="flex flex-col items-center gap-0.5 md:gap-1 mb-2 md:mb-4 mt-auto">
-                      <span className="text-[8px] md:text-sm text-slate-400 line-through">PKR 4,000</span>
-                      <span className="text-xs md:text-2xl font-black text-white">PKR 2,000</span>
-                    </div>
-                    <span className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-1.5 md:py-2.5 rounded text-[10px] md:text-base md:rounded-lg transition-all shadow-lg shadow-blue-500/20 active:scale-95 inline-block text-center mt-auto">Get</span>
-                  </Link>
-
-                  {/* HeyGen */}
-                  <Link to="/tools/heygen-ai-avatar-pro" className="bg-slate-800 rounded-lg md:rounded-xl p-2 md:p-5 border border-slate-700 hover:border-purple-500/50 hover:bg-slate-800/80 transition-all group flex flex-col h-full shadow-lg relative overflow-hidden">
-                    <div className="absolute top-0 right-0 bg-primary-600 text-white text-[8px] md:text-xs font-bold px-1.5 md:px-3 py-0.5 md:py-1 rounded-bl-lg">50% OFF</div>
-                    <div className="text-2xl md:text-4xl mb-1 md:mb-4 group-hover:scale-110 transition-transform">🤖</div>
-                    <h3 className="text-[10px] md:text-xl leading-tight md:leading-normal font-bold text-white mb-1 md:mb-2">HeyGen AI</h3>
-                    <p className="hidden md:block text-sm text-slate-400 mb-4 flex-grow">Create professional studio-quality avatars instantly.</p>
-                    <div className="flex flex-col items-center gap-0.5 md:gap-1 mb-2 md:mb-4 mt-auto">
-                      <span className="text-[8px] md:text-sm text-slate-400 line-through">PKR 5,000</span>
-                      <span className="text-xs md:text-2xl font-black text-white">PKR 2,500</span>
-                    </div>
-                    <span className="w-full bg-purple-600 hover:bg-purple-500 text-white font-bold py-1.5 md:py-2.5 rounded text-[10px] md:text-base md:rounded-lg transition-all shadow-lg shadow-purple-500/20 active:scale-95 inline-block text-center mt-auto">Get</span>
-                  </Link>
+                <div className={`grid grid-cols-1 sm:grid-cols-${Math.min(promoSettings.items?.length || 3, 3)} gap-2 md:gap-6`}>
+                                    {promoSettings.items?.map((item: any, i: number) => {
+                    const isBlue = item.theme === 'blue';
+                    const isPurple = item.theme === 'purple';
+                    
+                    const borderHover = isBlue ? 'hover:border-blue-500/50' : isPurple ? 'hover:border-purple-500/50' : 'hover:border-primary-500/50';
+                    const badgeBg = isBlue ? 'bg-blue-600' : isPurple ? 'bg-purple-600' : 'bg-primary-600';
+                    const btnBg = isBlue ? 'bg-blue-600 hover:bg-blue-500 shadow-blue-500/20' : isPurple ? 'bg-purple-600 hover:bg-purple-500 shadow-purple-500/20' : 'bg-primary-600 hover:bg-primary-500 shadow-primary-500/20';
+                    
+                    return (
+                      <Link key={i} to={item.link || '#'} className={`bg-slate-800 rounded-lg md:rounded-xl p-2 md:p-5 border border-slate-700 ${borderHover} hover:bg-slate-800/80 transition-all group flex flex-col h-full shadow-lg relative overflow-hidden`}>
+                        {item.discountBadge && (
+                          <div className={`absolute top-0 right-0 ${badgeBg} text-white text-[8px] md:text-xs font-bold px-1.5 md:px-3 py-0.5 md:py-1 rounded-bl-lg`}>{item.discountBadge}</div>
+                        )}
+                        <div className="text-2xl md:text-4xl mb-1 md:mb-4 group-hover:scale-110 transition-transform">{item.emoji}</div>
+                        <h3 className="text-[10px] md:text-xl leading-tight md:leading-normal font-bold text-white mb-1 md:mb-2">{item.name}</h3>
+                        <p className="hidden md:block text-sm text-slate-400 mb-4 flex-grow">{item.description}</p>
+                        <div className="flex flex-col items-center gap-0.5 md:gap-1 mb-2 md:mb-4 mt-auto">
+                          <span className="text-[8px] md:text-sm text-slate-400 line-through">PKR {item.originalPrice}</span>
+                          <span className="text-xs md:text-2xl font-black text-white">PKR {item.discountedPrice}</span>
+                        </div>
+                        <span className={`w-full ${btnBg} text-white font-bold py-1.5 md:py-2.5 rounded text-[10px] md:text-base md:rounded-lg transition-all shadow-lg active:scale-95 inline-block text-center mt-auto`}>Get</span>
+                      </Link>
+                    )
+                  })}
                 </div>
               </div>
             </motion.div>

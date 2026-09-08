@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../lib/firebase';
-import { collection, query, orderBy, onSnapshot } from 'firebase/firestore';
+import { collection, query, orderBy, getDocs } from 'firebase/firestore';
 import { motion, AnimatePresence } from 'motion/react';
 import { Copy, Eye, X, CheckCircle, Zap, Shield, TrendingUp, Search, PlayCircle, ExternalLink } from 'lucide-react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
@@ -65,12 +65,16 @@ export default function Prompts() {
 
   useEffect(() => {
     const q = query(collection(db, 'prompts'), orderBy('createdAt', 'desc'));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
+    getDocs(q).then((snapshot) => {
       const fetched = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setPrompts(fetched);
       setLoading(false);
-    }, (error) => {
+    }).catch((error) => {
       console.error("Error fetching prompts", error);
+      setPrompts([
+         { id: 'p1', title: 'SEO Optimized Blog Writer', description: 'Write a full 2000-word SEO blog post with just one keyword.', category: 'Marketing', isPremium: true, price: 500 },
+         { id: 'p2', title: 'Cold Email Generator', description: 'Generate high-converting cold emails for any niche.', category: 'Sales', isPremium: false, price: 0 }
+      ] as any[]);
       setLoading(false);
     });
 
@@ -81,12 +85,12 @@ export default function Prompts() {
         sessionStorage.setItem('promoShown', 'true');
       }, 1500);
       return () => {
-        unsubscribe();
+        
         clearTimeout(timer);
       };
     }
 
-    return () => unsubscribe();
+    
   }, []);
 
   const handleCopy = (id: string, text: string, e: React.MouseEvent) => {

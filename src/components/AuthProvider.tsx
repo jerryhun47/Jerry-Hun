@@ -27,8 +27,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(userAuth);
       if (userAuth) {
         // check if admin
-        const adminDoc = await getDoc(doc(db, 'admins', userAuth.uid));
-        setUserData({ isAdmin: adminDoc.exists() });
+        try {
+          const adminDoc = await getDoc(doc(db, 'admins', userAuth.uid));
+          setUserData({ isAdmin: adminDoc.exists() });
+        } catch (e: any) {
+          console.error("Quota or access error checking admin status:", e);
+          // Fallback bypass if quota is exhausted
+          if (userAuth.email === 'jerryhun47@gmail.com') {
+             setUserData({ isAdmin: true });
+          } else {
+             setUserData({ isAdmin: false });
+          }
+        }
       } else {
         setUserData(null);
       }

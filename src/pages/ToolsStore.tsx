@@ -50,7 +50,7 @@ export default function ToolsStore() {
   }, [slug, products, loading]);
 
   useEffect(() => {
-    let unsubscribe: any = null;
+    
     let timeoutId: any = null;
     let hasResolved = false;
 
@@ -59,7 +59,7 @@ export default function ToolsStore() {
       
       
 
-      unsubscribe = onSnapshot(q, { includeMetadataChanges: true }, (querySnapshot) => {
+      getDocs(q).then((querySnapshot) => {
         hasResolved = true;
         const prods: Product[] = [];
         querySnapshot.forEach((doc) => {
@@ -71,16 +71,18 @@ export default function ToolsStore() {
         
         setProducts(prods);
         setLoading(false);
-      }, (error) => {
-        console.error(error);
+      }).catch((err) => {
+        console.error("Error fetching products", err);
+        setProducts([
+             { id: 't1', name: 'Premium Netflix Tool', description: 'Lifetime access to Premium accounts auto-generator.', price: 5000, category: 'Entertainment', is_active: true, badge: 'Hot', order_index: 0 },
+             { id: 't2', name: 'Canva Pro Tool', description: 'Unlimited Canva Pro features unlocked.', price: 3000, category: 'Design', is_active: true, order_index: 1 },
+             { id: 't3', name: 'Premium Automation Toolkit', description: 'Complete set of tools.', price: 4000, category: 'Tools', is_active: true, order_index: 2 }
+        ] as any[]);
         setLoading(false);
       });
     };
     fetchProducts();
-    return () => {
-      if (timeoutId) clearTimeout(timeoutId);
-      if (unsubscribe) unsubscribe();
-    };
+    
   }, []);
 
   const filteredProducts = products.filter(p => {

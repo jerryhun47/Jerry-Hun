@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../lib/firebase';
-import { collection, onSnapshot, query } from 'firebase/firestore';
+import { collection, getDocs, query } from 'firebase/firestore';
 import { Target } from 'lucide-react';
 
 export default function FrontendAnnouncements() {
@@ -8,11 +8,11 @@ export default function FrontendAnnouncements() {
 
   useEffect(() => {
     try {
-      const unsubscribe = onSnapshot(query(collection(db, 'announcements')), (snap) => {
+      getDocs(query(collection(db, 'announcements'))).then((snap) => {
         const valid = snap.docs.map(d => d.data()).filter((a: any) => a.isActive);
         setAnnouncements(valid);
       });
-      return unsubscribe;
+      
     } catch (e) {
       // ignore
     }

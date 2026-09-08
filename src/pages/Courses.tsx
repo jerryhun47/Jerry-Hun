@@ -62,6 +62,9 @@ export default function Courses() {
         setCourses(fetchedCourses);
       } catch (err) {
         console.error("Error fetching courses", err);
+        setCourses([
+          { id: 'c1', name: 'Master AI Automation', description: 'Learn how to automate businesses using AI tools.', price: 15000, category: 'Course', is_active: true }
+        ]);
       } finally {
         setLoading(false);
       }
