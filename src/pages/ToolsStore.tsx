@@ -76,7 +76,10 @@ export default function ToolsStore() {
         setProducts([
              { id: 't1', name: 'Premium Netflix Tool', description: 'Lifetime access to Premium accounts auto-generator.', price: 5000, category: 'Entertainment', is_active: true, badge: 'Hot', order_index: 0 },
              { id: 't2', name: 'Canva Pro Tool', description: 'Unlimited Canva Pro features unlocked.', price: 3000, category: 'Design', is_active: true, order_index: 1 },
-             { id: 't3', name: 'Premium Automation Toolkit', description: 'Complete set of tools.', price: 4000, category: 'Tools', is_active: true, order_index: 2 }
+             { id: 't3', name: 'Premium Automation Toolkit', description: 'Complete set of tools.', price: 4000, category: 'Tools', is_active: true, order_index: 2 },
+             { id: 't4', name: 'Spotify Premium Generator', description: 'Generate Spotify premium accounts instantly.', price: 2500, category: 'Entertainment', is_active: true, order_index: 3 },
+             { id: 't5', name: 'SEO Keyword Ranker', description: 'Boost your website ranking automatically.', price: 8000, category: 'SEO', is_active: true, order_index: 4 },
+             { id: 't6', name: 'WhatsApp Bulk Sender', description: 'Send unlimited WhatsApp messages.', price: 4500, category: 'Marketing', is_active: true, order_index: 5 }
         ] as any[]);
         setLoading(false);
       });
@@ -269,6 +272,13 @@ function CheckoutModal({ product, onClose }: any) {
         }
       } catch (err) {
         console.error("Failed to fetch payment methods", err);
+        if (isMounted) {
+          setPaymentMethods([
+            { id: 'm1', providerName: 'Easypaisa', accountName: 'Jerry Automation', accountNumber: '0300-1234567', instructions: 'Send payment via Easypaisa App.', isActive: true },
+            { id: 'm2', providerName: 'JazzCash', accountName: 'Jerry Automation', accountNumber: '0300-1234567', instructions: 'Send payment via JazzCash App.', isActive: true },
+            { id: 'm3', providerName: 'Bank Transfer (Meezan)', accountName: 'Jerry Automation', accountNumber: '01234567891234', instructions: 'Transfer to our Meezan Bank account.', isActive: true }
+          ]);
+        }
       }
     };
     const fetchSettings = async () => {
@@ -279,7 +289,10 @@ function CheckoutModal({ product, onClose }: any) {
             setTelegramSettings({ token: snap.docs[0].data().telegramBotToken || '', chatId: snap.docs[0].data().telegramChatId || '' });
         }
       } catch (e) {
-        console.error(e);
+        console.error("Failed to fetch settings", e);
+        if (isMounted) {
+            setWhatsappNumber('+923271991893');
+        }
       }
     }
     fetchMethods();

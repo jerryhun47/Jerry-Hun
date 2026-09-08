@@ -32,44 +32,63 @@ export default function Dashboard() {
   }, [activeTab]);
 
   useEffect(() => {
-    let unsubs: any[] = [];
+let unsubs: any[] = [];
     
+// Fallback data function
+    const applyFallback = (err: any) => {
+        console.error("Firebase quota exceeded, applying fallback data", err);
+        setProducts([
+             { id: 't1', name: 'Premium Netflix Tool', description: 'Lifetime access to Premium accounts auto-generator.', price: 5000, category: 'Entertainment', is_active: true, badge: 'Hot', order_index: 0 },
+             { id: 't2', name: 'Canva Pro Tool', description: 'Unlimited Canva Pro features unlocked.', price: 3000, category: 'Design', is_active: true, order_index: 1 },
+             { id: 't3', name: 'Premium Automation Toolkit', description: 'Complete set of tools.', price: 4000, category: 'Tools', is_active: true, order_index: 2 },
+             { id: 't4', name: 'Spotify Premium Generator', description: 'Generate Spotify premium accounts instantly.', price: 2500, category: 'Entertainment', is_active: true, order_index: 3 },
+             { id: 't5', name: 'SEO Keyword Ranker', description: 'Boost your website ranking automatically.', price: 8000, category: 'SEO', is_active: true, order_index: 4 },
+             { id: 't6', name: 'WhatsApp Bulk Sender', description: 'Send unlimited WhatsApp messages.', price: 4500, category: 'Marketing', is_active: true, order_index: 5 }
+        ]);
+        setOrders([]);
+        setContacts([]);
+        setTransactions([]);
+        setRefunds([]);
+        setUsersList([]);
+        setStats({ products: 6, orders: 0, revenue: 0, messages: 0 });
+    };
+
     // Realtime Products
     unsubs.push(onSnapshot(collection(db, 'products'), (snap) => {
       const pData = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       setProducts(pData);
       setStats(s => ({ ...s, products: pData.length }));
-    }, (err) => console.error(err)));
+    }, applyFallback));
 
     // Realtime Orders
     unsubs.push(onSnapshot(query(collection(db, 'orders'), orderBy('createdAt', 'desc')), (snap) => {
       const oData = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       setOrders(oData);
       setStats(s => ({ ...s, orders: oData.length, revenue: oData.reduce((acc: number, curr: any) => acc + (curr.total_price || 0), 0) }));
-    }, (err) => console.error(err)));
+    }, applyFallback));
 
     // Realtime Contacts
     unsubs.push(onSnapshot(query(collection(db, 'contacts'), orderBy('createdAt', 'desc')), (snap) => {
       const cData = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       setContacts(cData);
       setStats(s => ({ ...s, messages: cData.filter((c:any) => !c.is_read).length }));
-    }, (err) => console.error(err)));
+    }, applyFallback));
 
     // Realtime Transactions
     unsubs.push(onSnapshot(query(collection(db, 'transactions'), orderBy('createdAt', 'desc')), (snap) => {
       const tData = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       setTransactions(tData);
-    }, (err) => console.error(err)));
+    }, applyFallback));
 
     // Realtime Refunds
     unsubs.push(onSnapshot(collection(db, 'refunds'), (snap) => {
       setRefunds(snap.docs.map(d => ({ id: d.id, ...d.data() })));
-    }, (err) => console.error(err)));
+    }, applyFallback));
 
     // Realtime Users
     unsubs.push(onSnapshot(collection(db, 'users'), (snap) => {
       setUsersList(snap.docs.map(d => ({ id: d.id, ...d.data() })));
-    }, (err) => console.error(err)));
+    }, applyFallback));
 
     return () => unsubs.forEach(u => u());
   }, []);
