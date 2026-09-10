@@ -10,6 +10,8 @@ import FrontendAnnouncements from './FrontendAnnouncements';
 import AIChatbot from './AIChatbot';
 
 import LiveTracking from './LiveTracking';
+import TouchFeedback from './TouchFeedback';
+import MobileBottomDock from './MobileBottomDock';
 
 export default function Layout() {
   const [isOpen, setIsOpen] = useState(false);
@@ -121,7 +123,7 @@ export default function Layout() {
       <LiveTracking />
       <AIChatbot isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
 
-      <main className="flex-1 relative z-10 pt-24">
+      <main className="flex-1 relative z-10 pt-24 pb-20 sm:pb-8">
         <Outlet />
       </main>
 
@@ -160,9 +162,23 @@ export default function Layout() {
         </div>
       </footer>
       
-      {/* Floating WhatsApp Button */}
+      {/* Global Interactive Touch Feedback */}
+      <TouchFeedback />
+
+      {/* Mobile Glowing Bottom Dock */}
+      <MobileBottomDock 
+        whatsappNumber={whatsappNumber} 
+        onOpenChat={() => setIsChatOpen(true)} 
+      />
+
+      {/* Desktop Floating WhatsApp Button */}
       {whatsappNumber && (
-        <a href={`https://wa.me/${whatsappNumber.replace(/[^0-9]/g, '') || '923189418941'}`} target="_blank" rel="noopener noreferrer" className="fixed bottom-6 right-6 z-[100] bg-green-500 hover:bg-green-400 text-white p-4 rounded-full shadow-lg shadow-green-500/30 transition-transform hover:scale-110 flex items-center justify-center">
+        <a 
+          href={`https://wa.me/${whatsappNumber.replace(/[^0-9]/g, '') || '923189418941'}`} 
+          target="_blank" 
+          rel="noopener noreferrer" 
+          className="hidden sm:flex fixed bottom-6 right-6 z-[100] bg-green-500 hover:bg-green-400 text-white p-4 rounded-full shadow-lg shadow-green-500/30 transition-transform hover:scale-110 items-center justify-center"
+        >
           <MessageCircle size={32} />
         </a>
       )}

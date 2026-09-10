@@ -124,173 +124,171 @@
 }
 
 /* =========================================================
-   GLOSSY 3D BUTTONS & SPECULAR HIGHLIGHTS (LIGHTWEIGHT CSS)
+   GLOWING CYBER 3D BUTTONS & NEON AURAS (LIGHTWEIGHT CSS)
    ========================================================= */
 
+@keyframes touch-pop {
+  0% {
+    transform: scale(0.2);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.4);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(2.2);
+    opacity: 0;
+  }
+}
+
+.animate-touch-pop {
+  animation: touch-pop 0.65s cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
+}
+
+/* 3D Glowing Typography */
+h1, h2, h3, .font-3d-glow {
+  text-shadow: 
+    0 1px 0 #be123c,
+    0 2px 0 #881337,
+    0 3px 0 #4c0519,
+    0 0 16px rgba(244, 63, 94, 0.7),
+    0 0 32px rgba(225, 29, 72, 0.4);
+}
+
+.gradient-text {
+  @apply bg-clip-text text-transparent bg-gradient-to-r from-rose-400 via-rose-500 to-red-500;
+  filter: drop-shadow(0 0 15px rgba(244, 63, 94, 0.6));
+}
+
+/* Primary Cyber Neon Glowing Buttons */
 .btn-3d-primary,
 button.bg-primary-600,
 a.bg-primary-600 {
   position: relative;
-  background: linear-gradient(180deg, #fb7185 0%, #e11d48 50%, #be123c 100%) !important;
-  border-top: 1px solid rgba(255, 255, 255, 0.45) !important;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.35) !important;
+  background: linear-gradient(135deg, #f43f5e 0%, #e11d48 50%, #be123c 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.4) !important;
   box-shadow: 
-    inset 0 1px 1px rgba(255, 255, 255, 0.5),
-    inset 0 -2px 3px rgba(0, 0, 0, 0.35),
-    0 4px 14px rgba(225, 29, 72, 0.38),
+    0 0 20px rgba(244, 63, 94, 0.6),
+    0 0 40px rgba(225, 29, 72, 0.3),
+    inset 0 0 15px rgba(255, 255, 255, 0.3),
     0 3px 0 #881337 !important;
-  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   overflow: hidden;
 }
 
 .btn-3d-primary:hover,
 button.bg-primary-600:hover,
 a.bg-primary-600:hover {
-  background: linear-gradient(180deg, #fda4af 0%, #f43f5e 50%, #e11d48 100%) !important;
-  transform: translateY(-2px);
+  background: linear-gradient(135deg, #fb7185 0%, #f43f5e 50%, #e11d48 100%) !important;
+  transform: translateY(-2px) scale(1.02);
+  border-color: rgba(255, 255, 255, 0.8) !important;
   box-shadow: 
-    inset 0 1px 2px rgba(255, 255, 255, 0.65),
-    inset 0 -2px 3px rgba(0, 0, 0, 0.25),
-    0 8px 22px rgba(225, 29, 72, 0.55),
+    0 0 30px rgba(244, 63, 94, 0.9),
+    0 0 60px rgba(225, 29, 72, 0.5),
+    inset 0 0 20px rgba(255, 255, 255, 0.45),
     0 5px 0 #881337 !important;
 }
 
 .btn-3d-primary:active,
 button.bg-primary-600:active,
 a.bg-primary-600:active {
-  transform: translateY(2px) !important;
+  transform: translateY(2px) scale(0.98) !important;
   box-shadow: 
-    inset 0 2px 4px rgba(0, 0, 0, 0.5),
-    0 1px 0 #881337,
-    0 2px 6px rgba(225, 29, 72, 0.25) !important;
+    0 0 15px rgba(244, 63, 94, 0.5),
+    inset 0 0 15px rgba(0, 0, 0, 0.4),
+    0 1px 0 #881337 !important;
 }
 
-/* Shimmer shine sweep */
-.btn-3d-primary::after,
-button.bg-primary-600::after,
-a.bg-primary-600::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -130%;
-  width: 60%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.35), transparent);
-  transform: skewX(-20deg);
-  pointer-events: none;
-}
-
-.btn-3d-primary:hover::after,
-button.bg-primary-600:hover::after,
-a.bg-primary-600:hover::after {
-  left: 200%;
-  transition: all 0.65s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* Secondary 3D Glossy Buttons */
+/* Secondary Cyber Glowing Buttons */
 .btn-3d-secondary,
 a.bg-slate-900,
 button.bg-slate-900 {
   position: relative;
-  background: linear-gradient(180deg, #1e293b 0%, #0f172a 65%, #020617 100%) !important;
-  border-top: 1px solid rgba(255, 255, 255, 0.16) !important;
-  border-left: 1px solid rgba(255, 255, 255, 0.08) !important;
-  border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.6) !important;
+  background: linear-gradient(135deg, #0f172a 0%, #030712 100%) !important;
+  border: 1px solid rgba(244, 63, 94, 0.3) !important;
   box-shadow: 
-    inset 0 1px 1px rgba(255, 255, 255, 0.15),
-    0 3px 0 #020617,
-    0 4px 12px rgba(0, 0, 0, 0.6) !important;
-  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+    0 0 15px rgba(244, 63, 94, 0.15),
+    inset 0 0 10px rgba(244, 63, 94, 0.1),
+    0 3px 0 #020617 !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .btn-3d-secondary:hover,
 a.bg-slate-900:hover,
 button.bg-slate-900:hover {
-  background: linear-gradient(180deg, #334155 0%, #1e293b 65%, #0f172a 100%) !important;
-  border-top-color: rgba(244, 63, 94, 0.5) !important;
-  transform: translateY(-2px);
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%) !important;
+  border-color: rgba(244, 63, 94, 0.7) !important;
+  transform: translateY(-2px) scale(1.02);
   box-shadow: 
-    inset 0 1px 2px rgba(255, 255, 255, 0.25),
-    0 5px 0 #020617,
-    0 8px 20px rgba(0, 0, 0, 0.7) !important;
+    0 0 25px rgba(244, 63, 94, 0.4),
+    inset 0 0 15px rgba(244, 63, 94, 0.2),
+    0 5px 0 #020617 !important;
 }
 
 .btn-3d-secondary:active,
 a.bg-slate-900:active,
 button.bg-slate-900:active {
-  transform: translateY(2px) !important;
+  transform: translateY(2px) scale(0.98) !important;
   box-shadow: 
-    inset 0 2px 4px rgba(0, 0, 0, 0.7),
+    0 0 10px rgba(244, 63, 94, 0.2),
     0 1px 0 #020617 !important;
 }
 
-/* Glossy Floating WhatsApp Button */
-a[href*="wa.me"] {
-  background: linear-gradient(180deg, #4ade80 0%, #22c55e 50%, #16a34a 100%) !important;
-  border-top: 1px solid rgba(255, 255, 255, 0.45) !important;
+/* Glowing Cyber Cards */
+.glass-effect,
+.card-shadow {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.04) 0%, rgba(15, 23, 42, 0.75) 100%);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(244, 63, 94, 0.25);
   box-shadow: 
-    inset 0 1px 1px rgba(255, 255, 255, 0.6),
-    0 4px 0 #15803d,
-    0 10px 25px rgba(34, 197, 94, 0.4) !important;
-  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+    0 0 25px rgba(225, 29, 72, 0.12),
+    inset 0 0 20px rgba(244, 63, 94, 0.05),
+    0 10px 30px -5px rgba(0, 0, 0, 0.7);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glass-effect:hover,
+.card-shadow:hover {
+  border-color: rgba(244, 63, 94, 0.55);
+  box-shadow: 
+    0 0 35px rgba(244, 63, 94, 0.3),
+    inset 0 0 25px rgba(244, 63, 94, 0.1),
+    0 15px 40px -10px rgba(0, 0, 0, 0.8);
+}
+
+.hero-orb {
+  @apply absolute rounded-full mix-blend-screen filter blur-[100px] opacity-[0.22] animate-pulse bg-gradient-to-r from-rose-500/80 to-red-700/80;
+  will-change: transform, opacity;
+}
+
+/* Glowing WhatsApp Float */
+a[href*="wa.me"] {
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.45) !important;
+  box-shadow: 
+    0 0 20px rgba(34, 197, 94, 0.6),
+    0 0 40px rgba(34, 197, 94, 0.3),
+    inset 0 0 10px rgba(255, 255, 255, 0.3),
+    0 4px 0 #15803d !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
 a[href*="wa.me"]:hover {
   transform: translateY(-3px) scale(1.08) !important;
   box-shadow: 
-    inset 0 1px 2px rgba(255, 255, 255, 0.75),
-    0 6px 0 #15803d,
-    0 16px 30px rgba(34, 197, 94, 0.55) !important;
+    0 0 30px rgba(34, 197, 94, 0.85),
+    0 0 60px rgba(34, 197, 94, 0.45),
+    inset 0 0 15px rgba(255, 255, 255, 0.5),
+    0 6px 0 #15803d !important;
 }
 
 a[href*="wa.me"]:active {
   transform: translateY(2px) scale(0.98) !important;
   box-shadow: 
-    inset 0 2px 4px rgba(0, 0, 0, 0.4),
+    0 0 15px rgba(34, 197, 94, 0.4),
     0 1px 0 #15803d !important;
 }
 
-/* =========================================================
-   CARDS, GLOWS & WEBSITE TEXTURE
-   ========================================================= */
-
-.gradient-text {
-  @apply bg-clip-text text-transparent bg-gradient-to-r from-rose-400 via-primary-500 to-rose-600;
-}
-
-.card-shadow {
-  box-shadow: 
-    inset 0 1px 0 rgba(255, 255, 255, 0.1),
-    0 10px 30px -5px rgba(0, 0, 0, 0.6), 
-    0 5px 15px -10px rgba(225, 29, 72, 0.2);
-}
-
-.hero-orb {
-  @apply absolute rounded-full mix-blend-screen filter blur-[120px] opacity-[0.14] animate-pulse bg-gradient-to-r from-rose-600/60 to-red-900/60;
-  will-change: transform, opacity;
-}
-
-.glass-effect {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.01) 100%), rgba(15, 23, 42, 0.75);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-top: 1px solid rgba(255, 255, 255, 0.18);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 12px 32px rgba(0, 0, 0, 0.4);
-}
-
-/* Smooth micro-interaction for cards */
-.hover-lift {
-  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.25s ease;
-}
-
-.hover-lift:hover {
-  transform: translateY(-4px);
-  border-color: rgba(244, 63, 94, 0.35);
-  box-shadow: 
-    inset 0 1px 0 rgba(255, 255, 255, 0.2),
-    0 20px 35px -10px rgba(0, 0, 0, 0.6),
-    0 0 20px rgba(225, 29, 72, 0.12);
-}
 
