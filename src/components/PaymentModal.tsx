@@ -25,7 +25,7 @@ export default function PaymentModal({ item, type, onClose }: { item: any, type:
   const [paymentMethods, setPaymentMethods] = useState<any[]>([]);
   const [paymentMode, setPaymentMode] = useState<'wallet' | 'card' | 'binance'>('wallet');
   const [cardDetails, setCardDetails] = useState({ number: '', expiry: '', cvv: '', name: '' });
-  const [whatsappNumber, setWhatsappNumber] = useState('');
+  const [whatsappNumber, setWhatsappNumber] = useState('+923189418941');
   const [telegramSettings, setTelegramSettings] = useState({ token: '', chatId: '' });
 
   useEffect(() => {
@@ -54,11 +54,14 @@ export default function PaymentModal({ item, type, onClose }: { item: any, type:
       try {
         const snap = await getDocs(collection(db, 'settings'));
         if (!snap.empty) {
-            setWhatsappNumber(snap.docs[0].data().whatsappNumber || '');
+            setWhatsappNumber(snap.docs[0].data().whatsappNumber || '+923189418941');
             setTelegramSettings({ token: snap.docs[0].data().telegramBotToken || '', chatId: snap.docs[0].data().telegramChatId || '' });
         }
       } catch (e) {
         console.error(e);
+        if (isMounted) {
+            setWhatsappNumber('+923189418941');
+        }
       }
     }
     fetchMethods();
@@ -330,11 +333,11 @@ export default function PaymentModal({ item, type, onClose }: { item: any, type:
              <p>Please check your email inbox and spam folder. A confirmation email has been sent to you.</p>
              <p>Once your access is approved, you will receive your Gmail and password via email.</p>
              <p>For faster service, please send your payment screenshot to our WhatsApp number below:</p>
-             <p className="text-center font-bold text-green-400 text-lg bg-green-900/20 py-2 rounded-lg border border-green-500/20">WhatsApp: +923271991893</p>
+             <p className="text-center font-bold text-green-400 text-lg bg-green-900/20 py-2 rounded-lg border border-green-500/20">WhatsApp: +923189418941</p>
           </div>
           <div className="space-y-3">
              <a 
-               href={`https://wa.me/923271991893`} 
+               href={`https://wa.me/923189418941`} 
                target="_blank" 
                rel="noreferrer"
                className="inline-flex items-center justify-center gap-2 w-full bg-green-600 hover:bg-green-500 text-white font-bold py-4 rounded-xl transition-all shadow-lg shadow-green-500/20"

@@ -16,7 +16,7 @@ export default function Layout() {
   const [isChatOpen, setIsChatOpen] = useState(false);
   const location = useLocation();
   const [isMobile, setIsMobile] = useState(false);
-  const [whatsappNumber, setWhatsappNumber] = useState('');
+  const [whatsappNumber, setWhatsappNumber] = useState('923189418941');
 
   useEffect(() => {
     setIsMobile(window.innerWidth < 768);
@@ -30,7 +30,7 @@ export default function Layout() {
         const { db } = await import('../lib/firebase');
         const snap = await getDocs(collection(db, 'settings'));
         if (!snap.empty) {
-            setWhatsappNumber(snap.docs[0].data().whatsappNumber || '');
+            setWhatsappNumber(snap.docs[0].data().whatsappNumber || '923189418941');
         }
       } catch (e) {
         console.error(e);
@@ -162,7 +162,7 @@ export default function Layout() {
       
       {/* Floating WhatsApp Button */}
       {whatsappNumber && (
-        <a href={`https://wa.me/${whatsappNumber}`} target="_blank" rel="noopener noreferrer" className="fixed bottom-6 right-6 z-[100] bg-green-500 hover:bg-green-400 text-white p-4 rounded-full shadow-lg shadow-green-500/30 transition-transform hover:scale-110 flex items-center justify-center">
+        <a href={`https://wa.me/${whatsappNumber.replace(/[^0-9]/g, '') || '923189418941'}`} target="_blank" rel="noopener noreferrer" className="fixed bottom-6 right-6 z-[100] bg-green-500 hover:bg-green-400 text-white p-4 rounded-full shadow-lg shadow-green-500/30 transition-transform hover:scale-110 flex items-center justify-center">
           <MessageCircle size={32} />
         </a>
       )}

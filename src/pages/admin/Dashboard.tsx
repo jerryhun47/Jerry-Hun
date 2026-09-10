@@ -1384,7 +1384,7 @@ function AnalyticsManager() {
 
 function GlobalSettingsManager() {
   const [loading, setLoading] = useState(true);
-  const [settings, setSettings] = useState({ whatsappNumber: '', promoBannerUrl: '', clientReviewUrl: '', telegramBotToken: '', telegramChatId: '' });
+  const [settings, setSettings] = useState({ whatsappNumber: '923189418941', promoBannerUrl: '', clientReviewUrl: '', telegramBotToken: '', telegramChatId: '' });
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -1394,7 +1394,7 @@ function GlobalSettingsManager() {
         if (!snap.empty) {
           const data = snap.docs[0].data();
           setSettings({ 
-            whatsappNumber: data.whatsappNumber || '',
+            whatsappNumber: data.whatsappNumber || '923189418941',
             promoBannerUrl: data.promoBannerUrl || '',
             clientReviewUrl: data.clientReviewUrl || '',
             telegramBotToken: data.telegramBotToken || '',
