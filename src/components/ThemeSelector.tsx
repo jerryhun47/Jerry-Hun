@@ -2,8 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { Palette } from 'lucide-react';
 
 const THEMES = [
-  { name: 'Blue', class: '' }, // Default
-  { name: 'Red', class: 'theme-red' },
+  { name: 'Red', class: '' }, // Default (Glossy Red)
+  { name: 'Blue', class: 'theme-blue' },
   { name: 'Green', class: 'theme-green' },
   { name: 'Purple', class: 'theme-purple' },
   { name: 'Orange', class: 'theme-orange' }
@@ -11,9 +11,7 @@ const THEMES = [
 
 export default function ThemeSelector() {
   const [currentTheme, setCurrentTheme] = useState(() => {
-    const saved = localStorage.getItem('app-theme');
-    // If previously saved as empty (which used to be red), or not set, default to blue
-    return saved || '';
+    return localStorage.getItem('app-theme') || '';
   });
 
   useEffect(() => {
