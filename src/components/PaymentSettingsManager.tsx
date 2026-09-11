@@ -120,6 +120,48 @@ export default function PaymentSettingsManager() {
     }));
   };
 
+  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const dataUrl = reader.result as string;
+      const img = new Image();
+      img.onload = () => {
+        try {
+          const canvas = document.createElement('canvas');
+          const MAX_SIZE = 300;
+          let width = img.width;
+          let height = img.height;
+
+          if (width > height) {
+            if (width > MAX_SIZE) {
+              height *= MAX_SIZE / width;
+              width = MAX_SIZE;
+            }
+          } else {
+            if (height > MAX_SIZE) {
+              width *= MAX_SIZE / height;
+              height = MAX_SIZE;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx?.drawImage(img, 0, 0, width, height);
+          setFormData(prev => ({ ...prev, logoUrl: canvas.toDataURL('image/png') }));
+        } catch (err) {
+          setFormData(prev => ({ ...prev, logoUrl: dataUrl }));
+        }
+      };
+      img.onerror = () => setFormData(prev => ({ ...prev, logoUrl: dataUrl }));
+      img.src = dataUrl;
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -610,21 +652,41 @@ export default function PaymentSettingsManager() {
                 </div>
               </div>
 
-              <div>
-                <label className="block text-xs uppercase tracking-wider font-bold text-slate-400 mb-1.5">
-                  Custom Logo URL (Optional)
+              {/* Payment Method Logo Upload */}
+              <div className="border border-slate-800 p-4 rounded-2xl bg-slate-950 space-y-3">
+                <label className="block text-xs uppercase tracking-wider font-bold text-slate-300">
+                  Payment Method Logo (Upload File or Enter URL)
                 </label>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={formData.logoUrl || ''}
-                    onChange={e => setFormData({ ...formData, logoUrl: e.target.value })}
-                    placeholder="https://example.com/logo.png"
-                    className="w-full bg-slate-950 border border-slate-800 text-white rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-primary-500"
-                  />
+                <div className="flex flex-col sm:flex-row items-center gap-4">
+                  <label className="w-full sm:w-auto flex-1 border border-dashed border-slate-700 hover:border-primary-500 rounded-xl p-3.5 text-center cursor-pointer transition-colors bg-slate-900/60">
+                    <Upload size={20} className="mx-auto text-primary-400 mb-1" />
+                    <span className="text-xs text-white font-bold block">Click to Upload Custom Logo</span>
+                    <span className="text-[10px] text-slate-400">PNG, JPG, SVG, WebP</span>
+                    <input type="file" accept="image/*" onChange={handleLogoUpload} className="hidden" />
+                  </label>
+                  
+                  <div className="flex-1 w-full">
+                    <span className="text-[10px] text-slate-400 uppercase font-bold block mb-1">Or paste Logo Image URL</span>
+                    <input
+                      type="text"
+                      value={formData.logoUrl || ''}
+                      onChange={e => setFormData({ ...formData, logoUrl: e.target.value })}
+                      placeholder="https://example.com/logo.png"
+                      className="w-full bg-slate-900 border border-slate-800 text-white rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-primary-500"
+                    />
+                  </div>
+
                   {formData.logoUrl && (
-                    <div className="w-12 h-12 bg-white p-1 rounded-xl shrink-0 flex items-center justify-center border border-slate-700">
-                      <img src={formData.logoUrl} alt="Logo" className="w-full h-full object-contain" />
+                    <div className="relative w-16 h-16 bg-white p-1.5 rounded-xl border border-slate-700 shrink-0 flex items-center justify-center shadow-lg">
+                      <img src={formData.logoUrl} alt="Logo Preview" className="w-full h-full object-contain" />
+                      <button
+                        type="button"
+                        onClick={() => setFormData({ ...formData, logoUrl: '' })}
+                        className="absolute -top-2 -right-2 bg-red-600 hover:bg-red-500 text-white p-1 rounded-full text-xs shadow-md transition-colors"
+                        title="Remove Logo"
+                      >
+                        <X size={12} />
+                      </button>
                     </div>
                   )}
                 </div>
