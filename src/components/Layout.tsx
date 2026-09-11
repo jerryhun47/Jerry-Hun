@@ -4,14 +4,9 @@ import { Menu, X, MessageCircle, Palette } from 'lucide-react';
 import ThemeSelector from './ThemeSelector';
 import { motion, useScroll, useTransform } from 'motion/react';
 import BackgroundEffects from './BackgroundEffects';
-import ParticleSystem from './ParticleSystem';
-import NetworkBackground from './NetworkBackground';
 import FrontendAnnouncements from './FrontendAnnouncements';
 import AIChatbot from './AIChatbot';
-
 import LiveTracking from './LiveTracking';
-import TouchFeedback from './TouchFeedback';
-import MobileBottomDock from './MobileBottomDock';
 
 export default function Layout() {
   const [isOpen, setIsOpen] = useState(false);
@@ -34,8 +29,8 @@ export default function Layout() {
         if (!snap.empty) {
             setWhatsappNumber(snap.docs[0].data().whatsappNumber || '923189418941');
         }
-      } catch (e) {
-        console.error(e);
+      } catch {
+        // Safe fallback to default whatsapp number
       }
     };
     fetchSettings();
@@ -58,9 +53,7 @@ export default function Layout() {
   return (
     <div className="flex flex-col min-h-screen bg-slate-950 font-sans text-slate-300 relative z-0">
       <BackgroundEffects />
-      <ParticleSystem />
-      <NetworkBackground />
-      <nav className="fixed top-0 w-full z-50 glass-effect bg-slate-950/40">
+      <nav className="fixed top-0 w-full z-50 glass-effect bg-slate-950/80">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16 relative">
             {/* Left: Hamburger menu and Logo */}
@@ -123,7 +116,7 @@ export default function Layout() {
       <LiveTracking />
       <AIChatbot isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
 
-      <main className="flex-1 relative z-10 pt-24 pb-20 sm:pb-8">
+      <main className="flex-1 relative z-10 pt-24 pb-8">
         <Outlet />
       </main>
 
@@ -162,24 +155,16 @@ export default function Layout() {
         </div>
       </footer>
       
-      {/* Global Interactive Touch Feedback */}
-      <TouchFeedback />
-
-      {/* Mobile Glowing Bottom Dock */}
-      <MobileBottomDock 
-        whatsappNumber={whatsappNumber} 
-        onOpenChat={() => setIsChatOpen(true)} 
-      />
-
-      {/* Desktop Floating WhatsApp Button */}
+      {/* Floating WhatsApp Button */}
       {whatsappNumber && (
         <a 
           href={`https://wa.me/${whatsappNumber.replace(/[^0-9]/g, '') || '923189418941'}`} 
           target="_blank" 
           rel="noopener noreferrer" 
-          className="hidden sm:flex fixed bottom-6 right-6 z-[100] bg-green-500 hover:bg-green-400 text-white p-4 rounded-full shadow-lg shadow-green-500/30 transition-transform hover:scale-110 items-center justify-center"
+          className="fixed bottom-6 right-6 z-[100] bg-green-500 hover:bg-green-400 text-white p-3.5 sm:p-4 rounded-full shadow-lg shadow-green-500/30 transition-transform hover:scale-110 flex items-center justify-center"
+          title="Chat on WhatsApp"
         >
-          <MessageCircle size={32} />
+          <MessageCircle size={28} />
         </a>
       )}
     </div>

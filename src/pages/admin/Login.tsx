@@ -72,47 +72,47 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
-      <div className="bg-white rounded-3xl p-8 w-full max-w-md shadow-2xl">
+    <div className="min-h-screen bg-black flex items-center justify-center p-4">
+      <div className="bg-zinc-950 border border-zinc-800 rounded-3xl p-8 w-full max-w-md shadow-2xl">
         <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-primary-100 text-primary-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+          <div className="w-16 h-16 bg-red-600/20 text-red-500 border border-red-600/30 rounded-2xl flex items-center justify-center mx-auto mb-4">
              <Lock size={32} />
           </div>
-          <h1 className="text-2xl font-black text-slate-900">Status Logs</h1>
-          <p className="text-slate-500 mt-2">Secure access for Jerry Automation</p>
+          <h1 className="text-2xl font-black text-white">Status Logs</h1>
+          <p className="text-zinc-400 mt-2 text-sm font-medium">Secure Admin Access for Jerry Automation</p>
         </div>
 
-        {error && <div className="bg-primary-50 text-primary-600 p-4 rounded-xl text-sm mb-6 font-medium">{error}</div>}
-        {msg && <div className="bg-green-50 text-green-600 p-4 rounded-xl text-sm mb-6 font-medium">{msg}</div>}
+        {error && <div className="bg-red-950/80 border border-red-600/50 text-red-200 p-4 rounded-xl text-sm mb-6 font-bold">{error}</div>}
+        {msg && <div className="bg-emerald-950/80 border border-emerald-500/50 text-emerald-200 p-4 rounded-xl text-sm mb-6 font-bold">{msg}</div>}
 
         <form onSubmit={handleAuth} className="space-y-4">
           <div>
-            <label className="block text-sm font-semibold mb-2 text-slate-700">Email Address</label>
+            <label className="block text-sm font-bold mb-2 text-white">Email Address</label>
             <div className="relative">
-               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" size={18} />
                <input 
                  type="email" 
                  required 
                  value={email} 
                  onChange={e => setEmail(e.target.value)}
-                 className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary-500" 
+                 className="w-full bg-zinc-900 border border-zinc-800 text-white rounded-xl pl-10 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-red-600" 
                  placeholder="your-admin@email.com"
                />
             </div>
           </div>
           <div>
             <div className="flex justify-between items-center mb-2">
-               <label className="block text-sm font-semibold text-slate-700">Password</label>
-               <button type="button" onClick={resetPassword} className="text-xs text-primary-600 hover:text-primary-700 font-medium">Reset Password</button>
+               <label className="block text-sm font-bold text-white">Password</label>
+               <button type="button" onClick={resetPassword} className="text-xs text-red-500 hover:text-red-400 font-bold">Reset Password</button>
             </div>
             <div className="relative">
-               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" size={18} />
                <input 
                  type="password" 
                  required 
                  value={password} 
                  onChange={e => setPassword(e.target.value)}
-                 className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary-500" 
+                 className="w-full bg-zinc-900 border border-zinc-800 text-white rounded-xl pl-10 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-red-600" 
                  placeholder="••••••••"
                />
             </div>
@@ -121,7 +121,7 @@ export default function Login() {
           <button 
             disabled={loading}
             type="submit" 
-            className="w-full bg-slate-900 hover:bg-slate-800 disabled:bg-slate-400 text-white font-bold py-4 rounded-xl transition-colors mt-6"
+            className="w-full bg-red-600 hover:bg-red-500 disabled:bg-zinc-800 text-white font-black py-4 rounded-xl transition-all shadow-lg shadow-red-600/20 mt-6 cursor-pointer"
           >
             {loading ? 'Processing...' : 'Login to Dashboard'}
           </button>

@@ -239,9 +239,10 @@ export default function AutoImporter() {
           }
         }
         
+        // Mark as imported to prevent duplicate queries
         localStorage.setItem('promptsImportedV2', 'true');
       } catch (err) {
-        console.error("Failed to auto-import prompts", err);
+        // Silent fallback
       }
     };
 

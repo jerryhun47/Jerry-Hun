@@ -8,13 +8,14 @@ import { useParams, useNavigate } from 'react-router-dom';
 import PaymentModal from '../components/PaymentModal';
 import ProductReviews from '../components/ProductReviews';
 import Markdown from 'react-markdown';
+import { getCachedCourses, getInstantCourses } from '../lib/cacheService';
 
 export default function Courses() {
   const { slug } = useParams();
   const navigate = useNavigate();
-  const [courses, setCourses] = useState<any[]>([]);
+  const [courses, setCourses] = useState<any[]>(() => getInstantCourses());
   const [enrollments, setEnrollments] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const { user } = useAuth();
   
   const [viewingCourse, setViewingCourse] = useState<any | null>(null);
@@ -53,18 +54,10 @@ export default function Courses() {
   useEffect(() => {
     const fetchCourses = async () => {
       try {
-        const q = query(collection(db, 'products'), where('category', '==', 'Course'));
-        const querySnapshot = await getDocs(q);
-        const fetchedCourses: any[] = [];
-        querySnapshot.forEach((doc) => {
-          fetchedCourses.push({ id: doc.id, ...doc.data() });
-        });
+        const fetchedCourses = await getCachedCourses();
         setCourses(fetchedCourses);
       } catch (err) {
-        console.error("Error fetching courses", err);
-        setCourses([
-          { id: 'c1', name: 'Master AI Automation', description: 'Learn how to automate businesses using AI tools.', price: 15000, category: 'Course', is_active: true }
-        ]);
+        // Handled in cache
       } finally {
         setLoading(false);
       }
@@ -84,7 +77,7 @@ export default function Courses() {
           });
           setEnrollments(userEnrollments);
         } catch (err) {
-            console.error("Error fetching enrollments", err);
+          // Gracefully fallback on quota or offline
         }
       };
       fetchEnrollments();

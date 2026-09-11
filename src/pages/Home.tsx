@@ -5,12 +5,16 @@ import { db } from '../lib/firebase';
 import { collection, addDoc, serverTimestamp, getDocs, query, onSnapshot, doc, getDoc } from 'firebase/firestore';
 import { motion, AnimatePresence } from 'motion/react';
 import { get, set } from 'idb-keyval';
+import { getCachedProducts, getCachedReviews, getInstantProducts } from '../lib/cacheService';
 
 export default function Home() {
   const [formData, setFormData] = useState({ name: '', email: '', phone: '', subject: '', message: '' });
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
-  const [topProducts, setTopProducts] = useState<any[]>([]);
-  const [loadingProducts, setLoadingProducts] = useState(true);
+  const [topProducts, setTopProducts] = useState<any[]>(() => {
+    const all = getInstantProducts();
+    return all.filter((p: any) => p.is_active !== false && p.category !== 'Course').slice(0, 3);
+  });
+  const [loadingProducts, setLoadingProducts] = useState(false);
   const [showPromo, setShowPromo] = useState(false);
   const [promoSettings, setPromoSettings] = useState<any>({
     enabled: true,
@@ -72,8 +76,8 @@ export default function Home() {
         if (d.exists()) {
           setPromoSettings(d.data());
         }
-      } catch (err) {
-        console.error(err);
+      } catch {
+        // Safe fallback
       }
     };
     fetchPromoSettings();
@@ -110,68 +114,26 @@ export default function Home() {
   }, [promoSettings, isEditorMode]);
 
   useEffect(() => {
-    const fetchTopProducts = () => {
-      const q = query(collection(db, 'products'));
-      getDocs(q).then((querySnapshot) => {
-        const prods: any[] = [];
-        querySnapshot.forEach((doc) => prods.push({ id: doc.id, ...doc.data() }));
-        let activeProds = prods.filter((p: any) => p.is_active !== false && p.category !== 'Course');
-        
-        if (activeProds.length === 0) {
-           activeProds = [
-             { id: 't1', name: 'Premium Netflix Tool', description: 'Lifetime access to Premium accounts auto-generator.', price: 5000, category: 'Entertainment', is_active: true, badge: 'Hot', order_index: 0 },
-             { id: 't2', name: 'Canva Pro Tool', description: 'Unlimited Canva Pro features unlocked.', price: 3000, category: 'Design', is_active: true, order_index: 1 }
-           ];
-        }
-
+    const fetchTopProducts = async () => {
+      try {
+        const prods = await getCachedProducts();
+        const activeProds = prods.filter((p: any) => p.is_active !== false && p.category !== 'Course');
         activeProds.sort((a, b) => (a.order_index ?? 999) - (b.order_index ?? 999));
         setTopProducts(activeProds.slice(0, 3));
+      } catch (err) {
+        // Safe fallback handled in getCachedProducts
+      } finally {
         setLoadingProducts(false);
-      }).catch((err) => {
-        console.error("Error fetching top products", err);
-        setTopProducts([
-             { id: 't1', name: 'Premium Netflix Tool', description: 'Lifetime access to Premium accounts auto-generator.', price: 5000, category: 'Entertainment', is_active: true, badge: 'Hot', order_index: 0 },
-             { id: 't2', name: 'Canva Pro Tool', description: 'Unlimited Canva Pro features unlocked.', price: 3000, category: 'Design', is_active: true, order_index: 1 },
-             { id: 't3', name: 'Premium Automation Toolkit', description: 'Complete set of tools.', price: 4000, category: 'Tools', is_active: true, order_index: 2 }
-        ]);
-        setLoadingProducts(false);
-      });
+      }
     };
 
-    const fetchReviews = () => {
-      const q = query(collection(db, 'reviews'));
-      getDocs(q).then((querySnapshot) => {
-        const fetchedReviews: any[] = [];
-        querySnapshot.forEach(doc => {
-          if (doc.data().approved !== false) {
-             fetchedReviews.push({ id: doc.id, ...doc.data() });
-          }
-        });
-        const defaultReviews = [
-             { name: 'Ali Raza', city: 'Lahore', text: 'bhai zabardast tool hai, highly recommended 💯', rating: 5, time: '1 min ago' },
-             { name: 'Usman Tariq', city: 'Karachi', text: 'service bht fast thi, great experience.', rating: 5, time: '2 mins ago' },
-             { name: 'Zainab Bibi', city: 'Islamabad', text: 'meri automation bilkul set chal rahi hai ab.', rating: 5, time: '5 mins ago' },
-             { name: 'Hamza Khan', city: 'Peshawar', text: 'best investment mene apni life me ki hai!', rating: 5, time: '15 mins ago' },
-             { name: 'Bilal Ahmed', city: 'Multan', text: 'bht zbardast system bnaya hy jerry ne.', rating: 4, time: '1 hr ago' },
-             { name: 'Ayesha Gul', city: 'Faisalabad', text: 'meri sales me 3x izafa hua hai in tools ki waja se.', rating: 5, time: '2 hrs ago' },
-             { name: 'Fahad Qureshi', city: 'Rawalpindi', text: 'support system bht responsive hai.', rating: 5, time: '3 hrs ago' },
-             { name: 'Omer Farooq', city: 'Quetta', text: 'worth every single penny. completely automated.', rating: 5, time: '3 hrs ago' },
-             { name: 'Nida Azhar', city: 'Gujranwala', text: 'sab kuch as described mila. thank you jerry!', rating: 5, time: '5 hrs ago' },
-             { name: 'Kashif Ali', city: 'Sialkot', text: 'pehle mjhe yakeen nahi aya, but results amazing hain.', rating: 5, time: '5 hrs ago' },
-             { name: 'Saad Haroon', city: 'Bahawalpur', text: '100% working and reliable system', rating: 5, time: '8 hrs ago'},
-             { name: 'Iqra Noor', city: 'Lahore', text: 'support team ne bht help ki. highly recommended.', rating: 5, time: '12 hrs ago'}
-        ];
-        setReviewsList([...fetchedReviews, ...defaultReviews]);
-      }).catch((err) => {
-        console.error("Error fetching reviews", err);
-        const defaultReviews = [
-             { name: 'Ali Raza', city: 'Lahore', text: 'bhai zabardast tool hai, highly recommended 💯', rating: 5, time: '1 min ago' },
-             { name: 'Usman Tariq', city: 'Karachi', text: 'service bht fast thi, great experience.', rating: 5, time: '2 mins ago' },
-             { name: 'Zainab Bibi', city: 'Islamabad', text: 'meri automation bilkul set chal rahi hai ab.', rating: 5, time: '5 mins ago' },
-             { name: 'Hamza Khan', city: 'Peshawar', text: 'best investment mene apni life me ki hai!', rating: 5, time: '15 mins ago' }
-        ];
-        setReviewsList(defaultReviews);
-      });
+    const fetchReviews = async () => {
+      try {
+        const list = await getCachedReviews();
+        setReviewsList(list);
+      } catch (err) {
+        // Safe fallback handled in getCachedReviews
+      }
     };
 
     fetchTopProducts();
@@ -179,21 +141,21 @@ export default function Home() {
     
     getDocs(collection(db, 'banners')).then((snap) => {
        setBanners(snap.docs.map(d => ({id: d.id, ...d.data()})));
-    }).catch(console.error);
+    }).catch(() => {});
 
     getDocs(collection(db, 'settings')).then((snap) => {
       if (!snap.empty) {
         const data = snap.docs[0].data();
         if (data.promoBannerUrl) {
           setPromoBannerUrl(data.promoBannerUrl);
-          set('cachedPromoBanner', data.promoBannerUrl).catch(console.error);
+          set('cachedPromoBanner', data.promoBannerUrl).catch(() => {});
         }
         if (data.clientReviewUrl) {
           setClientReviewUrl(data.clientReviewUrl);
-          set('cachedClientReview', data.clientReviewUrl).catch(console.error);
+          set('cachedClientReview', data.clientReviewUrl).catch(() => {});
         }
       }
-    }).catch(console.error);
+    }).catch(() => {});
 
   }, []);
 
@@ -361,7 +323,7 @@ export default function Home() {
         )}
       </AnimatePresence>
 
-      <FlashSaleBanner topProducts={topProducts} />
+      <FlashSaleBanner />
       <LivePurchasePopup topProducts={topProducts} />
       
       {banners.length > 0 && (
@@ -374,12 +336,9 @@ export default function Home() {
          </div>
       )}
 
-      <div className="absolute top-0 left-0 w-full h-[150vh] overflow-hidden pointer-events-none z-0">
-        <div className="absolute inset-0 bg-gradient-to-b from-primary-900/40 via-primary-950/20 to-black z-0"></div>
+      {/* Clean Dark Background without red bars/orbs */}
+      <div className="absolute top-0 left-0 w-full h-[120vh] overflow-hidden pointer-events-none z-0">
         <NetworkBackground />
-        <div className="hero-orb bg-primary-600 w-96 h-96 top-0 left-10 mt-10 sm:mt-0 z-0"></div>
-        <div className="hero-orb bg-primary-500 w-96 h-96 top-40 right-10 animation-delay-2000 z-0"></div>
-        <div className="hero-orb bg-primary-800 w-96 h-96 -bottom-20 left-1/2 animation-delay-4000 z-0"></div>
       </div>
 
       {/* Hero Section */}
@@ -810,22 +769,22 @@ function NetworkBackground() {
       canvas.width = width;
       canvas.height = height;
       particles = [];
-      const count = Math.min(width * height / 15000, 80);
+      const count = Math.min(width * height / 18000, 60);
       for(let i=0; i<count; i++) {
         particles.push({
           x: Math.random() * width,
           y: Math.random() * height,
-          vx: (Math.random() - 0.5) * 0.5,
-          vy: (Math.random() - 0.5) * 0.5,
-          radius: Math.random() * 2 + 1
+          vx: (Math.random() - 0.5) * 0.4,
+          vy: (Math.random() - 0.5) * 0.4,
+          radius: Math.random() * 1.5 + 0.8
         });
       }
     };
 
     const draw = () => {
       ctx.clearRect(0, 0, width, height);
-      ctx.fillStyle = 'rgba(239, 68, 68, 0.4)';
-      ctx.strokeStyle = 'rgba(239, 68, 68, 0.1)';
+      ctx.fillStyle = 'rgba(148, 163, 184, 0.25)';
+      ctx.strokeStyle = 'rgba(71, 85, 105, 0.12)';
       
       for(let i=0; i<particles.length; i++) {
         const p = particles[i];
@@ -841,7 +800,7 @@ function NetworkBackground() {
         for(let j=i+1; j<particles.length; j++) {
           const p2 = particles[j];
           const dist = Math.hypot(p.x - p2.x, p.y - p2.y);
-          if(dist < 120) {
+          if(dist < 110) {
             ctx.beginPath();
             ctx.moveTo(p.x, p.y);
             ctx.lineTo(p2.x, p2.y);
@@ -862,20 +821,11 @@ function NetworkBackground() {
     };
   }, []);
 
-  return <canvas ref={canvasRef} className="absolute inset-0 w-full h-full pointer-events-none opacity-50 z-0" />;
+  return <canvas ref={canvasRef} className="absolute inset-0 w-full h-full pointer-events-none opacity-40 z-0" />;
 }
 
-function FlashSaleBanner({ topProducts }: { topProducts: any[] }) {
-  const [timeLeft, setTimeLeft] = useState({ hours: 11, minutes: 0, seconds: 0 });
-  const [product, setProduct] = useState<any>({ name: 'Premium Automation Toolkit' });
-  const [discount, setDiscount] = useState("35% OFF");
-
-  useEffect(() => {
-    if (topProducts && topProducts.length > 0) {
-      setProduct(topProducts[Math.floor(Math.random() * topProducts.length)]);
-      setDiscount(`${Math.floor(Math.random() * 30 + 20)}% OFF`);
-    }
-  }, [topProducts]);
+function FlashSaleBanner() {
+  const [timeLeft, setTimeLeft] = useState({ hours: 11, minutes: 48, seconds: 32 });
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -884,7 +834,7 @@ function FlashSaleBanner({ topProducts }: { topProducts: any[] }) {
         s--;
         if (s < 0) { s = 59; m--; }
         if (m < 0) { m = 59; h--; }
-        if (h < 0) { h = 11; m = 0; s = 0; }
+        if (h < 0) { h = 11; m = 59; s = 59; }
         return { hours: h, minutes: m, seconds: s };
       });
     }, 1000);
@@ -892,16 +842,23 @@ function FlashSaleBanner({ topProducts }: { topProducts: any[] }) {
   }, []);
 
   return (
-    <div className="bg-primary-600 w-full text-white py-2 px-4 flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-6 z-40 relative shadow-md">
-      <div className="flex items-center gap-2 text-sm font-bold">
-        <Flame size={16} className="text-yellow-300 animate-pulse" /> 
-        <span>Limited Offer – {String(timeLeft.hours).padStart(2,'0')}:{String(timeLeft.minutes).padStart(2,'0')}:{String(timeLeft.seconds).padStart(2,'0')} Remaining</span>
+    <div className="bg-slate-900 border-b border-slate-800 w-full text-slate-200 py-2.5 px-4 flex flex-wrap items-center justify-center gap-3 sm:gap-6 z-40 relative shadow-sm">
+      <div className="flex items-center gap-2 text-xs sm:text-sm font-semibold">
+        <span className="bg-[#f50505] text-white text-[10px] sm:text-xs font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1 shadow-sm">
+          <Flame size={12} className="fill-white" /> Special Sale
+        </span>
+        <span className="text-slate-300 font-medium">Limited Time Discount — 50% OFF</span>
       </div>
       <div className="flex items-center gap-3">
-        <span className="text-sm font-semibold truncate max-w-[150px]">{product.name}</span>
-        <span className="bg-white text-primary-600 text-xs font-black px-2 py-0.5 rounded-full">{discount}</span>
-        <Link to={`/tools${product.id ? `?product=${product.id}` : ''}`} className="bg-slate-900 text-white text-xs font-bold px-3 py-1 rounded-full hover:bg-slate-800 transition-colors">
-          Buy Now
+        <div className="flex items-center gap-1 font-mono text-xs sm:text-sm font-bold bg-slate-950 px-2.5 py-1 rounded-lg border border-slate-800 text-white">
+          <span className="text-[#f50505]">{String(timeLeft.hours).padStart(2, '0')}</span>
+          <span className="text-slate-500">:</span>
+          <span className="text-[#f50505]">{String(timeLeft.minutes).padStart(2, '0')}</span>
+          <span className="text-slate-500">:</span>
+          <span className="text-[#f50505]">{String(timeLeft.seconds).padStart(2, '0')}</span>
+        </div>
+        <Link to="/tools" className="bg-[#f50505] hover:bg-[#dc0404] text-white text-xs font-bold px-3.5 py-1 rounded-lg transition-all shadow-md active:scale-95">
+          Buy Tools
         </Link>
       </div>
     </div>

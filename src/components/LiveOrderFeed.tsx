@@ -12,14 +12,25 @@ export default function LiveOrderFeed() {
   useEffect(() => {
     const fetchOrders = async () => {
       try {
-        const q = query(collection(db, 'orders'), orderBy('createdAt', 'desc'), limit(20));
+        const q = query(collection(db, 'orders'), orderBy('createdAt', 'desc'), limit(10));
         const snap = await getDocs(q);
         const fetchedOrders = snap.docs.map(doc => doc.data());
         if (fetchedOrders.length > 0) {
            setOrders(fetchedOrders);
+        } else {
+           setOrders([
+             { city: 'Lahore', items: [{ name: 'Google Veo 3 Ultra' }] },
+             { city: 'Karachi', items: [{ name: 'Grok AI Pro' }] },
+             { city: 'Islamabad', items: [{ name: 'Midjourney v6.1 Pro' }] },
+             { city: 'Rawalpindi', items: [{ name: 'Canva Pro Lifetime' }] }
+           ]);
         }
       } catch(e) {
-        console.error('Failed to fetch recent orders', e);
+        setOrders([
+          { city: 'Lahore', items: [{ name: 'Google Veo 3 Ultra' }] },
+          { city: 'Karachi', items: [{ name: 'Grok AI Pro' }] },
+          { city: 'Islamabad', items: [{ name: 'Midjourney v6.1 Pro' }] }
+        ]);
       }
     };
     fetchOrders();

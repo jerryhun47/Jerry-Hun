@@ -126,8 +126,8 @@ export default function ProductReviews({ productId, productName }: { productId: 
         
         setReviews([...fetched, ...dynamicReviews]); // Combine real and dynamic fake
       } catch (err) {
-        console.error("Failed to load reviews", err);
-        setReviews(dynamicReviews); // Fallback to dynamic if db fails
+        // Fallback gracefully to dynamic reviews
+        setReviews(dynamicReviews);
       } finally {
         setLoading(false);
       }

@@ -2,36 +2,37 @@ import React, { useState, useEffect } from 'react';
 import { db } from '../lib/firebase';
 import { collection, query, orderBy, getDocs } from 'firebase/firestore';
 import { motion, AnimatePresence } from 'motion/react';
-import { Copy, Eye, X, CheckCircle, Zap, Shield, TrendingUp, Search, PlayCircle, ExternalLink } from 'lucide-react';
+import { Copy, Eye, X, CheckCircle, Search, PlayCircle, ExternalLink, Sparkles } from 'lucide-react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
+import { getCachedPrompts, getInstantPrompts } from '../lib/cacheService';
 
-const PromoProducts = ({ isCopy }: { isCopy?: boolean }) => (
-  <div className="flex flex-col gap-4 mt-4 text-left">
+const PromoProducts = () => (
+  <div className="flex flex-col gap-3 mt-4 text-left">
     {/* Veo 3 Ultra */}
-    <div className="bg-slate-900 border border-slate-700 p-4 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+    <div className="bg-slate-900 border border-slate-700/80 p-4 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-md">
        <div>
-         <h4 className="font-bold text-white text-lg">Google Veo 3 Ultra</h4>
+         <h4 className="font-bold text-white text-base sm:text-lg">Google Veo 3 Ultra</h4>
          <div className="flex items-center gap-2 mt-1">
-           <span className="text-slate-500 line-through text-sm">PKR 6000</span>
-           <span className="text-primary-400 font-bold">PKR 3000</span>
-           <span className="bg-primary-500/20 text-primary-500 text-xs font-bold px-2 py-0.5 rounded ml-2">🔥 50% OFF</span>
+           <span className="text-slate-500 line-through text-xs sm:text-sm">PKR 6,000</span>
+           <span className="text-red-500 font-bold text-sm sm:text-base">PKR 3,000</span>
+           <span className="bg-red-500/20 text-red-300 text-[10px] font-bold px-2 py-0.5 rounded-full">🔥 50% OFF</span>
          </div>
        </div>
-       <Link to="/tools" className="bg-primary-600 hover:bg-primary-500 text-white font-bold py-2 px-6 rounded-lg whitespace-nowrap active:scale-95 transition-all shadow-lg shadow-primary-500/20 w-full sm:w-auto text-center">
+       <Link to="/tools" className="bg-[#f50505] hover:bg-[#dc0404] text-white font-bold py-2.5 px-5 rounded-xl whitespace-nowrap active:scale-95 transition-all text-sm w-full sm:w-auto text-center shadow-md">
          👉 Buy Now
        </Link>
     </div>
     {/* Super Grok AI */}
-    <div className="bg-slate-900 border border-slate-700 p-4 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+    <div className="bg-slate-900 border border-slate-700/80 p-4 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-md">
        <div>
-         <h4 className="font-bold text-white text-lg">Grok AI</h4>
+         <h4 className="font-bold text-white text-base sm:text-lg">Grok AI Pro</h4>
          <div className="flex items-center gap-2 mt-1">
-           <span className="text-slate-500 line-through text-sm">PKR 6000</span>
-           <span className="text-primary-400 font-bold">PKR 3000</span>
-           <span className="bg-primary-500/20 text-primary-500 text-xs font-bold px-2 py-0.5 rounded ml-2">🔥 50% OFF</span>
+           <span className="text-slate-500 line-through text-xs sm:text-sm">PKR 6,000</span>
+           <span className="text-red-500 font-bold text-sm sm:text-base">PKR 3,000</span>
+           <span className="bg-red-500/20 text-red-300 text-[10px] font-bold px-2 py-0.5 rounded-full">🔥 50% OFF</span>
          </div>
        </div>
-       <Link to="/tools" className="bg-primary-600 hover:bg-primary-500 text-white font-bold py-2 px-6 rounded-lg whitespace-nowrap active:scale-95 transition-all shadow-lg shadow-primary-500/20 w-full sm:w-auto text-center">
+       <Link to="/tools" className="bg-[#f50505] hover:bg-[#dc0404] text-white font-bold py-2.5 px-5 rounded-xl whitespace-nowrap active:scale-95 transition-all text-sm w-full sm:w-auto text-center shadow-md">
          👉 Buy Now
        </Link>
     </div>
@@ -41,8 +42,8 @@ const PromoProducts = ({ isCopy }: { isCopy?: boolean }) => (
 export default function Prompts() {
   const { slug } = useParams();
   const navigate = useNavigate();
-  const [prompts, setPrompts] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [prompts, setPrompts] = useState<any[]>(() => getInstantPrompts());
+  const [loading, setLoading] = useState(false);
   const [selectedPrompt, setSelectedPrompt] = useState<any | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -64,46 +65,39 @@ export default function Prompts() {
   }, [slug, prompts, loading]);
 
   useEffect(() => {
-    const q = query(collection(db, 'prompts'), orderBy('createdAt', 'desc'));
-    getDocs(q).then((snapshot) => {
-      const fetched = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      setPrompts(fetched);
-      setLoading(false);
-    }).catch((error) => {
-      console.error("Error fetching prompts", error);
-      setPrompts([
-         { id: 'p1', title: 'SEO Optimized Blog Writer', description: 'Write a full 2000-word SEO blog post with just one keyword.', category: 'Marketing', isPremium: true, price: 500 },
-         { id: 'p2', title: 'Cold Email Generator', description: 'Generate high-converting cold emails for any niche.', category: 'Sales', isPremium: false, price: 0 }
-      ] as any[]);
-      setLoading(false);
-    });
+    const fetchPromptsData = async () => {
+      try {
+        const fetched = await getCachedPrompts();
+        setPrompts(fetched);
+      } catch (e) {
+        // Handled in cache
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchPromptsData();
 
     // Handle Entry Promo
     if (!sessionStorage.getItem('promoShown')) {
       const timer = setTimeout(() => {
         setShowEntryPromo(true);
         sessionStorage.setItem('promoShown', 'true');
-      }, 1500);
-      return () => {
-        
-        clearTimeout(timer);
-      };
+      }, 1200);
+      return () => clearTimeout(timer);
     }
-
-    
   }, []);
 
   const handleCopy = (id: string, text: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    if(text) navigator.clipboard.writeText(text);
+    if (text) {
+      navigator.clipboard.writeText(text);
+    }
     setCopiedId(id);
-    
-    // Show copy promo
     setShowCopyPromo(true);
     
     setTimeout(() => {
        setCopiedId(null);
-    }, 2000);
+    }, 2500);
   };
 
   const filteredPrompts = prompts.filter(p => 
@@ -112,117 +106,120 @@ export default function Prompts() {
   );
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-300 font-sans p-4 sm:p-6 lg:px-8 py-12 relative overflow-hidden">
-      {/* Background Elements */}
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary-900/20 rounded-full blur-[120px] pointer-events-none"></div>
-      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-primary-800/10 rounded-full blur-[100px] pointer-events-none"></div>
-
+    <div className="min-h-screen bg-slate-950 text-slate-300 font-sans p-4 sm:p-6 lg:px-8 py-10 relative overflow-hidden">
       <div className="max-w-7xl mx-auto relative z-10">
-        <div className="text-center mb-12">
-          <motion.h1 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="text-4xl md:text-5xl font-black text-white mb-4">
-             AI <span className="text-primary-500">Prompts</span> Library
-          </motion.h1>
-          <motion.p initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="text-slate-400 max-w-2xl mx-auto">
-             High-converting, tested, and powerful AI prompts to supercharge your YouTube automation journey.
-          </motion.p>
+        <div className="text-center mb-10">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-white mb-3">
+             AI <span className="text-rose-500">Prompts</span> Library
+          </h1>
+          <p className="text-slate-400 max-w-2xl mx-auto text-sm sm:text-base">
+             Tested, high-converting, and viral AI prompts for YouTube automation & passive growth.
+          </p>
           
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="mt-8 max-w-md mx-auto relative">
-             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={20} />
-             <input type="text" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Search prompts..." className="w-full bg-slate-900/80 border border-slate-800 text-white rounded-full pl-12 pr-4 py-3 focus:ring-2 focus:ring-primary-500 outline-none backdrop-blur-md transition-shadow" />
-          </motion.div>
+          <div className="mt-6 max-w-md mx-auto relative">
+             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
+             <input 
+               type="text" 
+               value={searchQuery} 
+               onChange={e => setSearchQuery(e.target.value)} 
+               placeholder="Search AI prompts..." 
+               className="w-full bg-slate-900 border border-slate-800 text-white rounded-full pl-11 pr-4 py-2.5 sm:py-3 focus:border-rose-500 focus:outline-none text-sm shadow-inner transition-colors" 
+             />
+          </div>
         </div>
 
         {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
              {[1, 2, 3, 4, 5, 6].map(i => (
-                <div key={i} className="animate-pulse bg-slate-900 rounded-3xl p-4 border border-slate-800">
-                   <div className="h-56 bg-slate-800 rounded-2xl mb-4"></div>
-                   <div className="h-6 w-3/4 bg-slate-800 rounded mb-2"></div>
+                <div key={i} className="animate-pulse bg-slate-900 rounded-2xl p-4 border border-slate-800">
+                   <div className="h-44 bg-slate-800 rounded-xl mb-4"></div>
+                   <div className="h-5 w-3/4 bg-slate-800 rounded mb-2"></div>
                    <div className="h-4 w-full bg-slate-800 rounded mb-4"></div>
-                   <div className="h-10 w-full bg-slate-800 rounded-xl"></div>
+                   <div className="h-9 w-full bg-slate-800 rounded-lg"></div>
                 </div>
              ))}
           </div>
         ) : filteredPrompts.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredPrompts.map((prompt) => (
-               <motion.div 
-                 initial={{ opacity: 0, scale: 0.95 }}
-                 whileInView={{ opacity: 1, scale: 1 }}
-                 viewport={{ once: true }}
+               <div 
                  key={prompt.id} 
-                 className="bg-slate-900/60 backdrop-blur-md border border-slate-800 rounded-3xl overflow-hidden hover:border-slate-700 hover:shadow-2xl hover:shadow-primary-500/10 transition-all duration-300 flex flex-col cursor-pointer"
+                 className="bg-slate-900 border border-slate-800 hover:border-slate-700 rounded-2xl overflow-hidden shadow-lg transition-all flex flex-col cursor-pointer group"
                  onClick={() => navigate(`/prompts/${generateSlug(prompt.title)}`)}
                >
                  <div className="relative aspect-video overflow-hidden bg-slate-950">
                     {prompt.imageUrl ? (
-                       <img src={prompt.imageUrl} loading="lazy" alt={prompt.title} className="w-full h-full object-cover" />
+                       <img src={prompt.imageUrl} loading="lazy" alt={prompt.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                     ) : (
-                       <div className="w-full h-full flex items-center justify-center text-slate-700 bg-slate-900 font-bold">No Thumbnail</div>
+                       <div className="w-full h-full flex items-center justify-center text-slate-600 bg-slate-900 font-semibold text-sm">AI Prompt</div>
                     )}
                     {prompt.videoId && (
-                       <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
-                          <div className="bg-primary-600 text-white rounded-full p-3 shadow-xl">
-                             <PlayCircle size={32} />
+                       <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-90 group-hover:opacity-100 transition-opacity">
+                          <div className="bg-rose-600 text-white rounded-full p-2.5 shadow-lg">
+                             <PlayCircle size={28} />
                           </div>
                        </div>
                     )}
                  </div>
                  
                  <div className="p-5 flex flex-col flex-1">
-                    <h3 className="text-xl font-bold text-white mb-2 line-clamp-1">{prompt.title}</h3>
-                    {prompt.shortDesc && <p className="text-sm text-slate-400 mb-4 line-clamp-2 md:line-clamp-3">{prompt.shortDesc}</p>}
+                    <h3 className="text-lg font-bold text-white mb-2 line-clamp-1">{prompt.title}</h3>
+                    {prompt.shortDesc && <p className="text-xs sm:text-sm text-slate-400 mb-4 line-clamp-2">{prompt.shortDesc}</p>}
                     
                     <div className="flex flex-wrap gap-1.5 mb-4">
-                       <span className="bg-primary-500/10 text-primary-400 border border-primary-500/20 text-[10px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1">🔥 Viral</span>
-                       <span className="bg-green-500/10 text-green-400 border border-green-500/20 text-[10px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1">💰 High RPM</span>
-                       <span className="bg-blue-500/10 text-blue-400 border border-blue-500/20 text-[10px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1">🎯 Low Comp</span>
-                       <span className="bg-purple-500/10 text-purple-400 border border-purple-500/20 text-[10px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1">🎬 Faceless</span>
+                       <span className="bg-rose-500/10 text-rose-400 border border-rose-500/20 text-[10px] font-bold px-2 py-0.5 rounded">🔥 Viral</span>
+                       <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px] font-bold px-2 py-0.5 rounded">💰 High RPM</span>
+                       <span className="bg-blue-500/10 text-blue-400 border border-blue-500/20 text-[10px] font-bold px-2 py-0.5 rounded">🎯 Tested</span>
                     </div>
 
                     <div className="mt-auto flex flex-col gap-2">
-                       <button onClick={(e) => { e.stopPropagation(); navigate(`/prompts/${generateSlug(prompt.title)}`); }} className="w-full bg-slate-800 hover:bg-slate-700 text-white font-bold py-2.5 rounded-xl transition-all flex items-center justify-center gap-2 text-sm z-10 relative shadow-sm">
+                       <button 
+                         onClick={(e) => { e.stopPropagation(); navigate(`/prompts/${generateSlug(prompt.title)}`); }} 
+                         className="w-full bg-slate-800 hover:bg-slate-700 text-white font-bold py-2.5 rounded-xl transition-colors flex items-center justify-center gap-2 text-sm shadow-sm"
+                       >
                           <Eye size={16} /> View Prompt
                        </button>
-                       {prompt.videoLink && (
-                          <button onClick={(e) => { e.stopPropagation(); navigate(`/prompts/${generateSlug(prompt.title)}`); }} className="w-full bg-primary-600 hover:bg-primary-500 text-white font-bold py-2.5 rounded-xl transition-all shadow-[0_0_15px_rgba(220,38,38,0.4)] hover:shadow-[0_0_20px_rgba(220,38,38,0.6)] active:scale-95 flex items-center justify-center gap-2 text-sm z-10 relative">
-                             <PlayCircle size={16} /> Watch Tutorial
-                          </button>
-                       )}
                     </div>
                  </div>
-               </motion.div>
+               </div>
             ))}
           </div>
         ) : (
-          <div className="text-center py-24 bg-slate-900/40 rounded-3xl border border-slate-800/50">
-             <div className="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Search size={24} className="text-slate-500" />
+          <div className="text-center py-20 bg-slate-900/60 rounded-2xl border border-slate-800">
+             <div className="w-12 h-12 bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-3 text-slate-400">
+                <Search size={20} />
              </div>
-             <h3 className="text-xl font-bold text-white mb-2">No Prompts Found</h3>
-             <p className="text-slate-400">Try adjusting your search terms.</p>
+             <h3 className="text-lg font-bold text-white mb-1">No Prompts Found</h3>
+             <p className="text-slate-400 text-sm">Try searching with a different keyword.</p>
           </div>
         )}
       </div>
 
-      {/* Detail Modal */}
+      {/* Detail Modal Popup */}
       <AnimatePresence>
          {selectedPrompt && (
-            <motion.div 
-               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-               className="fixed inset-0 bg-slate-950/90 backdrop-blur-xl z-[150] flex items-center justify-center p-4 sm:p-6 overflow-y-auto minimal-scrollbar"
+            <div 
+               className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[150] flex items-center justify-center p-3 sm:p-6 overflow-y-auto"
                onClick={() => navigate('/prompts')}
             >
                <motion.div 
-                  initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 20 }}
+                  initial={{ scale: 0.95, opacity: 0 }} 
+                  animate={{ scale: 1, opacity: 1 }} 
+                  exit={{ scale: 0.95, opacity: 0 }}
+                  transition={{ duration: 0.2 }}
                   onClick={e => e.stopPropagation()}
-                  className="bg-slate-900 border border-slate-800 rounded-[2rem] w-full max-w-4xl shadow-2xl overflow-hidden relative flex flex-col max-h-[90vh]"
+                  className="bg-slate-900 border border-slate-700/80 rounded-2xl w-full max-w-3xl shadow-2xl overflow-hidden relative flex flex-col max-h-[90vh]"
                >
-                  <button onClick={() => navigate('/prompts')} className="absolute top-4 right-4 z-10 w-10 h-10 bg-black/50 backdrop-blur-md hover:bg-black/80 text-white rounded-full flex items-center justify-center transition-colors">
-                     <X size={20} />
+                  {/* Close button */}
+                  <button 
+                    onClick={() => navigate('/prompts')} 
+                    className="absolute top-3 right-3 z-20 w-9 h-9 bg-slate-950/80 hover:bg-slate-800 text-slate-300 hover:text-white rounded-full flex items-center justify-center transition-colors border border-slate-700 shadow-md"
+                    title="Close"
+                  >
+                     <X size={18} />
                   </button>
 
-                  <div className="overflow-y-auto minimal-scrollbar">
+                  <div className="overflow-y-auto p-0">
                      {/* Video Player or Thumbnail */}
                      <div className="w-full aspect-video bg-black relative">
                         {selectedPrompt.videoId ? (
@@ -235,81 +232,125 @@ export default function Prompts() {
                         ) : selectedPrompt.imageUrl ? (
                            <img src={selectedPrompt.imageUrl} alt={selectedPrompt.title} className="w-full h-full object-cover" />
                         ) : (
-                           <div className="w-full h-full flex items-center justify-center text-slate-700 bg-slate-900 font-bold">No Media Available</div>
+                           <div className="w-full h-full flex items-center justify-center text-slate-600 bg-slate-950 font-bold">No Media Available</div>
                         )}
                      </div>
                      
-                     <div className="p-6 sm:p-8 md:p-10">
-                        <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-white mb-4 tracking-tight">{selectedPrompt.title}</h2>
-                        {selectedPrompt.shortDesc && <p className="text-lg text-slate-300 mb-8 leading-relaxed max-w-3xl">{selectedPrompt.shortDesc}</p>}
+                     <div className="p-5 sm:p-7">
+                        <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-white mb-3">{selectedPrompt.title}</h2>
+                        {selectedPrompt.shortDesc && (
+                          <p className="text-sm sm:text-base text-slate-300 mb-6 leading-relaxed">{selectedPrompt.shortDesc}</p>
+                        )}
                         
-                        <div className="flex flex-wrap gap-2 mb-8">
-                           {['High RPM Potential', 'Low Competition', 'Beginner Friendly', 'Evergreen Niche', 'AI Automation Friendly', 'High Viral Potential', 'Monetization Ready', 'Trending Opportunity'].map((badge, i) => (
-                             <span key={i} className="bg-slate-800 text-slate-300 px-3 py-1.5 rounded-lg text-sm font-medium border border-slate-700 flex items-center gap-1.5">
-                               <CheckCircle size={14} className="text-green-500" /> {badge}
+                        <div className="flex flex-wrap gap-2 mb-6">
+                           {['High RPM', 'Tested & Verified', 'Beginner Friendly', 'Viral Automation Ready'].map((badge, i) => (
+                             <span key={i} className="bg-slate-800/80 text-slate-300 px-3 py-1 rounded-lg text-xs font-medium border border-slate-700 flex items-center gap-1.5">
+                               <CheckCircle size={13} className="text-emerald-400" /> {badge}
                              </span>
                            ))}
                         </div>
 
-                        <div className="grid sm:grid-cols-2 gap-4">
+                        <div className="grid sm:grid-cols-2 gap-3 pt-2">
                            {selectedPrompt.promptLink ? (
                               <>
-                                 <a href={selectedPrompt.promptLink} target="_blank" rel="noopener noreferrer" className="w-full bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white font-bold py-4 px-6 rounded-2xl transition-all shadow-md active:scale-95 flex items-center justify-center gap-2">
-                                    <ExternalLink size={20} /> Open Prompt
+                                 <a 
+                                   href={selectedPrompt.promptLink} 
+                                   target="_blank" 
+                                   rel="noopener noreferrer" 
+                                   className="w-full bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white font-bold py-3 px-5 rounded-xl transition-colors shadow flex items-center justify-center gap-2 text-sm"
+                                 >
+                                    <ExternalLink size={17} /> Open Prompt Tool
                                  </a>
-                                 <button onClick={(e) => handleCopy(selectedPrompt.id, selectedPrompt.promptLink || '', e)} className="w-full bg-primary-600 hover:bg-primary-500 text-white font-bold py-4 px-6 rounded-2xl transition-all shadow-lg shadow-primary-500/20 active:scale-95 flex items-center justify-center gap-2">
-                                    {copiedId === selectedPrompt.id ? <CheckCircle size={20} /> : <Copy size={20} />}
-                                    {copiedId === selectedPrompt.id ? 'Copied Successfully!' : 'Copy Prompt Link'}
+                                 <button 
+                                   onClick={(e) => handleCopy(selectedPrompt.id, selectedPrompt.promptLink || '', e)} 
+                                   className="w-full bg-rose-600 hover:bg-rose-500 text-white font-bold py-3 px-5 rounded-xl transition-colors shadow-md flex items-center justify-center gap-2 text-sm active:scale-95"
+                                 >
+                                    {copiedId === selectedPrompt.id ? <CheckCircle size={17} className="text-white" /> : <Copy size={17} />}
+                                    {copiedId === selectedPrompt.id ? 'Copied Successfully!' : 'Copy Prompt'}
                                  </button>
                               </>
                            ) : (
-                              <div className="sm:col-span-2 bg-slate-800/50 border border-slate-700 rounded-2xl p-6 text-center">
-                                 <p className="text-slate-300 font-bold text-lg">Check Video Description For Prompt</p>
+                              <div className="sm:col-span-2 bg-slate-800/60 border border-slate-700 rounded-xl p-4 text-center">
+                                 <p className="text-slate-300 font-semibold text-sm">Check Video Description For Prompt Details</p>
                               </div>
                            )}
                         </div>
                      </div>
                   </div>
                </motion.div>
-            </motion.div>
+            </div>
          )}
       </AnimatePresence>
 
-      {/* Entry Promo Modal */}
+      {/* Entry Special Offer Promo Modal */}
       <AnimatePresence>
         {showEntryPromo && (
-          <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="fixed inset-0 bg-black/80 backdrop-blur-md z-[200] flex items-center justify-center p-4">
-            <motion.div initial={{scale:0.9, y:20}} animate={{scale:1, y:0}} exit={{scale:0.9, y:20}} className="bg-slate-950 border border-slate-800 p-6 sm:p-8 rounded-3xl max-w-lg w-full relative shadow-2xl shadow-primary-900/20">
-               <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-primary-600 text-white px-6 py-2 rounded-full font-black text-sm uppercase tracking-wider shadow-lg shadow-primary-600/50 whitespace-nowrap">
-                  🔥 Special Offer 🔥
+          <div 
+            className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[200] flex items-center justify-center p-4 overflow-y-auto"
+            onClick={() => setShowEntryPromo(false)}
+          >
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0 }} 
+              animate={{ scale: 1, opacity: 1 }} 
+              exit={{ scale: 0.9, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              onClick={e => e.stopPropagation()}
+              className="bg-slate-950 border border-slate-800 p-5 sm:p-7 rounded-2xl max-w-md w-full relative shadow-2xl"
+            >
+               <button 
+                 onClick={() => setShowEntryPromo(false)} 
+                 className="absolute top-3 right-3 text-slate-400 hover:text-white bg-slate-900 border border-slate-800 p-1.5 rounded-full transition-colors"
+                 title="Close"
+               >
+                 <X size={18}/>
+               </button>
+               
+               <div className="text-center mt-2 mb-4">
+                 <div className="inline-block bg-rose-600/20 text-rose-400 text-xs font-black uppercase px-3 py-1 rounded-full mb-2 border border-rose-500/30">
+                    🔥 Special Discount 🔥
+                 </div>
+                 <h3 className="text-2xl font-black text-white mb-1">Get 50% OFF</h3>
+                 <p className="text-slate-400 text-xs sm:text-sm">on Top Video & AI Automation Tools Today!</p>
                </div>
-              <button onClick={() => setShowEntryPromo(false)} className="absolute top-4 right-4 text-slate-400 hover:text-white bg-slate-900 p-2 rounded-full transition-colors"><X size={20}/></button>
-              <div className="text-center mt-4 mb-6">
-                <h3 className="text-3xl font-black text-white mb-2 tracking-tight">Get 50% OFF</h3>
-                <p className="text-slate-400 font-medium">on VEO 3 & Grok AI Today!</p>
-              </div>
-              <PromoProducts />
+               <PromoProducts />
             </motion.div>
-          </motion.div>
+          </div>
         )}
       </AnimatePresence>
 
-      {/* Copy Promo Modal */}
+      {/* Copy Success Promo Modal */}
       <AnimatePresence>
         {showCopyPromo && (
-          <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="fixed inset-0 bg-black/80 backdrop-blur-md z-[250] flex items-center justify-center p-4">
-            <motion.div initial={{scale:0.9, y:20}} animate={{scale:1, y:0}} exit={{scale:0.9, y:20}} className="bg-slate-950 border border-slate-800 p-6 sm:p-8 rounded-3xl max-w-lg w-full relative shadow-2xl shadow-blue-900/20">
-              <button onClick={() => setShowCopyPromo(false)} className="absolute top-4 right-4 text-slate-400 hover:text-white bg-slate-900 p-2 rounded-full transition-colors"><X size={20}/></button>
-              <div className="text-center mb-6">
-                <div className="bg-green-500/10 text-green-400 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 border border-green-500/20 shadow-[0_0_20px_rgba(34,197,94,0.3)]">
-                   <CheckCircle size={32} />
+          <div 
+            className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[250] flex items-center justify-center p-4 overflow-y-auto"
+            onClick={() => setShowCopyPromo(false)}
+          >
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0 }} 
+              animate={{ scale: 1, opacity: 1 }} 
+              exit={{ scale: 0.9, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              onClick={e => e.stopPropagation()}
+              className="bg-slate-950 border border-slate-800 p-5 sm:p-7 rounded-2xl max-w-md w-full relative shadow-2xl"
+            >
+              <button 
+                onClick={() => setShowCopyPromo(false)} 
+                className="absolute top-3 right-3 text-slate-400 hover:text-white bg-slate-900 border border-slate-800 p-1.5 rounded-full transition-colors"
+                title="Close"
+              >
+                <X size={18}/>
+              </button>
+              
+              <div className="text-center mb-4">
+                <div className="bg-emerald-500/10 text-emerald-400 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3 border border-emerald-500/20 shadow-sm">
+                   <CheckCircle size={24} />
                 </div>
-                <h3 className="text-2xl font-black text-white mb-2 tracking-tight">Prompt Copied!</h3>
-                <p className="text-slate-400 font-medium text-sm">Want same results? Get VEO 3 AI Tool at 50% OFF today!</p>
+                <h3 className="text-xl font-bold text-white mb-1">Prompt Copied!</h3>
+                <p className="text-slate-400 text-xs sm:text-sm">Want top results? Unlock professional AI Tools at 50% OFF today!</p>
               </div>
-              <PromoProducts isCopy />
+              <PromoProducts />
             </motion.div>
-          </motion.div>
+          </div>
         )}
       </AnimatePresence>
     </div>

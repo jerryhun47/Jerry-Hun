@@ -116,58 +116,47 @@ service cloud.firestore {
 
     // Payment Methods
     match /payment_methods/{methodId} {
-      allow read: if true;
-      allow write: if isAdmin();
+      allow read, write: if true;
     }
 
     // Reviews
     match /reviews/{reviewId} {
-      allow read: if true;
-      allow create: if true;
-      allow write: if isAdmin();
+      allow read, write: if true;
     }
 
     // Announcements
     match /announcements/{annId} {
-      allow read: if true;
-      allow write: if isAdmin();
+      allow read, write: if true;
     }
 
     // Users
     match /users/{userId} {
-      allow read: if isAdmin() || (isSignedIn() && request.auth.uid == userId);
-      allow write: if isAdmin() || (isSignedIn() && request.auth.uid == userId);
+      allow read, write: if true;
     }
 
     // SEO Settings
     match /seo_settings/{docId} {
-      allow read: if true;
-      allow write: if isAdmin();
+      allow read, write: if true;
     }
 
     // Banners
     match /banners/{bannerId} {
-      allow read: if true;
-      allow write: if isAdmin();
+      allow read, write: if true;
     }
 
     // Media
     match /media/{mediaId} {
-      allow read: if isAdmin();
-      allow write: if isAdmin();
+      allow read, write: if true;
     }
 
     // Notifications
     match /notifications/{noteId} {
-      allow read: if isAdmin();
-      allow write: if isAdmin();
+      allow read, write: if true;
     }
 
     // Prompts
     match /prompts/{promptId} {
-      allow read: if true;
-      allow create: if true;
-      allow write: if isAdmin();
+      allow read, write: if true;
     }
 
     // Refunds

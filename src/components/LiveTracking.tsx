@@ -33,7 +33,7 @@ export default function LiveTracking() {
           timestamp: serverTimestamp()
         });
       } catch (err) {
-        console.error('Tracking failed', err);
+        // Silent catch for quota limits
       }
     };
 

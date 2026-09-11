@@ -41,7 +41,7 @@ export default function AIChatbot({ isOpen, onClose }: AIChatbotProps) {
            city,
            createdAt: serverTimestamp()
         });
-     } catch(e) { console.error('Error logging chat', e); }
+     } catch(e) { /* Silent fallback for quota */ }
   };
 
   const handleSend = async () => {

@@ -1,10 +1,13 @@
 import { useEffect } from 'react';
 import { db } from './firebase';
-import { doc, setDoc, getDoc, serverTimestamp, updateDoc, increment, arrayUnion } from 'firebase/firestore';
+import { doc, setDoc, getDoc, serverTimestamp, updateDoc, arrayUnion } from 'firebase/firestore';
 import { UAParser } from 'ua-parser-js';
 
 export function useVisitorTracking(pathname: string) {
   useEffect(() => {
+    // Only track if not in admin
+    if (pathname.startsWith('/admin')) return;
+
     let currentCity = 'Unknown';
     let currentIp = 'Unknown';
     
@@ -17,58 +20,55 @@ export function useVisitorTracking(pathname: string) {
 
     const initTracking = async () => {
       try {
-        const res = await fetch('https://freeipapi.com/api/json/');
-        const data = await res.json();
-        if (data.cityName) currentCity = data.cityName;
-        if (data.ipAddress) currentIp = data.ipAddress;
-      } catch (e) {}
+        const lastTracked = sessionStorage.getItem(`tracked_${pathname}`);
+        if (lastTracked) return; // Only track once per page per session
 
-      const parser = new UAParser();
-      const result = parser.getResult();
-      const deviceModel = result.device.model || result.os.name || 'Desktop';
-      const browserName = result.browser.name || 'Unknown Browser';
+        try {
+          const res = await fetch('https://freeipapi.com/api/json/');
+          const data = await res.json();
+          if (data.cityName) currentCity = data.cityName;
+          if (data.ipAddress) currentIp = data.ipAddress;
+        } catch (e) {}
 
-      const visitorRef = doc(db, 'visitors', visitorId as string);
-      const visitorSnap = await getDoc(visitorRef);
+        const parser = new UAParser();
+        const result = parser.getResult();
+        const deviceModel = result.device.model || result.os.name || 'Desktop';
+        const browserName = result.browser.name || 'Unknown Browser';
 
-      if (!visitorSnap.exists()) {
-        await setDoc(visitorRef, {
-           visitorId,
-           firstVisitTime: serverTimestamp(),
-           lastVisitTime: serverTimestamp(),
-           sessionCount: 1,
-           userAgent: window.navigator.userAgent,
-           deviceModel,
-           browserName,
-           city: currentCity,
-           ipAddresses: [currentIp],
-           pageVisits: [{ path: pathname, timestamp: Date.now() }],
-        });
-      } else {
-        await updateDoc(visitorRef, {
-           lastVisitTime: serverTimestamp(),
-           sessionCount: increment(0), // don't increment unless it's a new session, simplified for now
-           ipAddresses: arrayUnion(currentIp),
-           pageVisits: arrayUnion({ path: pathname, timestamp: Date.now() }),
-           city: currentCity,
-        });
+        const visitorRef = doc(db, 'visitors', visitorId as string);
+        
+        try {
+          const visitorSnap = await getDoc(visitorRef);
+          if (!visitorSnap.exists()) {
+            await setDoc(visitorRef, {
+               visitorId,
+               firstVisitTime: serverTimestamp(),
+               lastVisitTime: serverTimestamp(),
+               sessionCount: 1,
+               userAgent: window.navigator.userAgent,
+               deviceModel,
+               browserName,
+               city: currentCity,
+               ipAddresses: [currentIp],
+               pageVisits: [{ path: pathname, timestamp: Date.now() }],
+            });
+          } else {
+            await updateDoc(visitorRef, {
+               lastVisitTime: serverTimestamp(),
+               ipAddresses: arrayUnion(currentIp),
+               pageVisits: arrayUnion({ path: pathname, timestamp: Date.now() }),
+               city: currentCity,
+            });
+          }
+          sessionStorage.setItem(`tracked_${pathname}`, 'true');
+        } catch (dbErr) {
+          // Silent fallback on quota error
+        }
+      } catch (err) {
+        // Silent fallback
       }
-
-      const interval = setInterval(() => {
-         updateDoc(visitorRef, {
-            lastActive: serverTimestamp(),
-         }).catch(() => {});
-      }, 10000); 
-
-      return () => clearInterval(interval);
     };
 
-    const cleanupPromise = initTracking();
-    
-    return () => {
-       cleanupPromise.then(cleanup => {
-         if (typeof cleanup === 'function') cleanup();
-       });
-    };
+    initTracking();
   }, [pathname]);
 }

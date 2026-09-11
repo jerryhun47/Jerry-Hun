@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../lib/firebase';
-import { collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, serverTimestamp, query, orderBy, writeBatch } from 'firebase/firestore';
-import { Plus, Edit2, Trash2, X, Save, Image as ImageIcon, Video, UploadCloud, CheckSquare, Square } from 'lucide-react';
+import { collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, serverTimestamp, query, writeBatch, limit, getDocs } from 'firebase/firestore';
+import { Plus, Edit2, Trash2, X, Save, Image as ImageIcon, Video, UploadCloud, CheckSquare, Square, RefreshCw, Sparkles, CheckCircle2 } from 'lucide-react';
+import { DEFAULT_PROMPTS } from '../lib/defaultData';
 
 const extractYouTubeId = (url: string) => {
   if (!url) return null;
@@ -15,6 +16,7 @@ export default function PromptManager() {
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [isRestoring, setIsRestoring] = useState(false);
   
   const [formData, setFormData] = useState({
     title: '',
@@ -30,12 +32,25 @@ export default function PromptManager() {
   const [message, setMessage] = useState({ type: '', text: '' });
 
   useEffect(() => {
-    const q = query(collection(db, 'prompts'), orderBy('createdAt', 'desc'));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      setPrompts(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
+    try {
+      const q = collection(db, 'prompts');
+      const unsubscribe = onSnapshot(q, (snapshot) => {
+        const loaded = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+        loaded.sort((a: any, b: any) => {
+          const tA = a.createdAt?.toMillis?.() || a.createdAt?.seconds || 0;
+          const tB = b.createdAt?.toMillis?.() || b.createdAt?.seconds || 0;
+          return tB - tA;
+        });
+        setPrompts(loaded);
+        setLoading(false);
+      }, (err) => {
+        console.warn('Prompts snapshot error:', err);
+        setLoading(false);
+      });
+      return () => unsubscribe();
+    } catch (e) {
       setLoading(false);
-    });
-    return () => unsubscribe();
+    }
   }, []);
 
   const resetForm = () => {
@@ -43,6 +58,59 @@ export default function PromptManager() {
       title: '', shortDesc: '', promptLink: '', videoLink: '', imageUrl: ''
     });
     setEditingId(null);
+  };
+
+  const handleRestoreDefaultPrompts = async () => {
+    if (!confirm('Do you want to restore all standard viral prompts to your database? Any existing prompts will remain safe.')) return;
+    setIsRestoring(true);
+    setMessage({ type: '', text: '' });
+    try {
+      const batch = writeBatch(db);
+      const existingTitles = new Set(prompts.map(p => (p.title || '').toLowerCase().trim()));
+      let count = 0;
+
+      for (const dp of DEFAULT_PROMPTS) {
+        if (!existingTitles.has((dp.title || '').toLowerCase().trim())) {
+          const newDocRef = doc(collection(db, 'prompts'));
+          batch.set(newDocRef, {
+            title: dp.title,
+            shortDesc: dp.shortDesc,
+            promptLink: dp.promptLink,
+            videoLink: dp.videoLink,
+            videoId: dp.videoId || extractYouTubeId(dp.videoLink) || '',
+            imageUrl: dp.imageUrl,
+            createdAt: serverTimestamp()
+          });
+          count++;
+        }
+      }
+
+      if (count === 0) {
+        // Force re-seed with fresh IDs if everything was previously deleted
+        for (const dp of DEFAULT_PROMPTS) {
+          const newDocRef = doc(collection(db, 'prompts'));
+          batch.set(newDocRef, {
+            title: dp.title,
+            shortDesc: dp.shortDesc,
+            promptLink: dp.promptLink,
+            videoLink: dp.videoLink,
+            videoId: dp.videoId || extractYouTubeId(dp.videoLink) || '',
+            imageUrl: dp.imageUrl,
+            createdAt: serverTimestamp()
+          });
+          count++;
+        }
+      }
+
+      await batch.commit();
+      setMessage({ type: 'success', text: `Successfully restored ${count} viral prompts to database!` });
+      setTimeout(() => setMessage({ type: '', text: '' }), 4000);
+    } catch (err: any) {
+      console.error('Error restoring prompts:', err);
+      setMessage({ type: 'error', text: 'Failed to restore prompts: ' + (err.message || 'Unknown error') });
+    } finally {
+      setIsRestoring(false);
+    }
   };
 
   const handleEdit = (prompt: any) => {
@@ -60,8 +128,15 @@ export default function PromptManager() {
 
   const handleDelete = async (id: string) => {
     if (window.confirm("Are you sure you want to delete this prompt?")) {
-      await deleteDoc(doc(db, 'prompts', id));
-      setSelectedIds(prev => prev.filter(selectedId => selectedId !== id));
+      try {
+        await deleteDoc(doc(db, 'prompts', id));
+        setSelectedIds(prev => prev.filter(selectedId => selectedId !== id));
+        setMessage({ type: 'success', text: 'Prompt deleted successfully' });
+        setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+      } catch (err: any) {
+        console.error(err);
+        setMessage({ type: 'error', text: 'Failed to delete prompt' });
+      }
     }
   };
 
@@ -135,8 +210,8 @@ export default function PromptManager() {
     e.preventDefault();
     setMessage({ type: '', text: '' });
     
-    if (!formData.videoLink) {
-       setMessage({ type: 'error', text: 'Video Link is required' });
+    if (!formData.promptLink) {
+       setMessage({ type: 'error', text: 'Prompt Link is required' });
        return;
     }
 
@@ -148,19 +223,19 @@ export default function PromptManager() {
            ...dataToSave,
            updatedAt: serverTimestamp() 
         });
-        setMessage({ type: 'success', text: 'Prompt saved successfully' });
+        setMessage({ type: 'success', text: 'Prompt updated successfully' });
       } else {
         await addDoc(collection(db, 'prompts'), {
           ...dataToSave,
           createdAt: serverTimestamp()
         });
-        setMessage({ type: 'success', text: 'Prompt saved successfully' });
+        setMessage({ type: 'success', text: 'Prompt created successfully' });
       }
       resetForm();
       setTimeout(() => setMessage({ type: '', text: '' }), 3000);
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      setMessage({ type: 'error', text: 'Failed to save prompt' });
+      setMessage({ type: 'error', text: 'Failed to save prompt: ' + (error.message || 'Unknown error') });
     }
   };
 
@@ -180,7 +255,7 @@ export default function PromptManager() {
           const line = lines[i].trim();
           
           if (line.match(/^\d+\.$/) || line.toLowerCase().startsWith('title:')) {
-             if (currentPrompt.videoLink) {
+             if (currentPrompt.videoLink || currentPrompt.promptLink) {
                 if (!currentPrompt.title) currentPrompt.title = `Prompt ${promptsToAdd.length + 1}`;
                 promptsToAdd.push(processPromptData({ ...formData, ...currentPrompt }));
                 currentPrompt = {};
@@ -193,7 +268,7 @@ export default function PromptManager() {
           } else if (line.toLowerCase().startsWith('prompt:')) {
              currentPrompt.promptLink = line.substring(7).trim();
           } else if (line.toLowerCase().match(/^🔥 \d+\./)) {
-             if (currentPrompt.videoLink) {
+             if (currentPrompt.videoLink || currentPrompt.promptLink) {
                 promptsToAdd.push(processPromptData({ ...formData, ...currentPrompt }));
                 currentPrompt = {};
              }
@@ -201,7 +276,7 @@ export default function PromptManager() {
           }
        }
        
-       if (currentPrompt.videoLink) {
+       if (currentPrompt.videoLink || currentPrompt.promptLink) {
           if (!currentPrompt.title) currentPrompt.title = `Prompt ${promptsToAdd.length + 1}`;
           promptsToAdd.push(processPromptData({ ...formData, ...currentPrompt }));
        }
@@ -223,7 +298,7 @@ export default function PromptManager() {
        setBulkText('');
        setIsBulkMode(false);
        setTimeout(() => setMessage({ type: '', text: '' }), 3000);
-     } catch (err) {
+     } catch (err: any) {
        console.error(err);
        setMessage({ type: 'error', text: 'Failed to process bulk import' });
      }
@@ -231,6 +306,27 @@ export default function PromptManager() {
 
   return (
     <div className="space-y-8">
+      {/* Top Banner & Actions */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-900 border border-slate-800 rounded-2xl p-6 text-white shadow-md">
+        <div>
+           <h2 className="text-2xl font-black flex items-center gap-2">
+             <Sparkles className="text-rose-500" size={24} /> AI Prompts Library Manager
+           </h2>
+           <p className="text-slate-400 text-sm mt-1">Manage, add, and restore high-converting YouTube automation prompts.</p>
+        </div>
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <button
+            type="button"
+            onClick={handleRestoreDefaultPrompts}
+            disabled={isRestoring}
+            className="bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-bold px-4 py-2.5 rounded-xl text-sm flex items-center gap-2 shadow-md transition-all w-full sm:w-auto justify-center disabled:opacity-50"
+          >
+            <RefreshCw size={16} className={isRestoring ? 'animate-spin' : ''} />
+            {isRestoring ? 'Restoring...' : '⚡ Restore / Recover Default Prompts'}
+          </button>
+        </div>
+      </div>
+
       {/* Form Section */}
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
         <div className="flex justify-between items-center mb-6 flex-wrap gap-4">
@@ -252,8 +348,9 @@ export default function PromptManager() {
         </div>
 
         {message.text && (
-          <div className={`p-4 rounded-lg mb-6 ${message.type === 'error' ? 'bg-primary-50 text-primary-700 border border-primary-200' : 'bg-green-50 text-green-700 border border-green-200'}`}>
-            {message.text}
+          <div className={`p-4 rounded-lg mb-6 flex items-center gap-2 font-semibold ${message.type === 'error' ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-green-50 text-green-700 border border-green-200'}`}>
+            {message.type === 'success' && <CheckCircle2 size={18} className="text-green-600" />}
+            <span>{message.text}</span>
           </div>
         )}
 
@@ -280,7 +377,7 @@ export default function PromptManager() {
            <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid md:grid-cols-2 gap-6">
                  <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">Title (Optional)</label>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">Title</label>
                     <input type="text" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} className="w-full border border-slate-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-primary-500 outline-none" placeholder="e.g. 10x Your Views with this Hook" />
                  </div>
                  <div>
@@ -310,7 +407,7 @@ export default function PromptManager() {
                     {formData.imageUrl ? (
                        <div className="relative inline-block">
                           <img src={formData.imageUrl} alt="Preview" className="h-40 rounded-lg object-cover shadow-sm border border-slate-200" />
-                          <button type="button" onClick={() => setFormData({...formData, imageUrl: ''})} className="absolute -top-3 -right-3 bg-primary-100 text-primary-600 hover:bg-primary-200 p-1.5 rounded-full shadow-sm"><X size={16}/></button>
+                          <button type="button" onClick={() => setFormData({...formData, imageUrl: ''})} className="absolute -top-3 -right-3 bg-red-100 text-red-600 hover:bg-red-200 p-1.5 rounded-full shadow-sm"><X size={16}/></button>
                        </div>
                     ) : (
                        <div className="w-24 h-24 bg-slate-100 rounded-full flex items-center justify-center text-slate-400">
@@ -337,12 +434,15 @@ export default function PromptManager() {
       {/* List Section */}
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
         <div className="flex justify-between items-center mb-6 flex-wrap gap-4">
-          <h2 className="text-xl font-bold text-slate-800">Published Prompts</h2>
+          <div>
+            <h2 className="text-xl font-bold text-slate-800">Published Prompts ({prompts.length})</h2>
+            <p className="text-slate-500 text-xs">All active prompts visible to customers on the frontend.</p>
+          </div>
           {prompts.length > 0 && (
             <div className="flex gap-2 items-center">
               <button 
                 onClick={handleSelectAll} 
-                className="text-sm bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg flex items-center gap-2 transition-colors"
+                className="text-sm bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg flex items-center gap-2 transition-colors font-medium"
               >
                 {selectedIds.length === prompts.length ? <CheckSquare size={16} /> : <Square size={16} />}
                 Select All
@@ -350,7 +450,7 @@ export default function PromptManager() {
               {selectedIds.length > 0 && (
                 <button 
                   onClick={handleBulkDelete} 
-                  className="text-sm bg-primary-100 hover:bg-primary-200 text-primary-700 px-3 py-1.5 rounded-lg flex items-center gap-1 transition-colors font-semibold"
+                  className="text-sm bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1.5 rounded-lg flex items-center gap-1 transition-colors font-bold"
                 >
                   <Trash2 size={16} /> Delete Selected ({selectedIds.length})
                 </button>
@@ -368,9 +468,9 @@ export default function PromptManager() {
                    {/* Checkbox overlay */}
                    <button 
                      onClick={() => toggleSelection(prompt.id)}
-                     className="absolute top-2 left-2 z-10 bg-white/80 backdrop-blur text-slate-700 hover:text-primary-600 p-1.5 rounded-md shadow-sm transition-colors"
+                     className="absolute top-2 left-2 z-10 bg-white/90 backdrop-blur text-slate-700 hover:text-primary-600 p-1.5 rounded-md shadow-sm transition-colors"
                    >
-                     {selectedIds.includes(prompt.id) ? <CheckSquare className="text-primary-500" size={18} /> : <Square size={18} />}
+                     {selectedIds.includes(prompt.id) ? <CheckSquare className="text-primary-600" size={18} /> : <Square size={18} />}
                    </button>
 
                    <div className="aspect-video bg-black relative">
@@ -383,13 +483,13 @@ export default function PromptManager() {
                    </div>
                    <div className="p-4 flex flex-col flex-1">
                       <h3 className="font-bold text-slate-800 mb-1 line-clamp-1">{prompt.title}</h3>
-                      <p className="text-xs text-blue-600 truncate mb-1">{prompt.promptLink}</p>
+                      <p className="text-xs text-blue-600 truncate mb-2">{prompt.promptLink}</p>
                       
                       <div className="flex items-center gap-2 border-t border-slate-200 pt-3 mt-auto">
                          <button onClick={() => handleEdit(prompt)} className="flex-1 flex justify-center items-center gap-1.5 p-2 bg-blue-100 text-blue-700 hover:bg-blue-200 rounded-lg text-sm font-semibold transition-colors">
                             <Edit2 size={16} /> Edit
                          </button>
-                         <button onClick={() => handleDelete(prompt.id)} className="flex-1 flex justify-center items-center gap-1.5 p-2 bg-primary-100 text-primary-700 hover:bg-primary-200 rounded-lg text-sm font-semibold transition-colors">
+                         <button onClick={() => handleDelete(prompt.id)} className="flex-1 flex justify-center items-center gap-1.5 p-2 bg-red-100 text-red-700 hover:bg-red-200 rounded-lg text-sm font-semibold transition-colors">
                             <Trash2 size={16} /> Delete
                          </button>
                       </div>
@@ -398,7 +498,17 @@ export default function PromptManager() {
              ))}
           </div>
         ) : (
-          <div className="text-center py-12 text-slate-500 border-2 border-dashed border-slate-200 rounded-xl">No prompts found. Add your first prompt above.</div>
+          <div className="text-center py-12 text-slate-500 border-2 border-dashed border-slate-200 rounded-xl space-y-3">
+            <p className="text-base font-semibold text-slate-700">No custom prompts found in database.</p>
+            <button
+              onClick={handleRestoreDefaultPrompts}
+              disabled={isRestoring}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-6 py-2.5 rounded-xl inline-flex items-center gap-2 shadow-md transition-all"
+            >
+              <RefreshCw size={16} className={isRestoring ? 'animate-spin' : ''} />
+              Restore 8 Default Viral Prompts
+            </button>
+          </div>
         )}
       </div>
     </div>

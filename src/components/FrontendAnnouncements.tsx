@@ -1,21 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { db } from '../lib/firebase';
-import { collection, getDocs, query } from 'firebase/firestore';
 import { Target } from 'lucide-react';
+import { getCachedAnnouncements } from '../lib/cacheService';
 
 export default function FrontendAnnouncements() {
   const [announcements, setAnnouncements] = useState<any[]>([]);
 
   useEffect(() => {
-    try {
-      getDocs(query(collection(db, 'announcements'))).then((snap) => {
-        const valid = snap.docs.map(d => d.data()).filter((a: any) => a.isActive);
-        setAnnouncements(valid);
-      });
-      
-    } catch (e) {
-      // ignore
-    }
+    getCachedAnnouncements().then((data) => {
+      setAnnouncements(data);
+    }).catch(() => {});
   }, []);
 
   if (announcements.length === 0) return null;

@@ -2,7 +2,7 @@ import { apiFetch } from '../lib/api';
 import React, { useState, useEffect } from 'react';
 import { db, auth } from '../lib/firebase';
 import { collection, getDocs, addDoc, serverTimestamp, query, onSnapshot, doc, getDoc } from 'firebase/firestore';
-import { ShoppingCart, Search, Lock, CheckCircle, X, Upload } from 'lucide-react';
+import { ShoppingCart, Search, Lock, CheckCircle, X, Upload, Copy, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '../components/AuthProvider';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
@@ -10,6 +10,9 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 
 import { checkAndBanIfSpamming, checkDuplicateOrder } from '../lib/blocker';
 import ProductReviews from '../components/ProductReviews';
+import { getCachedProducts, getInstantProducts } from '../lib/cacheService';
+import { getProviderLogo } from '../lib/paymentLogos';
+import { calculateYearlyPrice } from '../lib/defaultData';
 
 interface Product {
   id: string;
@@ -27,8 +30,8 @@ interface Product {
 export default function ToolsStore() {
   const { slug } = useParams();
   const navigate = useNavigate();
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [products, setProducts] = useState<Product[]>(() => getInstantProducts() as Product[]);
+  const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -50,42 +53,17 @@ export default function ToolsStore() {
   }, [slug, products, loading]);
 
   useEffect(() => {
-    
-    let timeoutId: any = null;
-    let hasResolved = false;
-
-    const fetchProducts = () => {
-      const q = query(collection(db, 'products'));
-      
-      
-
-      getDocs(q).then((querySnapshot) => {
-        hasResolved = true;
-        const prods: Product[] = [];
-        querySnapshot.forEach((doc) => {
-          const data = doc.data();
-          if (data.is_active !== false && data.category !== 'Course') {
-             prods.push({ id: doc.id, ...data } as Product);
-          }
-        });
-        
-        setProducts(prods);
+    const fetchProducts = async () => {
+      try {
+        const prods = await getCachedProducts();
+        setProducts(prods as Product[]);
+      } catch (err) {
+        // Safe fallback handled in getCachedProducts
+      } finally {
         setLoading(false);
-      }).catch((err) => {
-        console.error("Error fetching products", err);
-        setProducts([
-             { id: 't1', name: 'Premium Netflix Tool', description: 'Lifetime access to Premium accounts auto-generator.', price: 5000, category: 'Entertainment', is_active: true, badge: 'Hot', order_index: 0 },
-             { id: 't2', name: 'Canva Pro Tool', description: 'Unlimited Canva Pro features unlocked.', price: 3000, category: 'Design', is_active: true, order_index: 1 },
-             { id: 't3', name: 'Premium Automation Toolkit', description: 'Complete set of tools.', price: 4000, category: 'Tools', is_active: true, order_index: 2 },
-             { id: 't4', name: 'Spotify Premium Generator', description: 'Generate Spotify premium accounts instantly.', price: 2500, category: 'Entertainment', is_active: true, order_index: 3 },
-             { id: 't5', name: 'SEO Keyword Ranker', description: 'Boost your website ranking automatically.', price: 8000, category: 'SEO', is_active: true, order_index: 4 },
-             { id: 't6', name: 'WhatsApp Bulk Sender', description: 'Send unlimited WhatsApp messages.', price: 4500, category: 'Marketing', is_active: true, order_index: 5 }
-        ] as any[]);
-        setLoading(false);
-      });
+      }
     };
     fetchProducts();
-    
   }, []);
 
   const filteredProducts = products.filter(p => {
@@ -160,17 +138,17 @@ export default function ToolsStore() {
 
             {/* Products Grid */}
             {loading ? (
-              <div className="grid md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
                  {[1, 2, 3, 4, 5, 6].map(i => (
-                    <div key={i} className="bg-slate-900 border border-slate-700 rounded-3xl p-6 flex flex-col h-64 animate-pulse opacity-100">
-                      <div className="w-16 h-16 bg-slate-800 rounded-xl mb-4"></div>
-                      <div className="w-24 h-3 bg-slate-800 rounded mb-3"></div>
-                      <div className="w-3/4 h-6 bg-slate-800 rounded mb-4"></div>
-                      <div className="w-full h-4 bg-slate-800 rounded mb-2"></div>
-                      <div className="w-2/3 h-4 bg-slate-800 rounded mb-6 flex-1"></div>
-                      <div className="flex justify-between items-end border-t border-slate-700 pt-4">
-                         <div className="w-24 h-6 bg-slate-800 rounded"></div>
-                         <div className="w-28 h-10 bg-slate-800 rounded-xl"></div>
+                    <div key={i} className="bg-slate-900 border border-slate-700 rounded-2xl sm:rounded-3xl p-3 sm:p-5 flex flex-col h-56 sm:h-64 animate-pulse opacity-100">
+                      <div className="w-12 h-12 sm:w-16 sm:h-16 bg-slate-800 rounded-xl mb-3"></div>
+                      <div className="w-16 h-3 bg-slate-800 rounded mb-2"></div>
+                      <div className="w-3/4 h-5 bg-slate-800 rounded mb-3"></div>
+                      <div className="w-full h-3 bg-slate-800 rounded mb-2"></div>
+                      <div className="w-2/3 h-3 bg-slate-800 rounded mb-4 flex-1"></div>
+                      <div className="flex justify-between items-end border-t border-slate-700 pt-3">
+                         <div className="w-16 h-5 bg-slate-800 rounded"></div>
+                         <div className="w-16 h-8 bg-slate-800 rounded-lg"></div>
                       </div>
                     </div>
                  ))}
@@ -180,7 +158,7 @@ export default function ToolsStore() {
                 variants={containerVariants}
                 initial="hidden"
                 animate="show"
-                className="grid md:grid-cols-2 gap-6"
+                className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 md:gap-6"
               >
                  <AnimatePresence>
                    {filteredProducts.map(product => (
@@ -188,17 +166,24 @@ export default function ToolsStore() {
                         variants={itemVariants}
                         layout
                         key={product.id} 
-                        className="bg-slate-800 border border-slate-700 rounded-3xl p-6 card-shadow flex flex-col relative overflow-hidden group hover:-translate-y-1 hover:scale-[1.03] hover:shadow-2xl hover:border-slate-600 transition-all duration-300 opacity-100"
+                        className="bg-slate-800/90 border border-slate-700/80 rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 md:p-6 card-shadow flex flex-col relative overflow-hidden group hover:-translate-y-1 hover:border-slate-600 transition-all duration-300 opacity-100"
                       >
-                        {product.badge && <div className="absolute top-4 right-4 bg-slate-900 border border-slate-700 text-primary-500 text-xs font-bold px-3 py-1 rounded-full">{product.badge}</div>}
-                        <div className="mb-4">
-                          <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">{product.category}</span>
-                          <h3 className="text-xl font-bold mt-1 text-white group-hover:text-primary-400 transition-colors leading-snug">{product.name}</h3>
+                        {product.badge && (
+                          <div className="absolute top-2.5 right-2.5 sm:top-4 sm:right-4 bg-slate-900/90 border border-slate-700 text-[#f50505] text-[9px] sm:text-xs font-bold px-2 py-0.5 sm:px-3 sm:py-1 rounded-full">
+                            {product.badge}
+                          </div>
+                        )}
+                        <div className="mb-2 sm:mb-4 pr-12 sm:pr-16">
+                          <span className="text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider">{product.category}</span>
+                          <h3 className="text-sm sm:text-lg md:text-xl font-bold mt-0.5 sm:mt-1 text-white group-hover:text-red-400 transition-colors leading-snug line-clamp-2">{product.name}</h3>
                         </div>
-                        <p className="text-slate-300 text-sm mb-6 flex-1 line-clamp-3">{product.description}</p>
-                        <div className="flex items-center justify-between mt-auto border-t border-slate-700 pt-4">
-                          <div className="font-black text-2xl text-white">PKR {product.price.toLocaleString()}</div>
-                          <button onClick={() => { navigate(`/tools/${generateSlug(product.name)}`); }} className="bg-primary-600 hover:bg-primary-500 cursor-pointer text-white px-6 py-2 rounded-xl transition-all shadow-lg shadow-primary-500/20 active:scale-95 font-bold">
+                        <p className="text-slate-300 text-xs sm:text-sm mb-3 sm:mb-6 flex-1 line-clamp-2 sm:line-clamp-3">{product.description}</p>
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-0 mt-auto border-t border-slate-700/70 pt-2.5 sm:pt-4">
+                          <div className="font-black text-sm sm:text-lg md:text-2xl text-white">PKR {product.price.toLocaleString()}</div>
+                          <button 
+                            onClick={() => { navigate(`/tools/${generateSlug(product.name)}`); }} 
+                            className="bg-[#f50505] hover:bg-[#dc0404] cursor-pointer text-white px-3 py-1.5 sm:px-5 sm:py-2 rounded-xl transition-all shadow-md active:scale-95 text-xs sm:text-sm md:text-base font-bold text-center"
+                          >
                              Buy Now
                           </button>
                         </div>
@@ -235,7 +220,7 @@ function CheckoutModal({ product, onClose }: any) {
   const [step, setStep] = useState<'detail' | 'checkout'>('detail');
   const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'yearly'>('monthly');
 
-  const yearlyPriceTemp = product.yearlyPrice || (product.price * 10);
+  const yearlyPriceTemp = product.yearlyPrice || calculateYearlyPrice(product.price);
   const selectedPrice = selectedPlan === 'monthly' ? product.price : yearlyPriceTemp;
 
   const [email, setEmail] = useState('');
@@ -244,11 +229,46 @@ function CheckoutModal({ product, onClose }: any) {
   
   const [proofBase64, setProofBase64] = useState('');
   const [status, setStatus] = useState<'idle' | 'processing' | 'uploading' | 'success' | 'error' | 'card_error'>('idle');
-  const [paymentMethods, setPaymentMethods] = useState<any[]>([]);
+  const [copiedKey, setCopiedKey] = useState<string | null>(null);
+
+  const DEFAULT_EASYPAISA_LIST = [
+    {
+      id: 'pm_easypaisa_1',
+      providerName: 'Easypaisa',
+      accountName: 'Jerry Automation',
+      accountNumber: '03189418941',
+      logoUrl: getProviderLogo('Easypaisa'),
+      isActive: true,
+      instructions: 'Send exact amount via Easypaisa and upload payment screenshot below.'
+    }
+  ];
+
+  const [paymentMethods, setPaymentMethods] = useState<any[]>(() => {
+    try {
+      const cached = localStorage.getItem('cached_payment_methods');
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          const filtered = parsed.filter((m: any) => 
+            m.isActive !== false && 
+            !['jazzcash', 'meezan', 'meezan bank'].includes((m.providerName || '').toLowerCase().trim())
+          );
+          if (filtered.length > 0) return filtered;
+        }
+      }
+    } catch (e) {}
+    return DEFAULT_EASYPAISA_LIST;
+  });
   const [paymentMode, setPaymentMode] = useState<'wallet' | 'card' | 'binance'>('wallet');
   const [cardDetails, setCardDetails] = useState({ number: '', expiry: '', cvv: '', name: '' });
   const [whatsappNumber, setWhatsappNumber] = useState('+923189418941');
   const [telegramSettings, setTelegramSettings] = useState({ token: '', chatId: '' });
+
+  const copyToClipboard = (text: string, key: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedKey(key);
+    setTimeout(() => setCopiedKey(null), 2500);
+  };
 
   useEffect(() => {
     if (typeof window !== 'undefined' && (window as any).fbq) {
@@ -266,32 +286,37 @@ function CheckoutModal({ product, onClose }: any) {
     const fetchMethods = async () => {
       try {
         const snap = await getDocs(collection(db, 'payment_methods'));
-        const methods = snap.docs.map((d: any) => ({ id: d.id, ...d.data() })).filter((m: any) => m.isActive !== false);
-        if (isMounted) {
+        if (!snap.empty) {
+          const methods = snap.docs.map((d: any) => {
+            const data = d.data();
+            return {
+              id: d.id,
+              ...data,
+              logoUrl: getProviderLogo(data.providerName, data.logoUrl)
+            };
+          }).filter((m: any) => 
+            m.isActive !== false && 
+            !['jazzcash', 'meezan', 'meezan bank'].includes((m.providerName || '').toLowerCase().trim())
+          );
+          if (isMounted && methods.length > 0) {
             setPaymentMethods(methods);
+            try { localStorage.setItem('cached_payment_methods', JSON.stringify(methods)); } catch(e) {}
+          }
         }
       } catch (err) {
-        console.error("Failed to fetch payment methods", err);
-        if (isMounted) {
-          setPaymentMethods([
-            { id: 'm1', providerName: 'Easypaisa', accountName: 'Jerry Automation', accountNumber: '0300-1234567', instructions: 'Send payment via Easypaisa App.', isActive: true },
-            { id: 'm2', providerName: 'JazzCash', accountName: 'Jerry Automation', accountNumber: '0300-1234567', instructions: 'Send payment via JazzCash App.', isActive: true },
-            { id: 'm3', providerName: 'Bank Transfer (Meezan)', accountName: 'Jerry Automation', accountNumber: '01234567891234', instructions: 'Transfer to our Meezan Bank account.', isActive: true }
-          ]);
-        }
+        console.warn('Could not fetch payment methods in ToolsStore', err);
       }
     };
     const fetchSettings = async () => {
       try {
         const snap = await getDocs(collection(db, 'settings'));
         if (!snap.empty && isMounted) {
-            setWhatsappNumber(snap.docs[0].data().whatsappNumber || '+923189418941');
-            setTelegramSettings({ token: snap.docs[0].data().telegramBotToken || '', chatId: snap.docs[0].data().telegramChatId || '' });
+          setWhatsappNumber(snap.docs[0].data().whatsappNumber || '+923189418941');
+          setTelegramSettings({ token: snap.docs[0].data().telegramBotToken || '', chatId: snap.docs[0].data().telegramChatId || '' });
         }
-      } catch (e) {
-        console.error("Failed to fetch settings", e);
+      } catch {
         if (isMounted) {
-            setWhatsappNumber('+923189418941');
+          setWhatsappNumber('+923189418941');
         }
       }
     }
@@ -571,26 +596,39 @@ function CheckoutModal({ product, onClose }: any) {
          
          {status === 'success' ? (
            <div className="text-center py-4">
-             <div className="w-16 h-16 bg-green-500/20 text-green-500 rounded-full flex items-center justify-center mx-auto mb-4"><CheckCircle size={32} /></div>
-             <h3 className="text-2xl font-black mb-4 text-white">Order Successful!</h3>
-             <div className="text-slate-300 space-y-4 mb-6 text-sm text-left bg-slate-800/50 p-6 rounded-2xl border border-slate-700/50 leading-relaxed font-medium">
-                <p className="text-green-400 font-bold text-center text-lg mb-2">Your order has been placed and is currently in pending status.</p>
-                <p className="text-center bg-slate-800 p-3 rounded-xl border border-slate-700">You have ordered: <span className="text-white font-bold">{product.name}</span></p>
-                <p>Please check your email inbox and spam folder. A confirmation email has been sent to you.</p>
-                <p>Once your access is approved, you will receive your Gmail and password via email.</p>
-                <p>For faster service, please send your payment screenshot to our WhatsApp number below:</p>
-                <p className="text-center font-bold text-green-400 text-lg bg-green-900/20 py-2 rounded-lg border border-green-500/20">WhatsApp: +923189418941</p>
+             <div className="w-16 h-16 bg-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce">
+               <CheckCircle size={36} />
              </div>
+             <h3 className="text-2xl font-black mb-2 text-white">Order Submitted Successfully!</h3>
+             <p className="text-slate-300 font-bold mb-6 text-sm">
+               You ordered: <span className="text-red-400 font-black">{product.name} ({selectedPlan} plan)</span>
+             </p>
+
+             <div className="bg-black/90 border border-emerald-500/40 rounded-2xl p-5 mb-6 text-left space-y-3 shadow-xl">
+               <p className="text-emerald-400 font-black text-center text-base uppercase tracking-wide">
+                 📲 Ab Apna Payment Screenshot WhatsApp Par Bhejein:
+               </p>
+               <p className="text-white text-xs text-center font-bold">
+                 Please send your payment screenshot to our official WhatsApp number to complete instant account activation:
+               </p>
+               <div className="bg-emerald-950/80 border border-emerald-500/50 p-4 rounded-xl text-center">
+                 <span className="text-xs text-emerald-300 block font-bold uppercase mb-1">WhatsApp Official Number</span>
+                 <span className="text-white font-black text-2xl tracking-wider">+92 318 9418941</span>
+               </div>
+             </div>
+
              <div className="space-y-3">
                <a 
-                 href={`https://wa.me/923189418941`} 
+                 href={`https://wa.me/923189418941?text=${encodeURIComponent(`Hi Jerry Automation, I have placed an order for ${product.name} (${selectedPlan} plan - PKR ${selectedPrice}). Here is my payment screenshot:`)}`} 
                  target="_blank" 
                  rel="noreferrer"
-                 className="inline-flex items-center justify-center gap-2 w-full bg-green-600 hover:bg-green-500 text-white font-bold py-4 rounded-xl transition-all shadow-lg shadow-green-500/20"
+                 className="inline-flex items-center justify-center gap-2 w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black py-4 px-6 rounded-2xl transition-all shadow-lg shadow-emerald-600/30 text-base"
                >
-                 Confirm on WhatsApp
+                 <span>Send Screenshot on WhatsApp (+923189418941)</span>
                </a>
-               <button onClick={onClose} className="w-full bg-slate-800 hover:bg-slate-700 text-white font-bold py-4 rounded-xl transition-colors cursor-pointer">Close</button>
+               <button onClick={onClose} className="w-full bg-zinc-800 hover:bg-zinc-700 text-white font-bold py-3.5 rounded-2xl transition-colors cursor-pointer text-sm">
+                 Close
+               </button>
              </div>
            </div>
          ) : step === 'detail' ? (
@@ -700,31 +738,93 @@ function CheckoutModal({ product, onClose }: any) {
                   {paymentMethods.length > 0 ? (
                     <div className="space-y-4 mb-6">
                        {paymentMethods.map(method => (
-                         <div key={method.id} className="bg-slate-800/50 border border-slate-700 rounded-2xl p-6 text-center relative overflow-hidden">
-                            <div className="flex items-center justify-center gap-3 mb-4">
-                              {method.logoUrl && <img src={method.logoUrl} alt={method.providerName} className="w-8 h-8 object-contain rounded-full bg-white p-1" />}
-                              <h3 className="font-bold text-white text-lg">{method.providerName} Details</h3>
+                         <div key={method.id} className="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 text-left relative overflow-hidden shadow-lg shadow-black/40 hover:border-slate-700 transition-colors">
+                            <div className="flex items-center justify-between gap-3 mb-4 pb-3 border-b border-slate-800/80">
+                              <div className="flex items-center gap-3">
+                                {method.logoUrl ? (
+                                  <div className="w-10 h-10 rounded-xl bg-white p-1 flex items-center justify-center border border-slate-700 shrink-0">
+                                    <img src={method.logoUrl} alt={method.providerName} className="w-full h-full object-contain" />
+                                  </div>
+                                ) : (
+                                  <div className="w-10 h-10 rounded-xl bg-primary-600 text-white font-black text-sm flex items-center justify-center shrink-0">
+                                    {method.providerName ? method.providerName.substring(0, 2).toUpperCase() : 'PA'}
+                                  </div>
+                                )}
+                                <div>
+                                  <h3 className="font-bold text-white text-base leading-tight">{method.providerName}</h3>
+                                  <span className="text-[11px] text-emerald-400 font-semibold flex items-center gap-1">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Instant Transfer
+                                  </span>
+                                </div>
+                              </div>
+                              <span className="text-xs px-2.5 py-1 rounded-full bg-primary-500/10 text-primary-400 font-bold border border-primary-500/20">
+                                Official Account
+                              </span>
                             </div>
-                            <div className="space-y-2 text-sm md:text-base mb-4">
-                              <div className="flex justify-between border-b border-slate-700/50 pb-2"><span className="text-slate-400">Account Name:</span> <span className="font-bold text-white">{method.accountName}</span></div>
-                              <div className="flex justify-between border-b border-slate-700/50 pb-2"><span className="text-slate-400">Account No:</span> <span className="font-bold text-white">{method.accountNumber}</span></div>
-                              {method.iban && <div className="flex justify-between pt-1 flex-col sm:flex-row gap-1"><span className="text-slate-400 text-left">IBAN:</span> <span className="font-mono font-bold text-white text-right break-all">{method.iban}</span></div>}
+
+                            <div className="space-y-2.5 text-sm mb-3">
+                              <div className="flex justify-between items-center py-1 bg-slate-950/60 px-3 rounded-xl border border-slate-800/60">
+                                <span className="text-slate-400 text-xs font-semibold uppercase">Account Name:</span>
+                                <span className="font-bold text-white text-sm">{method.accountName}</span>
+                              </div>
+
+                              <div className="flex justify-between items-center py-1.5 bg-slate-950/90 px-3 rounded-xl border border-slate-800">
+                                <span className="text-slate-400 text-xs font-semibold uppercase">Account Number:</span>
+                                <div className="flex items-center gap-2">
+                                  <span className="font-mono font-bold text-primary-400 text-sm tracking-wider">{method.accountNumber}</span>
+                                  <button
+                                    type="button"
+                                    onClick={() => copyToClipboard(method.accountNumber, `acc_${method.id}`)}
+                                    className="p-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg transition-colors flex items-center gap-1 text-[10px] font-bold"
+                                    title="Copy Number"
+                                  >
+                                    {copiedKey === `acc_${method.id}` ? <Check size={13} className="text-emerald-400" /> : <Copy size={13} />}
+                                    {copiedKey === `acc_${method.id}` ? 'Copied' : 'Copy'}
+                                  </button>
+                                </div>
+                              </div>
+
+                              {method.iban && (
+                                <div className="flex justify-between items-center py-1.5 bg-slate-950/60 px-3 rounded-xl border border-slate-800/60 flex-col sm:flex-row gap-1">
+                                  <span className="text-slate-400 text-xs font-semibold uppercase">IBAN:</span>
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-mono font-bold text-slate-300 text-xs break-all">{method.iban}</span>
+                                    <button
+                                      type="button"
+                                      onClick={() => copyToClipboard(method.iban, `iban_${method.id}`)}
+                                      className="p-1 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-md transition-colors"
+                                      title="Copy IBAN"
+                                    >
+                                      {copiedKey === `iban_${method.id}` ? <Check size={12} className="text-emerald-400" /> : <Copy size={12} />}
+                                    </button>
+                                  </div>
+                                </div>
+                              )}
+
+                              {method.instructions && (
+                                <p className="text-xs text-slate-400 italic pt-1">
+                                  ℹ️ {method.instructions}
+                                </p>
+                              )}
                             </div>
+
                             {method.qrBase64 && (
-                              <div className="mt-4 flex flex-col items-center border-t border-slate-700/50 pt-4">
-                                 <span className="text-xs text-slate-400 font-bold mb-2">Scan QR to Pay</span>
-                                 <div className="bg-white p-2 rounded-xl">
-                                   <img src={method.qrBase64} alt="QR Code" className="w-32 h-32 object-contain" />
-                                 </div>
+                              <div className="mt-3 flex flex-col items-center border-t border-slate-800 pt-3 bg-slate-950/40 -mx-5 -mb-5 p-4">
+                                 <span className="text-xs text-slate-400 font-bold mb-2 flex items-center gap-1.5">
+                                   Scan QR Code in {method.providerName} App
+                                 </span>
+                                 <div className="bg-white p-2 rounded-xl shadow-md">
+                                   <img src={method.qrBase64} alt="QR Code" className="w-28 h-28 object-contain" />
+                                  </div>
                               </div>
                             )}
                          </div>
                        ))}
                     </div>
                   ) : (
-                    <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-6 text-center mb-6">
+                    <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-6 text-center mb-6">
                        <h3 className="font-bold text-white mb-2">No Payment Methods Configured</h3>
-                       <p className="text-slate-400 text-sm">Please ask the administrator to configure payment methods.</p>
+                       <p className="text-slate-400 text-sm">Please contact support or configure payment accounts in admin.</p>
                     </div>
                   )}
 
