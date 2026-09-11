@@ -2,7 +2,7 @@ import { apiFetch } from '../../lib/api';
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { db, auth, signOut } from '../../lib/firebase';
-import { collection, getDocs, doc, deleteDoc, updateDoc, addDoc, serverTimestamp, query, orderBy, onSnapshot, getDoc, limit, writeBatch } from 'firebase/firestore';
+import { collection, getDocs, doc, deleteDoc, updateDoc, addDoc, setDoc, serverTimestamp, query, orderBy, onSnapshot, getDoc, limit, writeBatch } from 'firebase/firestore';
 import { LayoutDashboard, ShoppingBag, MessageSquare, Package, LogOut, Plus, Trash2, Edit, X, Menu, DollarSign as DollarSign2, ArrowUp, ArrowDown, RefreshCcw, ShieldCheck, Copy, Download, Upload, CheckCircle2, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import WebsiteEditor from './WebsiteEditor';
@@ -167,6 +167,11 @@ export default function Dashboard() {
       unsubs.push(onSnapshot(collection(db, 'transactions'), (snap) => {
         if (!snap.empty) {
           const tData = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+          tData.sort((a: any, b: any) => {
+            const timeA = a.createdAt?.toMillis ? a.createdAt.toMillis() : (typeof a.createdAt === 'number' ? a.createdAt : (a.timestamp || 0));
+            const timeB = b.createdAt?.toMillis ? b.createdAt.toMillis() : (typeof b.createdAt === 'number' ? b.createdAt : (b.timestamp || 0));
+            return timeB - timeA;
+          });
           setTransactions(tData);
           try { localStorage.setItem('admin_cached_transactions', JSON.stringify(tData)); } catch(e) {}
         }
@@ -481,8 +486,8 @@ function ProductsManager({ products, type, refresh }: { products: any[], type: s
            // Also if moving to index 0, mark badge "Top Product" if desired, though we'll just update order_index
            const updates: any = { order_index: i };
            if (i === 0) updates.badge = 'Top Product';
-           return updateDoc(doc(db, 'products', p.id), updates)
-       }));
+           return updateDoc(doc(db, 'products', p.id), updates);
+        }));
      } catch (e) {
        console.error("Error updating order", e);
      }
@@ -500,7 +505,7 @@ function ProductsManager({ products, type, refresh }: { products: any[], type: s
         await Promise.all(newOrder.map((p, i) => {
             const updates: any = { order_index: i };
             if (i === 0) updates.badge = 'Top Product';
-            return updateDoc(doc(db, 'products', p.id), updates)
+            return updateDoc(doc(db, 'products', p.id), updates);
         }));
       } catch (e) { console.error("Error updating order", e); }
       setDraggedIndex(null);
@@ -726,6 +731,12 @@ function OrdersManager({ orders, refresh, viewProof, setViewProof }: { orders: a
   const [bulkAction, setBulkAction] = useState<string>('');
   const [isApplyingBulk, setIsApplyingBulk] = useState(false);
 
+  const sortedOrders = [...orders].sort((a: any, b: any) => {
+    const timeA = a.createdAt?.toMillis ? a.createdAt.toMillis() : (typeof a.createdAt === 'number' ? a.createdAt : (a.timestamp || 0));
+    const timeB = b.createdAt?.toMillis ? b.createdAt.toMillis() : (typeof b.createdAt === 'number' ? b.createdAt : (b.timestamp || 0));
+    return timeB - timeA;
+  });
+
   const handleSelectAll = (e: any) => {
     if (e.target.checked) setSelectedIds(orders.map((o: any) => o.id));
     else setSelectedIds([]);
@@ -908,7 +919,7 @@ function OrdersManager({ orders, refresh, viewProof, setViewProof }: { orders: a
        </div>
 
        <div className="grid gap-4">
-          {orders.map(o => (
+          {sortedOrders.map((o: any) => (
              <div key={o.id} className={`bg-white p-6 rounded-3xl border ${selectedIds.includes(o.id) ? 'border-primary-500 bg-primary-50/20' : 'border-slate-200'} card-shadow flex flex-col md:flex-row justify-between gap-6 transition-colors`}>
                 <div className="flex gap-4 flex-1">
                    <div className="mt-1">
@@ -933,14 +944,34 @@ function OrdersManager({ orders, refresh, viewProof, setViewProof }: { orders: a
                       <p><strong className="text-slate-900">Email:</strong> {o.customer_email}</p>
                       <p><strong className="text-slate-900">WhatsApp:</strong> {o.customer_phone}</p>
                       <p><strong className="text-slate-900">Payment Method:</strong> <span className="capitalize">{o.payment_method}</span></p>
-                      {o.proofBase64 && (
-                        <div className="mt-2">
-                           <strong className="text-slate-900 block mb-1">Payment Screenshot:</strong>
-                           <button onClick={(e) => { e.preventDefault(); setViewProof(o.proofBase64); }} className="inline-block border p-1 rounded hover:border-primary-500 transition-colors cursor-pointer">
-                              <img src={o.proofBase64} alt="Proof" className="h-24 w-auto object-contain rounded bg-slate-100" />
-                           </button>
-                        </div>
-                      )}
+                      {/* Prominent Payment Screenshot Display */
+                       (o.proofBase64 || o.screenshot_url || o.screenshotUrl || o.proofUrl) ? (
+                         <div className="mt-3 bg-white border border-slate-200 p-3 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm hover:border-primary-500 transition-colors">
+                            <div className="flex items-center gap-3">
+                               <button type="button" onClick={(e) => { e.preventDefault(); setViewProof(o.proofBase64 || o.screenshot_url || o.screenshotUrl || o.proofUrl); }} className="relative group shrink-0 cursor-pointer">
+                                  <img src={o.proofBase64 || o.screenshot_url || o.screenshotUrl || o.proofUrl} alt="Payment Proof Screenshot" className="h-20 w-24 object-cover rounded-xl border border-slate-300 bg-slate-100 shadow-sm group-hover:opacity-90 transition-opacity" />
+                                  <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity rounded-xl">
+                                     <span className="text-[10px] font-bold text-white uppercase bg-black/60 px-2 py-1 rounded">Zoom</span>
+                                  </div>
+                               </button>
+                               <div>
+                                  <span className="text-xs font-bold text-emerald-600 block uppercase tracking-wide">📸 Payment Screenshot Attached</span>
+                                  <span className="text-[11px] text-slate-500 font-medium block">Click image to view full HD screenshot</span>
+                               </div>
+                            </div>
+                            <button 
+                              type="button" 
+                              onClick={(e) => { e.preventDefault(); setViewProof(o.proofBase64 || o.screenshot_url || o.screenshotUrl || o.proofUrl); }} 
+                              className="bg-primary-600 hover:bg-primary-700 text-white text-xs font-bold px-4 py-2 rounded-xl transition-all shadow-md cursor-pointer w-full sm:w-auto text-center"
+                            >
+                              View Screenshot
+                            </button>
+                         </div>
+                       ) : (
+                         <div className="mt-2 bg-slate-100 p-2.5 rounded-xl border border-slate-200 text-xs text-slate-500 italic">
+                           ⚠️ Screenshot not attached in form (Customer sent via WhatsApp)
+                         </div>
+                       )}
                       {o.notes && <p className="bg-slate-50 p-2 rounded border border-slate-100 italic">"{o.notes}"</p>}
                    </div>
                    <div>
@@ -1092,6 +1123,12 @@ function TransactionsManager({ transactions, refresh, viewProof, setViewProof }:
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [bulkAction, setBulkAction] = useState<string>('');
   const [isApplyingBulk, setIsApplyingBulk] = useState(false);
+
+  const sortedTransactions = [...transactions].sort((a: any, b: any) => {
+    const timeA = a.createdAt?.toMillis ? a.createdAt.toMillis() : (typeof a.createdAt === 'number' ? a.createdAt : (a.timestamp || 0));
+    const timeB = b.createdAt?.toMillis ? b.createdAt.toMillis() : (typeof b.createdAt === 'number' ? b.createdAt : (b.timestamp || 0));
+    return timeB - timeA;
+  });
 
   const handleSelectAll = (e: any) => {
     if (e.target.checked) setSelectedIds(transactions.map((t: any) => t.id));

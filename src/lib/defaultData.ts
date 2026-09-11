@@ -3,6 +3,7 @@ export interface Product {
   name: string;
   description: string;
   price: number;
+  yearlyPrice?: number;
   original_price?: number;
   category: string;
   is_active: boolean;
