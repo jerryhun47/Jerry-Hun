@@ -7,6 +7,8 @@ import { motion, AnimatePresence } from 'motion/react';
 import { get, set } from 'idb-keyval';
 import { getCachedProducts, getCachedReviews, getInstantProducts } from '../lib/cacheService';
 
+import NetworkBackground from '../components/NetworkBackground';
+
 export default function Home() {
   const [formData, setFormData] = useState({ name: '', email: '', phone: '', subject: '', message: '' });
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
@@ -747,81 +749,6 @@ export default function Home() {
 
     </div>
   );
-}
-
-function NetworkBackground() {
-  const canvasRef = React.useRef<HTMLCanvasElement>(null);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    let particles: any[] = [];
-    let animationFrameId: number;
-    let width = window.innerWidth;
-    let height = window.innerHeight;
-
-    const init = () => {
-      width = window.innerWidth;
-      height = window.innerHeight;
-      canvas.width = width;
-      canvas.height = height;
-      particles = [];
-      const count = Math.min(width * height / 18000, 60);
-      for(let i=0; i<count; i++) {
-        particles.push({
-          x: Math.random() * width,
-          y: Math.random() * height,
-          vx: (Math.random() - 0.5) * 0.4,
-          vy: (Math.random() - 0.5) * 0.4,
-          radius: Math.random() * 1.5 + 0.8
-        });
-      }
-    };
-
-    const draw = () => {
-      ctx.clearRect(0, 0, width, height);
-      ctx.fillStyle = 'rgba(148, 163, 184, 0.25)';
-      ctx.strokeStyle = 'rgba(71, 85, 105, 0.12)';
-      
-      for(let i=0; i<particles.length; i++) {
-        const p = particles[i];
-        p.x += p.vx;
-        p.y += p.vy;
-        if(p.x < 0 || p.x > width) p.vx *= -1;
-        if(p.y < 0 || p.y > height) p.vy *= -1;
-        
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-        ctx.fill();
-
-        for(let j=i+1; j<particles.length; j++) {
-          const p2 = particles[j];
-          const dist = Math.hypot(p.x - p2.x, p.y - p2.y);
-          if(dist < 110) {
-            ctx.beginPath();
-            ctx.moveTo(p.x, p.y);
-            ctx.lineTo(p2.x, p2.y);
-            ctx.stroke();
-          }
-        }
-      }
-      animationFrameId = requestAnimationFrame(draw);
-    };
-
-    init();
-    draw();
-    window.addEventListener('resize', init);
-
-    return () => {
-      cancelAnimationFrame(animationFrameId);
-      window.removeEventListener('resize', init);
-    };
-  }, []);
-
-  return <canvas ref={canvasRef} className="absolute inset-0 w-full h-full pointer-events-none opacity-40 z-0" />;
 }
 
 function FlashSaleBanner() {

@@ -638,10 +638,12 @@ function ProductsManager({ products, type, refresh }: { products: any[], type: s
        </div>
 
        {showModal && (
-          <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex flex-col items-center justify-center p-4">
-             <div className="bg-white rounded-3xl w-full max-w-xl p-8 max-h-[90vh] overflow-y-auto relative">
-               <button onClick={() => setShowModal(false)} className="absolute top-6 right-6 text-slate-400 hover:text-slate-600"><X size={24}/></button>
-               <h3 className="text-2xl font-black mb-6">{editingId ? 'Edit Product' : 'Add New Product'}</h3>
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex flex-col items-center justify-center p-4">
+             <div className="bg-slate-900 border border-slate-700/80 rounded-3xl w-full max-w-2xl p-6 sm:p-8 max-h-[90vh] overflow-y-auto relative shadow-2xl text-white">
+               <button onClick={() => setShowModal(false)} className="absolute top-6 right-6 text-slate-400 hover:text-white bg-slate-800 border border-slate-700 p-2 rounded-full transition-colors"><X size={20}/></button>
+               <h3 className="text-2xl font-black mb-6 text-white flex items-center gap-2 border-b border-slate-800 pb-4">
+                 <span className="text-red-500">{editingId ? '✏️ Edit Tool / Product' : '➕ Add New Tool / Product'}</span>
+               </h3>
                
                {saveSuccess && (
                  <div className="bg-green-100 text-green-700 p-4 rounded-xl font-bold mb-4 border border-green-200">
@@ -654,64 +656,96 @@ function ProductsManager({ products, type, refresh }: { products: any[], type: s
                  </div>
                )}
 
-               <form onSubmit={handleSave} className="space-y-4">
-                  <div><label className="block text-sm font-semibold mb-1">Product Name</label><input required disabled={isSaving} type="text" value={formData.name} onChange={e=>setFormData({...formData, name: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2" /></div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div><label className="block text-sm font-semibold mb-1">Monthly Price (PKR)</label><input required disabled={isSaving} type="number" min="0" value={formData.price} onChange={e=>setFormData({...formData, price: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2" /></div>
-                    <div><label className="block text-sm font-semibold mb-1">Yearly Price (PKR)</label><input required disabled={isSaving} type="number" min="0" value={formData.yearlyPrice} onChange={e=>setFormData({...formData, yearlyPrice: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2" /></div>
+               <form onSubmit={handleSave} className="space-y-4 text-left">
+                  <div>
+                    <label className="block text-sm font-bold text-slate-200 mb-1.5">Product Name</label>
+                    <input required disabled={isSaving} type="text" value={formData.name} onChange={e=>setFormData({...formData, name: e.target.value})} className="w-full bg-slate-950 border border-slate-700 focus:border-red-500 focus:ring-2 focus:ring-red-500/30 text-white placeholder-slate-500 rounded-xl px-4 py-3 outline-none font-medium text-sm transition-all" placeholder="e.g. ChatGPT Plus / Canva Pro" />
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div><label className="block text-sm font-semibold mb-1">Category</label>
-                      <select required disabled={isSaving} value={formData.category} onChange={e=>setFormData({...formData, category: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2">
-                         <option value="Course">Course</option>
-                         <option value="Tool">Tool</option>
-                         <option value="Bundle">Bundle</option>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-bold text-slate-200 mb-1.5">Monthly Price (PKR)</label>
+                      <input required disabled={isSaving} type="number" min="0" value={formData.price} onChange={e=>setFormData({...formData, price: e.target.value})} className="w-full bg-slate-950 border border-slate-700 focus:border-red-500 focus:ring-2 focus:ring-red-500/30 text-white placeholder-slate-500 rounded-xl px-4 py-3 outline-none font-medium text-sm transition-all" placeholder="e.g. 1500" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-bold text-slate-200 mb-1.5">Yearly Price (PKR)</label>
+                      <input required disabled={isSaving} type="number" min="0" value={formData.yearlyPrice} onChange={e=>setFormData({...formData, yearlyPrice: e.target.value})} className="w-full bg-slate-950 border border-slate-700 focus:border-red-500 focus:ring-2 focus:ring-red-500/30 text-white placeholder-slate-500 rounded-xl px-4 py-3 outline-none font-medium text-sm transition-all" placeholder="e.g. 2800" />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-bold text-slate-200 mb-1.5">Category</label>
+                      <select required disabled={isSaving} value={formData.category} onChange={e=>setFormData({...formData, category: e.target.value})} className="w-full bg-slate-950 border border-slate-700 focus:border-red-500 focus:ring-2 focus:ring-red-500/30 text-white rounded-xl px-4 py-3 outline-none font-medium text-sm transition-all">
+                         <option value="Tool" className="bg-slate-900 text-white">Tool</option>
+                         <option value="Course" className="bg-slate-900 text-white">Course</option>
+                         <option value="Bundle" className="bg-slate-900 text-white">Bundle</option>
                       </select>
                     </div>
-                    <div><label className="block text-sm font-semibold mb-1">Badge (Optional)</label><input disabled={isSaving} type="text" value={formData.badge} onChange={e=>setFormData({...formData, badge: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2" placeholder="e.g. Best Seller" /></div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="flex items-center mt-6">
-                       <label className="flex items-center gap-2 cursor-pointer">
-                         <input type="checkbox" checked={formData.is_active} onChange={e=>setFormData({...formData,is_active: e.target.checked})} className="w-5 h-5 text-primary-600 rounded border-slate-300" />
-                         <span className="font-semibold">Active in Store</span>
-                       </label>
+                    <div>
+                      <label className="block text-sm font-bold text-slate-200 mb-1.5">Badge (Optional)</label>
+                      <input disabled={isSaving} type="text" value={formData.badge} onChange={e=>setFormData({...formData, badge: e.target.value})} className="w-full bg-slate-950 border border-slate-700 focus:border-red-500 focus:ring-2 focus:ring-red-500/30 text-white placeholder-slate-500 rounded-xl px-4 py-3 outline-none font-medium text-sm transition-all" placeholder="e.g. Best Seller" />
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div><label className="block text-sm font-semibold mb-1">Image Link (Optional)</label><input type="text" value={formData.imageLink} onChange={e=>setFormData({...formData, imageLink: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2" placeholder="https://" /></div>
-                    <div><label className="block text-sm font-semibold mb-1">Video Link (Optional)</label><input type="text" value={formData.videoLink} onChange={e=>setFormData({...formData, videoLink: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2" placeholder="YouTube URL" /></div>
+
+                  <div>
+                    <label className="flex items-center gap-3 cursor-pointer bg-slate-950 p-3 rounded-xl border border-slate-800 hover:border-slate-700 transition-colors mt-2">
+                      <input type="checkbox" checked={formData.is_active} onChange={e=>setFormData({...formData, is_active: e.target.checked})} className="w-5 h-5 text-red-600 rounded border-slate-700 bg-slate-900 focus:ring-red-500" />
+                      <span className="font-bold text-slate-200 text-sm">Active in Store (Visible to Customers)</span>
+                    </label>
                   </div>
-                  <div><label className="block text-sm font-semibold mb-1">Short Description</label><textarea required value={formData.description} onChange={e=>setFormData({...formData, description: e.target.value})} rows={2} className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2" placeholder="Write a short description..."></textarea></div>
-                  <div><label className="block text-sm font-semibold mb-1">Product Detail (Rich Content/Paragraph)</label><textarea value={formData.detail} onChange={e=>setFormData({...formData, detail: e.target.value})} rows={5} className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2" placeholder="Write full product detail here... Markdown is supported."></textarea></div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-bold text-slate-200 mb-1.5">Image Link (Optional)</label>
+                      <input type="text" value={formData.imageLink} onChange={e=>setFormData({...formData, imageLink: e.target.value})} className="w-full bg-slate-950 border border-slate-700 focus:border-red-500 focus:ring-2 focus:ring-red-500/30 text-white placeholder-slate-500 rounded-xl px-4 py-3 outline-none font-medium text-sm transition-all" placeholder="https://" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-bold text-slate-200 mb-1.5">Video Link (Optional)</label>
+                      <input type="text" value={formData.videoLink} onChange={e=>setFormData({...formData, videoLink: e.target.value})} className="w-full bg-slate-950 border border-slate-700 focus:border-red-500 focus:ring-2 focus:ring-red-500/30 text-white placeholder-slate-500 rounded-xl px-4 py-3 outline-none font-medium text-sm transition-all" placeholder="YouTube URL" />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-bold text-slate-200 mb-1.5">Short Description</label>
+                    <textarea required value={formData.description} onChange={e=>setFormData({...formData, description: e.target.value})} rows={2} className="w-full bg-slate-950 border border-slate-700 focus:border-red-500 focus:ring-2 focus:ring-red-500/30 text-white placeholder-slate-500 rounded-xl px-4 py-3 outline-none font-medium text-sm transition-all resize-none" placeholder="Write a short description..."></textarea>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-bold text-slate-200 mb-1.5">Product Detail (Full Overview)</label>
+                    <textarea value={formData.detail} onChange={e=>setFormData({...formData, detail: e.target.value})} rows={4} className="w-full bg-slate-950 border border-slate-700 focus:border-red-500 focus:ring-2 focus:ring-red-500/30 text-white placeholder-slate-500 rounded-xl px-4 py-3 outline-none font-medium text-sm transition-all" placeholder="Write full product detail here..."></textarea>
+                  </div>
 
                   {formData.category === 'Course' && (
-                    <div className="border border-slate-200 rounded-xl p-4 bg-slate-50 mt-4">
-                       <div className="flex justify-between items-center mb-4">
-                         <h4 className="font-bold">Course Lessons</h4>
-                         <button type="button" onClick={() => setLessons([...lessons, { title: '', duration: '', videoLink: '', content: '' }])} className="text-sm bg-slate-200 hover:bg-slate-300 font-bold px-3 py-1 rounded-lg">Add Lesson</button>
+                    <div className="border border-slate-800 rounded-2xl p-4 bg-slate-950/80 mt-4">
+                       <div className="flex justify-between items-center mb-4 border-b border-slate-800 pb-2">
+                         <h4 className="font-bold text-white text-base">Course Lessons</h4>
+                         <button type="button" onClick={() => setLessons([...lessons, { title: '', duration: '', videoLink: '', content: '' }])} className="text-xs bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white font-bold px-3 py-1.5 rounded-lg transition-colors">
+                           + Add Lesson
+                         </button>
                        </div>
                        <div className="space-y-4">
                          {lessons.map((lesson, idx) => (
-                           <div key={idx} className="border border-slate-300 rounded-lg p-4 bg-white relative">
-                             <button type="button" onClick={() => setLessons(lessons.filter((_, i) => i !== idx))} className="absolute top-2 right-2 text-primary-500 hover:bg-primary-50 p-1 rounded"><X size={16}/></button>
-                             <div className="grid grid-cols-2 gap-2 mb-2">
-                               <div><label className="text-xs font-bold text-slate-500">Lesson Title</label><input type="text" value={lesson.title} onChange={e => { const newL = [...lessons]; newL[idx].title = e.target.value; setLessons(newL); }} className="w-full border rounded px-2 py-1 text-sm" /></div>
-                               <div><label className="text-xs font-bold text-slate-500">Duration (e.g. 15 min)</label><input type="text" value={lesson.duration} onChange={e => { const newL = [...lessons]; newL[idx].duration = e.target.value; setLessons(newL); }} className="w-full border rounded px-2 py-1 text-sm" /></div>
+                           <div key={idx} className="border border-slate-800 rounded-xl p-4 bg-slate-900 relative space-y-3">
+                             <button type="button" onClick={() => setLessons(lessons.filter((_, i) => i !== idx))} className="absolute top-2 right-2 text-red-400 hover:bg-red-500/20 p-1.5 rounded-lg transition-colors"><X size={16}/></button>
+                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                               <div><label className="text-xs font-bold text-slate-300 mb-1 block">Lesson Title</label><input type="text" value={lesson.title} onChange={e => { const newL = [...lessons]; newL[idx].title = e.target.value; setLessons(newL); }} className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white" /></div>
+                               <div><label className="text-xs font-bold text-slate-300 mb-1 block">Duration (e.g. 15 min)</label><input type="text" value={lesson.duration} onChange={e => { const newL = [...lessons]; newL[idx].duration = e.target.value; setLessons(newL); }} className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white" /></div>
                              </div>
-                             <div className="mb-2"><label className="text-xs font-bold text-slate-500">Video URL</label><input type="text" value={lesson.videoLink} onChange={e => { const newL = [...lessons]; newL[idx].videoLink = e.target.value; setLessons(newL); }} className="w-full border rounded px-2 py-1 text-sm" placeholder="https://" /></div>
-                             <div><label className="text-xs font-bold text-slate-500">Text Content</label><textarea value={lesson.content} onChange={e => { const newL = [...lessons]; newL[idx].content = e.target.value; setLessons(newL); }} className="w-full border rounded px-2 py-1 text-sm" rows={2}></textarea></div>
+                             <div><label className="text-xs font-bold text-slate-300 mb-1 block">Video URL</label><input type="text" value={lesson.videoLink} onChange={e => { const newL = [...lessons]; newL[idx].videoLink = e.target.value; setLessons(newL); }} className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white" placeholder="https://" /></div>
+                             <div><label className="text-xs font-bold text-slate-300 mb-1 block">Text Content</label><textarea value={lesson.content} onChange={e => { const newL = [...lessons]; newL[idx].content = e.target.value; setLessons(newL); }} className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white" rows={2}></textarea></div>
                            </div>
                          ))}
-                         {lessons.length === 0 && <p className="text-sm text-slate-500 text-center py-2">No lessons added. Click "Add Lesson" to curriculum.</p>}
+                         {lessons.length === 0 && <p className="text-xs text-slate-400 text-center py-2">No lessons added yet.</p>}
                        </div>
                     </div>
                   )}
 
-                  <div className="flex justify-end gap-2 pt-4">
-                    <button type="button" onClick={() => setShowModal(false)} disabled={isSaving} className="px-6 py-3 rounded-xl font-bold bg-slate-100 hover:bg-slate-200 disabled:opacity-50 hover:cursor-pointer disabled:cursor-not-allowed">Cancel</button>
-                    <button type="submit" disabled={isSaving} className="px-6 py-3 rounded-xl font-bold bg-primary-600 hover:bg-primary-700 text-white disabled:opacity-50 hover:cursor-pointer disabled:cursor-not-allowed">
-                       {isSaving ? 'Saving...' : 'Save Product'}
+                  <div className="flex items-center justify-end gap-3 pt-6 border-t border-slate-800">
+                    <button type="button" onClick={() => setShowModal(false)} disabled={isSaving} className="px-6 py-3 rounded-xl font-bold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-all text-sm disabled:opacity-50">
+                      Cancel
+                    </button>
+                    <button type="submit" disabled={isSaving} className="px-7 py-3 rounded-xl font-black bg-red-600 hover:bg-red-500 text-white shadow-lg shadow-red-600/30 transition-all text-sm active:scale-95 disabled:opacity-50">
+                       {isSaving ? 'Saving...' : (editingId ? 'Update Product' : 'Save Product')}
                     </button>
                   </div>
                </form>
@@ -2326,40 +2360,40 @@ function ReviewsManager() {
        </div>
 
        {showAddModal && (
-         <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-3xl w-full max-w-lg p-6 relative max-h-[90vh] overflow-y-auto">
-               <button onClick={() => setShowAddModal(false)} className="absolute top-4 right-4 text-slate-400 hover:text-slate-900"><X size={24}/></button>
-               <h3 className="text-2xl font-bold mb-4">Add Manual Review</h3>
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
+             <div className="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-lg p-6 sm:p-8 relative max-h-[90vh] overflow-y-auto text-white shadow-2xl">
+                <button onClick={() => setShowAddModal(false)} className="absolute top-6 right-6 text-slate-400 hover:text-white bg-slate-800 p-2 rounded-full"><X size={20}/></button>
+               <h3 className="text-2xl font-black mb-6 text-white border-b border-slate-800 pb-3">⭐ Add Manual Review</h3>
                <form onSubmit={handleAddReview} className="space-y-4">
                   <div>
-                    <label className="block text-sm font-semibold mb-2">Name</label>
-                    <input type="text" required value={newReview.name} onChange={e => setNewReview({...newReview, name: e.target.value})} className="w-full border rounded-lg px-4 py-2" />
+                    <label className="block text-sm font-bold text-slate-200 mb-1.5">Name</label>
+                    <input type="text" required value={newReview.name} onChange={e => setNewReview({...newReview, name: e.target.value})} className="w-full bg-slate-950 border border-slate-700 focus:border-red-500 rounded-xl px-4 py-3 text-white outline-none" />
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold mb-2">City</label>
-                    <input type="text" value={newReview.city} onChange={e => setNewReview({...newReview, city: e.target.value})} className="w-full border rounded-lg px-4 py-2" />
+                    <label className="block text-sm font-bold text-slate-200 mb-1.5">City</label>
+                    <input type="text" value={newReview.city} onChange={e => setNewReview({...newReview, city: e.target.value})} className="w-full bg-slate-950 border border-slate-700 focus:border-red-500 rounded-xl px-4 py-3 text-white outline-none" />
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold mb-2">Product Id (Optional, link to specific product)</label>
-                    <input type="text" value={newReview.productId || ''} onChange={e => setNewReview({...newReview, productId: e.target.value})} className="w-full border rounded-lg px-4 py-2" />
+                    <label className="block text-sm font-bold text-slate-200 mb-1.5">Product Id (Optional)</label>
+                    <input type="text" value={newReview.productId || ''} onChange={e => setNewReview({...newReview, productId: e.target.value})} className="w-full bg-slate-950 border border-slate-700 focus:border-red-500 rounded-xl px-4 py-3 text-white outline-none" />
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold mb-2">Product Name (Optional)</label>
-                    <input type="text" value={newReview.productName || ''} onChange={e => setNewReview({...newReview, productName: e.target.value})} className="w-full border rounded-lg px-4 py-2" />
+                    <label className="block text-sm font-bold text-slate-200 mb-1.5">Product Name (Optional)</label>
+                    <input type="text" value={newReview.productName || ''} onChange={e => setNewReview({...newReview, productName: e.target.value})} className="w-full bg-slate-950 border border-slate-700 focus:border-red-500 rounded-xl px-4 py-3 text-white outline-none" />
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold mb-2">Review Text</label>
-                    <textarea required value={newReview.text} onChange={e => setNewReview({...newReview, text: e.target.value})} className="w-full border rounded-lg px-4 py-2" rows={3}></textarea>
+                    <label className="block text-sm font-bold text-slate-200 mb-1.5">Review Text</label>
+                    <textarea required value={newReview.text} onChange={e => setNewReview({...newReview, text: e.target.value})} className="w-full bg-slate-950 border border-slate-700 focus:border-red-500 rounded-xl px-4 py-3 text-white outline-none" rows={3}></textarea>
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold mb-2">Rating</label>
-                    <input type="number" min="1" max="5" value={newReview.rating} onChange={e => setNewReview({...newReview, rating: Number(e.target.value)})} className="w-full border rounded-lg px-4 py-2" />
+                    <label className="block text-sm font-bold text-slate-200 mb-1.5">Rating (1 to 5)</label>
+                    <input type="number" min="1" max="5" value={newReview.rating} onChange={e => setNewReview({...newReview, rating: Number(e.target.value)})} className="w-full bg-slate-950 border border-slate-700 focus:border-red-500 rounded-xl px-4 py-3 text-white outline-none" />
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold mb-2">Image (Optional Base64 Upload)</label>
-                    <input type="file" accept="image/*" onChange={handleImageUpload} className="w-full border rounded-lg px-4 py-2" />
+                    <label className="block text-sm font-bold text-slate-200 mb-1.5">Image (Optional Base64 Upload)</label>
+                    <input type="file" accept="image/*" onChange={handleImageUpload} className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-slate-300 text-sm" />
                   </div>
-                  <button type="submit" className="w-full bg-primary-600 hover:bg-primary-700 text-white font-bold py-3 rounded-xl">Save Review</button>
+                  <button type="submit" className="w-full bg-red-600 hover:bg-red-500 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-red-600/30 transition-all mt-4">Save Review</button>
                </form>
             </div>
          </div>
@@ -2462,17 +2496,17 @@ function AnnouncementsManager() {
          <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
             <div className="bg-white rounded-3xl w-full max-w-lg p-6 relative">
                <button onClick={() => setShowAddModal(false)} className="absolute top-4 right-4 text-slate-400 hover:text-slate-900"><X size={24}/></button>
-               <h3 className="text-2xl font-bold mb-4">Add Announcement</h3>
+               <h3 className="text-2xl font-black mb-6 text-white border-b border-slate-800 pb-3">📢 Add Announcement</h3>
                <form onSubmit={handleAddAnnouncement} className="space-y-4">
                   <div>
                     <label className="block text-sm font-semibold mb-2">Announcement Text</label>
-                    <textarea required value={newAnnouncement.text} onChange={e => setNewAnnouncement({...newAnnouncement, text: e.target.value})} className="w-full border rounded-lg px-4 py-2" rows={3} placeholder="E.g., Huge 50% discount on all courses starting tomorrow!"></textarea>
+                    <textarea required value={newAnnouncement.text} onChange={e => setNewAnnouncement({...newAnnouncement, text: e.target.value})} className="w-full bg-slate-950 border border-slate-700 focus:border-red-500 rounded-xl px-4 py-3 text-white outline-none" rows={3} placeholder="E.g., Huge 50% discount on all courses starting tomorrow!"></textarea>
                   </div>
                   <div className="flex items-center gap-2">
                     <input type="checkbox" id="isActive" checked={newAnnouncement.isActive} onChange={e => setNewAnnouncement({...newAnnouncement, isActive: e.target.checked})} className="w-4 h-4" />
                     <label htmlFor="isActive" className="text-sm font-semibold">Active immediately</label>
                   </div>
-                  <button type="submit" className="w-full bg-primary-600 hover:bg-primary-700 text-white font-bold py-3 rounded-xl">Save</button>
+                  <button type="submit" className="w-full bg-red-600 hover:bg-red-500 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-red-600/30 transition-all mt-4">Save Announcement</button>
                </form>
             </div>
          </div>
