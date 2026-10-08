@@ -695,7 +695,6 @@ function CheckoutModal({ product, onClose }: any) {
                  Continue to Payment
               </button>
 
-              <ProductReviews productId={product.id} productName={product.name} />
            </>
          ) : (
            <>

@@ -307,7 +307,6 @@ export default function Courses() {
                  )}
                </div>
                
-               <ProductReviews productId={viewingCourse.id} productName={viewingCourse.name} />
              </div>
           </div>
         </motion.div>
